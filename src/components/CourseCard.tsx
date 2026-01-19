@@ -185,9 +185,24 @@ export default function CourseCard({
           </span>
           <Link
             href={courseLink}
-            className="px-4 sm:px-5 py-2 bg-secondary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-all duration-200"
+            className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-secondary text-white text-xs sm:text-sm font-semibold rounded-lg hover:opacity-90 transition-all duration-200"
           >
-            Subscribe
+            Enroll Now
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="transform group-hover:translate-x-0.5 transition-transform duration-200"
+            >
+              <path
+                d="M3.33337 8H12.6667M12.6667 8L8.00004 3.33333M12.6667 8L8.00004 12.6667"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </Link>
         </div>
       </div>

@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import CategoriesSection from "@/components/CategoriesSection";
 import FeaturedCoursesSection from "@/components/FeaturedCoursesSection";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -10,6 +11,7 @@ export default function Home() {
       <HeroSection />
       <CategoriesSection />
       <FeaturedCoursesSection />
+      <Footer />
     </div>
   );
 }
