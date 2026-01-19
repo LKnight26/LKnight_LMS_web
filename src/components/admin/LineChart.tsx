@@ -1,6 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface DataPoint {
   label: string;
@@ -11,126 +19,132 @@ interface LineChartProps {
   data: DataPoint[];
   color?: string;
   fillColor?: string;
+  showGrid?: boolean;
+  valuePrefix?: string;
+  valueSuffix?: string;
 }
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number; payload: DataPoint }>;
+  label?: string;
+  valuePrefix?: string;
+  valueSuffix?: string;
+}
+
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+  valuePrefix = "",
+  valueSuffix = "",
+}: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#000E51] text-white px-4 py-2.5 rounded-xl shadow-lg border-0">
+        <p className="text-xs text-gray-300 mb-0.5">{label}</p>
+        <p className="text-base font-semibold">
+          {valuePrefix}
+          {payload[0].value.toLocaleString()}
+          {valueSuffix}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function LineChart({
   data,
   color = "#000E51",
-  fillColor = "rgba(0, 14, 81, 0.1)",
+  fillColor,
+  showGrid = true,
+  valuePrefix = "",
+  valueSuffix = "",
 }: LineChartProps) {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const formattedData = data.map((item) => ({
+    name: item.label,
+    value: item.value,
+    label: item.label,
+  }));
 
-  const maxValue = Math.max(...data.map((d) => d.value));
-  const minValue = Math.min(...data.map((d) => d.value));
-  const range = maxValue - minValue || 1;
-
-  const chartWidth = 100;
-  const chartHeight = 100;
-  const padding = 5;
-
-  const getX = (index: number) => {
-    return padding + (index / (data.length - 1)) * (chartWidth - 2 * padding);
-  };
-
-  const getY = (value: number) => {
-    return (
-      chartHeight -
-      padding -
-      ((value - minValue) / range) * (chartHeight - 2 * padding)
-    );
-  };
-
-  // Generate path for the line
-  const linePath = data
-    .map((point, index) => {
-      const x = getX(index);
-      const y = getY(point.value);
-      return `${index === 0 ? "M" : "L"} ${x} ${y}`;
-    })
-    .join(" ");
-
-  // Generate path for the filled area
-  const areaPath = `${linePath} L ${getX(data.length - 1)} ${
-    chartHeight - padding
-  } L ${getX(0)} ${chartHeight - padding} Z`;
+  const gradientId = `lineGradient-${color.replace("#", "")}`;
+  const areaFill = fillColor || `${color}20`;
 
   return (
-    <div className="relative h-full">
-      <svg
-        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-        className="w-full h-full"
-        preserveAspectRatio="none"
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart
+        data={formattedData}
+        margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
       >
-        {/* Grid lines */}
-        {[0, 25, 50, 75, 100].map((percent) => (
-          <line
-            key={percent}
-            x1={padding}
-            y1={padding + ((100 - percent) / 100) * (chartHeight - 2 * padding)}
-            x2={chartWidth - padding}
-            y2={padding + ((100 - percent) / 100) * (chartHeight - 2 * padding)}
-            stroke="#e5e7eb"
-            strokeWidth="0.5"
-            strokeDasharray="2,2"
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+            <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+          </linearGradient>
+        </defs>
+        {showGrid && (
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#E5E7EB"
+            strokeOpacity={0.5}
           />
-        ))}
-
-        {/* Filled area */}
-        <path d={areaPath} fill={fillColor} />
-
-        {/* Line */}
-        <path
-          d={linePath}
-          fill="none"
-          stroke={color}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        )}
+        <XAxis
+          dataKey="name"
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#6B7280", fontSize: 11, fontWeight: 500 }}
+          dy={10}
         />
-
-        {/* Data points */}
-        {data.map((point, index) => (
-          <circle
-            key={index}
-            cx={getX(index)}
-            cy={getY(point.value)}
-            r={hoveredIndex === index ? 4 : 3}
-            fill="white"
-            stroke={hoveredIndex === index ? "#FF6F00" : color}
-            strokeWidth="2"
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
-            className="cursor-pointer transition-all duration-200"
-          />
-        ))}
-      </svg>
-
-      {/* Hover tooltip */}
-      {hoveredIndex !== null && (
-        <div
-          className="absolute bg-primary text-white text-xs px-2 py-1 rounded-lg pointer-events-none z-10 transform -translate-x-1/2"
-          style={{
-            left: `${(hoveredIndex / (data.length - 1)) * 100}%`,
-            top: `${getY(data[hoveredIndex].value) - 10}%`,
+        <YAxis
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#9CA3AF", fontSize: 11 }}
+          tickFormatter={(value) => {
+            if (value >= 1000) {
+              return `${(value / 1000).toFixed(0)}k`;
+            }
+            return value.toString();
           }}
-        >
-          ${data[hoveredIndex].value.toLocaleString()}
-        </div>
-      )}
-
-      {/* X-axis labels */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-between px-1">
-        {data.map((point, index) => (
-          <span
-            key={index}
-            className={`text-xs ${
-              hoveredIndex === index ? "text-primary font-medium" : "text-gray-400"
-            }`}
-          >
-            {point.label}
-          </span>
-        ))}
-      </div>
-    </div>
+          width={45}
+        />
+        <Tooltip
+          content={
+            <CustomTooltip
+              valuePrefix={valuePrefix}
+              valueSuffix={valueSuffix}
+            />
+          }
+          cursor={{
+            stroke: color,
+            strokeWidth: 1,
+            strokeDasharray: "5 5",
+            strokeOpacity: 0.3,
+          }}
+        />
+        <Area
+          type="monotone"
+          dataKey="value"
+          stroke={color}
+          strokeWidth={2.5}
+          fill={`url(#${gradientId})`}
+          dot={{
+            r: 0,
+            strokeWidth: 2,
+            fill: "#fff",
+            stroke: color,
+          }}
+          activeDot={{
+            r: 6,
+            strokeWidth: 3,
+            fill: "#fff",
+            stroke: color,
+            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.15))",
+          }}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
   );
 }

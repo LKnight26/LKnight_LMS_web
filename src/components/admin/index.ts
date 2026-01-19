@@ -7,3 +7,5 @@ export { default as Badge } from "./Badge";
 export { default as DataTable } from "./DataTable";
 export { default as RevenueChart } from "./RevenueChart";
 export { default as LineChart } from "./LineChart";
+export { default as PieChart } from "./PieChart";
+export { default as EnrollmentChart } from "./EnrollmentChart";

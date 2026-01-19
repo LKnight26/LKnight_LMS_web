@@ -19,55 +19,57 @@ export default function StatsCard({
   iconBgColor = "bg-primary/10",
 }: StatsCardProps) {
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 group">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
-          <h3 className="text-2xl lg:text-3xl font-bold text-primary font-outfit">
+    <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 group">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-gray-500 text-xs sm:text-sm font-medium mb-1 truncate">{title}</p>
+          <h3 className="text-lg sm:text-2xl lg:text-3xl font-bold text-primary font-outfit truncate">
             {value}
           </h3>
           {change && (
-            <div className="flex items-center gap-1 mt-2">
+            <div className="flex items-center gap-1 mt-1 sm:mt-2 flex-wrap">
               <span
-                className={`flex items-center gap-0.5 text-sm font-medium ${
+                className={`flex items-center gap-0.5 text-xs sm:text-sm font-medium ${
                   change.type === "increase" ? "text-green-600" : "text-red-500"
                 }`}
               >
                 {change.type === "increase" ? (
                   <svg
-                    width="16"
-                    height="16"
+                    width="14"
+                    height="14"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    className="w-3 h-3 sm:w-4 sm:h-4"
                   >
                     <polyline points="18 15 12 9 6 15" />
                   </svg>
                 ) : (
                   <svg
-                    width="16"
-                    height="16"
+                    width="14"
+                    height="14"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    className="w-3 h-3 sm:w-4 sm:h-4"
                   >
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 )}
                 {change.value}%
               </span>
-              <span className="text-gray-400 text-sm">vs last month</span>
+              <span className="text-gray-400 text-[10px] sm:text-sm hidden sm:inline">vs last month</span>
             </div>
           )}
         </div>
         <div
-          className={`w-12 h-12 ${iconBgColor} rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300`}
+          className={`w-10 h-10 sm:w-12 sm:h-12 ${iconBgColor} rounded-lg sm:rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shrink-0`}
         >
           {icon}
         </div>

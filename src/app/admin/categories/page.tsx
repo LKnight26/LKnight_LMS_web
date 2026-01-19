@@ -241,30 +241,33 @@ export default function CategoriesPage() {
   const totalCourses = categories.reduce((sum, c) => sum + c.courseCount, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary font-outfit">
+          <h1 className="text-xl sm:text-2xl font-bold text-primary font-outfit">
             Category Management
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">
             Organize your courses into categories
           </p>
         </div>
         <AdminButton
           variant="secondary"
           onClick={() => setShowAddModal(true)}
+          size="sm"
+          className="self-start sm:self-auto"
           icon={
             <svg
-              width="18"
-              height="18"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              className="sm:w-4.5 sm:h-4.5"
             >
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
@@ -276,33 +279,33 @@ export default function CategoriesPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
-          <p className="text-sm text-gray-500">Total Categories</p>
-          <p className="text-2xl font-bold text-primary mt-1">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
+          <p className="text-xs sm:text-sm text-gray-500">Total Categories</p>
+          <p className="text-xl sm:text-2xl font-bold text-primary mt-0.5 sm:mt-1">
             {categories.length}
           </p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
-          <p className="text-sm text-gray-500">Total Courses</p>
-          <p className="text-2xl font-bold text-secondary mt-1">{totalCourses}</p>
+        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
+          <p className="text-xs sm:text-sm text-gray-500">Total Courses</p>
+          <p className="text-xl sm:text-2xl font-bold text-secondary mt-0.5 sm:mt-1">{totalCourses}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 hidden sm:block">
-          <p className="text-sm text-gray-500">Avg Courses/Category</p>
-          <p className="text-2xl font-bold text-blue-600 mt-1">
+        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100 hidden sm:block">
+          <p className="text-xs sm:text-sm text-gray-500">Avg Courses/Category</p>
+          <p className="text-xl sm:text-2xl font-bold text-blue-600 mt-0.5 sm:mt-1">
             {Math.round(totalCourses / categories.length)}
           </p>
         </div>
       </div>
 
       {/* Categories Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {categories.map((category) => (
           <AdminCard key={category.id} padding="md" className="group">
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3 sm:gap-4">
               {/* Icon */}
               <div
-                className={`w-12 h-12 ${category.iconBgColor} rounded-xl flex items-center justify-center text-white flex-shrink-0`}
+                className={`w-10 h-10 sm:w-12 sm:h-12 ${category.iconBgColor} rounded-lg sm:rounded-xl flex items-center justify-center text-white shrink-0`}
               >
                 <IconComponent type={category.icon} />
               </div>
@@ -310,24 +313,24 @@ export default function CategoriesPage() {
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-gray-900 truncate">
+                  <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">
                     {category.name}
                   </h3>
                   <Badge variant="gray" size="sm">
-                    {category.courseCount} courses
+                    {category.courseCount}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 line-clamp-2">
                   {category.description}
                 </p>
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-[10px] sm:text-xs text-gray-400 mt-1.5 sm:mt-2">
                   /{category.slug}
                 </p>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               <AdminButton
                 variant="ghost"
                 size="sm"
@@ -381,29 +384,30 @@ export default function CategoriesPage() {
         {/* Add Card */}
         <button
           onClick={() => setShowAddModal(true)}
-          className="border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 text-gray-400 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-200 min-h-[180px]"
+          className="border-2 border-dashed border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 text-gray-400 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-200 min-h-[140px] sm:min-h-[180px]"
         >
           <svg
-            width="32"
-            height="32"
+            width="28"
+            height="28"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            className="sm:w-8 sm:h-8"
           >
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          <span className="font-medium">Add New Category</span>
+          <span className="font-medium text-sm sm:text-base">Add New Category</span>
         </button>
       </div>
 
       {/* Add/Edit Modal */}
       {(showAddModal || editingCategory) && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 sm:p-4"
           onClick={() => {
             setShowAddModal(false);
             setEditingCategory(null);
@@ -411,14 +415,14 @@ export default function CategoriesPage() {
           }}
         >
           <div
-            className="bg-white rounded-2xl max-w-md w-full p-6"
+            className="bg-white rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">
               {editingCategory ? "Edit Category" : "Add New Category"}
             </h3>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <AdminInput
                 label="Category Name"
                 value={formData.name}
@@ -440,10 +444,10 @@ export default function CategoriesPage() {
 
               {/* Icon Selection */}
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700">
                   Icon
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                   {iconOptions.map((option) => (
                     <button
                       key={option.value}
@@ -451,15 +455,15 @@ export default function CategoriesPage() {
                       onClick={() =>
                         setFormData({ ...formData, icon: option.value })
                       }
-                      className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                      className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 transition-all duration-200 ${
                         formData.icon === option.value
                           ? "border-primary bg-primary/5"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
-                      <div className="flex flex-col items-center gap-1">
+                      <div className="flex flex-col items-center gap-0.5 sm:gap-1">
                         <IconComponent type={option.value} />
-                        <span className="text-xs text-gray-500">
+                        <span className="text-[10px] sm:text-xs text-gray-500">
                           {option.label}
                         </span>
                       </div>
@@ -470,10 +474,10 @@ export default function CategoriesPage() {
 
               {/* Color Selection */}
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700">
                   Icon Color
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                   {colorOptions.map((option) => (
                     <button
                       key={option.value}
@@ -481,7 +485,7 @@ export default function CategoriesPage() {
                       onClick={() =>
                         setFormData({ ...formData, iconBgColor: option.value })
                       }
-                      className={`w-8 h-8 rounded-full transition-all duration-200 ${
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full transition-all duration-200 ${
                         formData.iconBgColor === option.value
                           ? "ring-2 ring-offset-2 ring-primary scale-110"
                           : "hover:scale-105"
@@ -493,19 +497,19 @@ export default function CategoriesPage() {
               </div>
 
               {/* Preview */}
-              <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-xs text-gray-500 mb-2">Preview</p>
-                <div className="flex items-center gap-3">
+              <div className="p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl">
+                <p className="text-[10px] sm:text-xs text-gray-500 mb-1.5 sm:mb-2">Preview</p>
+                <div className="flex items-center gap-2 sm:gap-3">
                   <div
-                    className={`w-10 h-10 ${formData.iconBgColor} rounded-lg flex items-center justify-center text-white`}
+                    className={`w-8 h-8 sm:w-10 sm:h-10 ${formData.iconBgColor} rounded-lg flex items-center justify-center text-white`}
                   >
                     <IconComponent type={formData.icon} />
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 text-sm sm:text-base truncate">
                       {formData.name || "Category Name"}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-[10px] sm:text-xs text-gray-500 truncate">
                       {formData.description || "Description"}
                     </p>
                   </div>
@@ -513,10 +517,11 @@ export default function CategoriesPage() {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6">
               <AdminButton
                 variant="outline"
                 className="flex-1"
+                size="sm"
                 onClick={() => {
                   setShowAddModal(false);
                   setEditingCategory(null);
@@ -528,6 +533,7 @@ export default function CategoriesPage() {
               <AdminButton
                 variant="primary"
                 className="flex-1"
+                size="sm"
                 onClick={editingCategory ? handleEdit : handleAdd}
               >
                 {editingCategory ? "Save Changes" : "Add Category"}
@@ -540,41 +546,42 @@ export default function CategoriesPage() {
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 sm:p-4"
           onClick={() => setDeleteConfirm(null)}
         >
           <div
-            className="bg-white rounded-2xl max-w-sm w-full p-6"
+            className="bg-white rounded-xl sm:rounded-2xl max-w-sm w-full p-4 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
               <svg
-                width="24"
-                height="24"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-red-500"
+                className="text-red-500 sm:w-6 sm:h-6"
               >
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 text-center mb-1.5 sm:mb-2">
               Delete Category?
             </h3>
-            <p className="text-sm text-gray-500 text-center mb-6">
+            <p className="text-xs sm:text-sm text-gray-500 text-center mb-4 sm:mb-6">
               This action cannot be undone. All courses in this category will be
               uncategorized.
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <AdminButton
                 variant="outline"
                 className="flex-1"
+                size="sm"
                 onClick={() => setDeleteConfirm(null)}
               >
                 Cancel
@@ -582,6 +589,7 @@ export default function CategoriesPage() {
               <AdminButton
                 variant="danger"
                 className="flex-1"
+                size="sm"
                 onClick={() => handleDelete(deleteConfirm)}
               >
                 Delete

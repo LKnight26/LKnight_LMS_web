@@ -84,33 +84,34 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-4 sm:space-y-6 max-w-4xl">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary font-outfit">
+          <h1 className="text-xl sm:text-2xl font-bold text-primary font-outfit">
             Settings
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">
             Configure your LMS platform settings
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {saved && (
-            <Badge variant="success" size="md">
-              Changes saved
+            <Badge variant="success" size="sm">
+              Saved
             </Badge>
           )}
           <AdminButton
             variant="secondary"
             onClick={handleSave}
             disabled={saving}
+            size="sm"
             icon={
               saving ? (
                 <svg
                   className="animate-spin"
-                  width="18"
-                  height="18"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -129,8 +130,8 @@ export default function SettingsPage() {
                 </svg>
               ) : (
                 <svg
-                  width="18"
-                  height="18"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -155,7 +156,7 @@ export default function SettingsPage() {
         title="General Settings"
         subtitle="Basic information about your LMS"
       >
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <AdminInput
             label="Site Name"
             name="siteName"
@@ -166,11 +167,11 @@ export default function SettingsPage() {
 
           {/* Logo Upload */}
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700">
               Site Logo
             </label>
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-xl bg-gray-100 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl bg-gray-100 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
                 {logo ? (
                   <img
                     src={logo}
@@ -178,8 +179,8 @@ export default function SettingsPage() {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">LK</span>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm sm:text-lg">LK</span>
                   </div>
                 )}
               </div>
@@ -191,16 +192,17 @@ export default function SettingsPage() {
                     onChange={handleLogoChange}
                     className="hidden"
                   />
-                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors">
+                  <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-colors">
                     <svg
-                      width="16"
-                      height="16"
+                      width="14"
+                      height="14"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                      className="sm:w-4 sm:h-4"
                     >
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                       <polyline points="17 8 12 3 7 8" />
@@ -209,8 +211,8 @@ export default function SettingsPage() {
                     Upload Logo
                   </span>
                 </label>
-                <p className="text-xs text-gray-400 mt-1">
-                  PNG or JPG, max 1MB. Recommended: 200x200px
+                <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
+                  PNG or JPG, max 1MB
                 </p>
               </div>
             </div>
@@ -223,7 +225,7 @@ export default function SettingsPage() {
         title="Contact Information"
         subtitle="Email addresses for communication"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <AdminInput
             label="Contact Email"
             name="contactEmail"
@@ -233,14 +235,15 @@ export default function SettingsPage() {
             placeholder="contact@example.com"
             icon={
               <svg
-                width="16"
-                height="16"
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="sm:w-4 sm:h-4"
               >
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                 <polyline points="22,6 12,13 2,6" />
@@ -256,14 +259,15 @@ export default function SettingsPage() {
             placeholder="support@example.com"
             icon={
               <svg
-                width="16"
-                height="16"
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="sm:w-4 sm:h-4"
               >
                 <circle cx="12" cy="12" r="10" />
                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
@@ -279,7 +283,7 @@ export default function SettingsPage() {
         title="Course Settings"
         subtitle="Default settings for courses"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <AdminSelect
             label="Default Currency"
             name="currency"
@@ -302,53 +306,53 @@ export default function SettingsPage() {
         title="Notifications"
         subtitle="Configure email notifications"
       >
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Toggle Items */}
-          <div className="flex items-center justify-between py-3 border-b border-gray-100">
-            <div>
-              <p className="font-medium text-gray-900">
+          <div className="flex items-center justify-between py-2 sm:py-3 border-b border-gray-100 gap-3">
+            <div className="min-w-0">
+              <p className="font-medium text-gray-900 text-sm sm:text-base">
                 Enrollment Notifications
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-500">
                 Receive email when a user enrolls in a course
               </p>
             </div>
             <button
               onClick={() => handleToggle("enrollmentNotifications")}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+              className={`relative w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors duration-200 shrink-0 ${
                 settings.enrollmentNotifications
                   ? "bg-primary"
                   : "bg-gray-200"
               }`}
             >
               <span
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+                className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
                   settings.enrollmentNotifications
-                    ? "translate-x-7"
-                    : "translate-x-1"
+                    ? "translate-x-5 sm:translate-x-7"
+                    : "translate-x-0.5 sm:translate-x-1"
                 }`}
               />
             </button>
           </div>
 
-          <div className="flex items-center justify-between py-3 border-b border-gray-100">
-            <div>
-              <p className="font-medium text-gray-900">Marketing Emails</p>
-              <p className="text-sm text-gray-500">
+          <div className="flex items-center justify-between py-2 sm:py-3 border-b border-gray-100 gap-3">
+            <div className="min-w-0">
+              <p className="font-medium text-gray-900 text-sm sm:text-base">Marketing Emails</p>
+              <p className="text-xs sm:text-sm text-gray-500">
                 Send promotional emails to users
               </p>
             </div>
             <button
               onClick={() => handleToggle("marketingEmails")}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+              className={`relative w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors duration-200 shrink-0 ${
                 settings.marketingEmails ? "bg-primary" : "bg-gray-200"
               }`}
             >
               <span
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+                className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
                   settings.marketingEmails
-                    ? "translate-x-7"
-                    : "translate-x-1"
+                    ? "translate-x-5 sm:translate-x-7"
+                    : "translate-x-0.5 sm:translate-x-1"
                 }`}
               />
             </button>
@@ -362,62 +366,62 @@ export default function SettingsPage() {
         subtitle="Irreversible and destructive actions"
         className="border-red-200"
       >
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Maintenance Mode */}
-          <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="font-medium text-gray-900">Maintenance Mode</p>
+          <div className="flex items-center justify-between p-3 sm:p-4 bg-yellow-50 rounded-lg sm:rounded-xl border border-yellow-200 gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-medium text-gray-900 text-sm sm:text-base">Maintenance Mode</p>
                 {settings.maintenanceMode && (
                   <Badge variant="warning" size="sm">
                     Active
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-500">
                 Put the site in maintenance mode. Users will see a maintenance
                 page.
               </p>
             </div>
             <button
               onClick={() => handleToggle("maintenanceMode")}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+              className={`relative w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors duration-200 shrink-0 ${
                 settings.maintenanceMode ? "bg-yellow-500" : "bg-gray-200"
               }`}
             >
               <span
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+                className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
                   settings.maintenanceMode
-                    ? "translate-x-7"
-                    : "translate-x-1"
+                    ? "translate-x-5 sm:translate-x-7"
+                    : "translate-x-0.5 sm:translate-x-1"
                 }`}
               />
             </button>
           </div>
 
           {/* Clear Cache */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <div>
-              <p className="font-medium text-gray-900">Clear Cache</p>
-              <p className="text-sm text-gray-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl border border-gray-200 gap-3">
+            <div className="min-w-0">
+              <p className="font-medium text-gray-900 text-sm sm:text-base">Clear Cache</p>
+              <p className="text-xs sm:text-sm text-gray-500">
                 Clear all cached data. This may temporarily slow down the site.
               </p>
             </div>
-            <AdminButton variant="outline" size="sm">
+            <AdminButton variant="outline" size="sm" className="self-start sm:self-auto shrink-0">
               Clear Cache
             </AdminButton>
           </div>
 
           {/* Delete All Data */}
-          <div className="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-200">
-            <div>
-              <p className="font-medium text-red-700">Delete All Data</p>
-              <p className="text-sm text-red-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-red-50 rounded-lg sm:rounded-xl border border-red-200 gap-3">
+            <div className="min-w-0">
+              <p className="font-medium text-red-700 text-sm sm:text-base">Delete All Data</p>
+              <p className="text-xs sm:text-sm text-red-500">
                 Permanently delete all courses, users, and data. This cannot be
                 undone.
               </p>
             </div>
-            <AdminButton variant="danger" size="sm">
+            <AdminButton variant="danger" size="sm" className="self-start sm:self-auto shrink-0">
               Delete All
             </AdminButton>
           </div>
@@ -426,22 +430,22 @@ export default function SettingsPage() {
 
       {/* System Info */}
       <AdminCard title="System Information" subtitle="Technical details">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-3 bg-gray-50 rounded-xl">
-            <p className="text-xs text-gray-500">Version</p>
-            <p className="text-sm font-medium text-gray-900">1.0.0</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+          <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
+            <p className="text-[10px] sm:text-xs text-gray-500">Version</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-900">1.0.0</p>
           </div>
-          <div className="p-3 bg-gray-50 rounded-xl">
-            <p className="text-xs text-gray-500">Framework</p>
-            <p className="text-sm font-medium text-gray-900">Next.js 16</p>
+          <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
+            <p className="text-[10px] sm:text-xs text-gray-500">Framework</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-900">Next.js 16</p>
           </div>
-          <div className="p-3 bg-gray-50 rounded-xl">
-            <p className="text-xs text-gray-500">Database</p>
-            <p className="text-sm font-medium text-gray-900">PostgreSQL</p>
+          <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
+            <p className="text-[10px] sm:text-xs text-gray-500">Database</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-900">PostgreSQL</p>
           </div>
-          <div className="p-3 bg-gray-50 rounded-xl">
-            <p className="text-xs text-gray-500">Environment</p>
-            <p className="text-sm font-medium text-gray-900">Development</p>
+          <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
+            <p className="text-[10px] sm:text-xs text-gray-500">Environment</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-900">Development</p>
           </div>
         </div>
       </AdminCard>
