@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import TransitionLink from "./TransitionLink";
 
 export default function Footer() {
   const platformLinks = [
@@ -74,7 +74,7 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="sm:col-span-2 lg:col-span-4">
             {/* Logo */}
-            <Link href="/" className="inline-block mb-4">
+            <TransitionLink href="/" className="inline-block mb-4">
               <Image
                 src="/icon/main-logo.svg"
                 alt="LKnight LMS"
@@ -82,7 +82,7 @@ export default function Footer() {
                 height={40}
                 className="h-[36px] w-auto"
               />
-            </Link>
+            </TransitionLink>
 
             {/* Tagline */}
             <p className="text-[#64748B] text-sm leading-relaxed mb-6 max-w-[280px]">
@@ -112,12 +112,12 @@ export default function Footer() {
             <ul className="space-y-3">
               {platformLinks.map((link) => (
                 <li key={link.label}>
-                  <Link
+                  <TransitionLink
                     href={link.href}
                     className="text-[#64748B] text-sm hover:text-[#FF6F00] transition-colors duration-200"
                   >
                     {link.label}
-                  </Link>
+                  </TransitionLink>
                 </li>
               ))}
             </ul>
@@ -129,12 +129,12 @@ export default function Footer() {
             <ul className="space-y-3">
               {companyLinks.map((link) => (
                 <li key={link.label}>
-                  <Link
+                  <TransitionLink
                     href={link.href}
                     className="text-[#64748B] text-sm hover:text-[#FF6F00] transition-colors duration-200"
                   >
                     {link.label}
-                  </Link>
+                  </TransitionLink>
                 </li>
               ))}
             </ul>
@@ -146,12 +146,12 @@ export default function Footer() {
             <ul className="space-y-3">
               {supportLinks.map((link) => (
                 <li key={link.label}>
-                  <Link
+                  <TransitionLink
                     href={link.href}
                     className="text-[#64748B] text-sm hover:text-[#FF6F00] transition-colors duration-200"
                   >
                     {link.label}
-                  </Link>
+                  </TransitionLink>
                 </li>
               ))}
             </ul>

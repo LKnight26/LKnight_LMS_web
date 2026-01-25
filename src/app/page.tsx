@@ -2,6 +2,8 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import CategoriesSection from "@/components/CategoriesSection";
 import FeaturedCoursesSection from "@/components/FeaturedCoursesSection";
+import WhyChooseSection from "@/components/WhyChooseSection";
+import CEOSection from "@/components/CEOSection";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -11,6 +13,8 @@ export default function Home() {
       <HeroSection />
       <CategoriesSection />
       <FeaturedCoursesSection />
+      <WhyChooseSection />
+      <CEOSection />
       <Footer />
     </div>
   );

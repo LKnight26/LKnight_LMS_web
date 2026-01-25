@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import TransitionLink from "./TransitionLink";
 import { useState, useEffect, useRef } from "react";
 
 export default function Navbar() {
@@ -175,7 +176,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-[64px] lg:h-[72px]">
             {/* Logo */}
             <div className="flex items-center">
-              <a href="/" className="flex items-center">
+              <TransitionLink href="/" className="flex items-center">
                 <Image
                   src="/icon/main-logo.svg"
                   alt="LKnight Productions"
@@ -184,7 +185,7 @@ export default function Navbar() {
                   className="h-[40px] sm:h-[45px] lg:h-[52px] w-auto"
                   priority
                 />
-              </a>
+              </TransitionLink>
             </div>
 
             {/* Center Navigation - Desktop */}
@@ -297,18 +298,18 @@ export default function Navbar() {
               </div>
 
               {/* Regular Links */}
-              <a href="#" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
+              <TransitionLink href="/courses" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
                 Courses
-              </a>
-              <a href="#" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
+              </TransitionLink>
+              <TransitionLink href="/pricing" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
                 Pricing
-              </a>
-              <a href="#" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
+              </TransitionLink>
+              <TransitionLink href="/about" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
                 About
-              </a>
-              <a href="#" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
+              </TransitionLink>
+              <TransitionLink href="/contact" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
                 Contact
-              </a>
+              </TransitionLink>
             </div>
 
             {/* Right Section - Desktop */}
@@ -452,18 +453,18 @@ export default function Navbar() {
               </div>
 
               {/* Simple Links */}
-              <a href="#" className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
+              <TransitionLink href="/courses" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
                 Courses
-              </a>
-              <a href="#" className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
+              </TransitionLink>
+              <TransitionLink href="/pricing" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
                 Pricing
-              </a>
-              <a href="#" className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
+              </TransitionLink>
+              <TransitionLink href="/about" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
                 About
-              </a>
-              <a href="#" className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
+              </TransitionLink>
+              <TransitionLink href="/contact" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
                 Contact
-              </a>
+              </TransitionLink>
             </div>
           </div>
 
