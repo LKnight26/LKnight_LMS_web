@@ -4,6 +4,7 @@ import CategoriesSection from "@/components/CategoriesSection";
 import FeaturedCoursesSection from "@/components/FeaturedCoursesSection";
 import WhyChooseSection from "@/components/WhyChooseSection";
 import CEOSection from "@/components/CEOSection";
+import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
       <FeaturedCoursesSection />
       <WhyChooseSection />
       <CEOSection />
+      <CTASection />
       <Footer />
     </div>
   );

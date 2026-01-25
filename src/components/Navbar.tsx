@@ -191,8 +191,8 @@ export default function Navbar() {
             {/* Center Navigation - Desktop */}
             <div className="hidden lg:flex items-center gap-1">
               {/* The Vault Button */}
-              <a
-                href="#"
+              <TransitionLink
+                href="/vault"
                 className="flex items-center gap-2 px-5 py-2.5 bg-[#FF6F001A] hover:bg-[#FF6F0033] text-[#FF6F00] text-sm font-semibold rounded-lg transition-all duration-200 mr-4"
               >
                 <Image
@@ -203,7 +203,7 @@ export default function Navbar() {
                   className="w-[18px] h-[18px]"
                 />
                 The Vault
-              </a>
+              </TransitionLink>
 
               {/* Platform Dropdown */}
               <div
@@ -383,8 +383,9 @@ export default function Navbar() {
           <div className="flex-1 overflow-y-auto py-4">
             {/* The Vault Button - Mobile */}
             <div className="px-4 mb-4">
-              <a
-                href="#"
+              <TransitionLink
+                href="/vault"
+                onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-[#FF6F001A] hover:bg-[#FF6F0033] text-[#FF6F00] text-sm font-semibold rounded-lg transition-all duration-200"
               >
                 <Image
@@ -395,7 +396,7 @@ export default function Navbar() {
                   className="w-[18px] h-[18px]"
                 />
                 The Vault
-              </a>
+              </TransitionLink>
             </div>
 
             {/* Mobile Navigation Links */}
