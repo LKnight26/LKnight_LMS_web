@@ -1,149 +1,175 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
 import Badge from "@/components/admin/Badge";
 import DataTable from "@/components/admin/DataTable";
-
-// Mock data
-const usersData = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: "JD",
-    role: "Student",
-    enrolledCourses: 5,
-    status: "Active",
-    joinedAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Sarah Smith",
-    email: "sarah.smith@example.com",
-    avatar: "SS",
-    role: "Student",
-    enrolledCourses: 3,
-    status: "Active",
-    joinedAt: "2024-02-20",
-  },
-  {
-    id: "3",
-    name: "Mike Johnson",
-    email: "mike.j@example.com",
-    avatar: "MJ",
-    role: "Instructor",
-    enrolledCourses: 0,
-    status: "Active",
-    joinedAt: "2023-12-10",
-  },
-  {
-    id: "4",
-    name: "Emily Brown",
-    email: "emily.b@example.com",
-    avatar: "EB",
-    role: "Student",
-    enrolledCourses: 8,
-    status: "Active",
-    joinedAt: "2024-01-25",
-  },
-  {
-    id: "5",
-    name: "David Wilson",
-    email: "david.w@example.com",
-    avatar: "DW",
-    role: "Student",
-    enrolledCourses: 2,
-    status: "Inactive",
-    joinedAt: "2024-03-05",
-  },
-  {
-    id: "6",
-    name: "Jessica Taylor",
-    email: "jessica.t@example.com",
-    avatar: "JT",
-    role: "Admin",
-    enrolledCourses: 0,
-    status: "Active",
-    joinedAt: "2023-06-15",
-  },
-  {
-    id: "7",
-    name: "Chris Anderson",
-    email: "chris.a@example.com",
-    avatar: "CA",
-    role: "Instructor",
-    enrolledCourses: 0,
-    status: "Active",
-    joinedAt: "2024-02-01",
-  },
-  {
-    id: "8",
-    name: "Amanda Martinez",
-    email: "amanda.m@example.com",
-    avatar: "AM",
-    role: "Student",
-    enrolledCourses: 12,
-    status: "Active",
-    joinedAt: "2023-11-20",
-  },
-];
+import { userApi, UserDetails } from "@/lib/api";
 
 const roleOptions = [
-  { value: "all", label: "All Roles" },
-  { value: "admin", label: "Admin" },
-  { value: "instructor", label: "Instructor" },
-  { value: "student", label: "Student" },
+  { value: "", label: "All Roles" },
+  { value: "ADMIN", label: "Admin" },
+  { value: "INSTRUCTOR", label: "Instructor" },
+  { value: "STUDENT", label: "Student" },
 ];
 
 const statusOptions = [
-  { value: "all", label: "All Status" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: "", label: "All Status" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
 ];
 
-type User = (typeof usersData)[0];
+interface UserStats {
+  total: number;
+  students: number;
+  instructors: number;
+  admins: number;
+  active: number;
+  inactive: number;
+}
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<UserDetails[]>([]);
+  const [stats, setStats] = useState<UserStats>({ total: 0, students: 0, instructors: 0, admins: 0, active: 0, inactive: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Filters
   const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [roleFilter, setRoleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
-  const filteredUsers = usersData.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole =
-      roleFilter === "all" || user.role.toLowerCase() === roleFilter;
-    const matchesStatus =
-      statusFilter === "all" || user.status.toLowerCase() === statusFilter;
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
 
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
+
+  // Get initials from user name
+  const getInitials = (user: UserDetails) => {
+    return `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || 'U';
+  };
+
+  // Get full name
+  const getFullName = (user: UserDetails) => {
+    return `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
+  };
+
+  // Format role for display
+  const formatRole = (role: string) => {
+    return role.charAt(0) + role.slice(1).toLowerCase();
+  };
+
+  // Format status for display
+  const formatStatus = (status: string) => {
+    return status.charAt(0) + status.slice(1).toLowerCase();
+  };
+
+  // Fetch users from API
+  const fetchUsers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const params: {
+        page?: number;
+        limit?: number;
+        search?: string;
+        role?: string;
+        status?: string;
+      } = {
+        page: currentPage,
+        limit,
+      };
+
+      if (searchQuery) params.search = searchQuery;
+      if (roleFilter) params.role = roleFilter;
+      if (statusFilter) params.status = statusFilter;
+
+      const response = await userApi.getAll(params);
+
+      if (response.data) {
+        setUsers(Array.isArray(response.data) ? response.data : []);
+        if (response.count) {
+          setTotalUsers(response.count);
+          setTotalPages(Math.ceil(response.count / limit));
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch users');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, searchQuery, roleFilter, statusFilter]);
+
+  // Fetch user stats
+  const fetchStats = async () => {
+    try {
+      const response = await userApi.getStats();
+      if (response.data) {
+        setStats(response.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    }
+  };
+
+  // Toggle user status
+  const handleToggleStatus = async (user: UserDetails) => {
+    try {
+      setIsSaving(true);
+      const newStatus = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      await userApi.toggleStatus(user.id, newStatus as 'ACTIVE' | 'INACTIVE');
+      setSelectedUser(null);
+      fetchUsers();
+      fetchStats();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update user status');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Initial data load
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  // Fetch users when filters or page changes
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter, statusFilter]);
 
   const columns = [
     {
       key: "name",
       header: "User",
-      render: (user: User) => (
+      render: (user: UserDetails) => (
         <div className="flex items-center gap-2 sm:gap-3">
           <div
             className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 ${
-              user.role === "Admin"
+              user.role === "ADMIN"
                 ? "bg-purple-100 text-purple-700"
-                : user.role === "Instructor"
+                : user.role === "INSTRUCTOR"
                 ? "bg-blue-100 text-blue-700"
                 : "bg-primary/10 text-primary"
             }`}
           >
-            <span className="text-xs sm:text-sm font-semibold">{user.avatar}</span>
+            <span className="text-xs sm:text-sm font-semibold">{getInitials(user)}</span>
           </div>
           <div className="min-w-0">
-            <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">{user.name}</p>
+            <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">{getFullName(user)}</p>
             <p className="text-[10px] sm:text-xs text-gray-500 truncate">{user.email}</p>
           </div>
         </div>
@@ -153,18 +179,18 @@ export default function UsersPage() {
       key: "role",
       header: "Role",
       sortable: true,
-      render: (user: User) => (
+      render: (user: UserDetails) => (
         <Badge
           variant={
-            user.role === "Admin"
+            user.role === "ADMIN"
               ? "secondary"
-              : user.role === "Instructor"
+              : user.role === "INSTRUCTOR"
               ? "primary"
               : "gray"
           }
           size="sm"
         >
-          {user.role}
+          {formatRole(user.role || 'STUDENT')}
         </Badge>
       ),
     },
@@ -172,9 +198,9 @@ export default function UsersPage() {
       key: "enrolledCourses",
       header: "Enrolled",
       sortable: true,
-      render: (user: User) => (
+      render: (user: UserDetails) => (
         <span className="text-gray-700 text-xs sm:text-sm">
-          {user.enrolledCourses > 0
+          {(user.enrolledCourses ?? 0) > 0
             ? `${user.enrolledCourses} courses`
             : "-"}
         </span>
@@ -184,41 +210,43 @@ export default function UsersPage() {
       key: "status",
       header: "Status",
       sortable: true,
-      render: (user: User) => (
+      render: (user: UserDetails) => (
         <div className="flex items-center gap-1.5 sm:gap-2">
           <span
             className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
-              user.status === "Active" ? "bg-green-500" : "bg-gray-400"
+              user.status === "ACTIVE" ? "bg-green-500" : "bg-gray-400"
             }`}
           />
           <span
             className={`text-xs sm:text-sm ${
-              user.status === "Active" ? "text-green-600" : "text-gray-500"
+              user.status === "ACTIVE" ? "text-green-600" : "text-gray-500"
             }`}
           >
-            {user.status}
+            {formatStatus(user.status || 'ACTIVE')}
           </span>
         </div>
       ),
     },
     {
-      key: "joinedAt",
+      key: "createdAt",
       header: "Joined",
       sortable: true,
-      render: (user: User) => (
+      render: (user: UserDetails) => (
         <span className="text-gray-500 text-xs sm:text-sm">
-          {new Date(user.joinedAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
+          {user.createdAt
+            ? new Date(user.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "-"}
         </span>
       ),
     },
     {
       key: "actions",
       header: "Actions",
-      render: (user: User) => (
+      render: (user: UserDetails) => (
         <div className="flex items-center gap-1 sm:gap-2">
           <AdminButton
             variant="ghost"
@@ -249,8 +277,44 @@ export default function UsersPage() {
     },
   ];
 
+  // Loading skeleton
+  if (isLoading && users.length === 0) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div>
+            <div className="h-7 w-48 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 w-64 bg-gray-200 rounded animate-pulse mt-2"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
+              <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-7 w-16 bg-gray-200 rounded animate-pulse mt-2"></div>
+            </div>
+          ))}
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-12 bg-gray-100 rounded animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
@@ -268,25 +332,25 @@ export default function UsersPage() {
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
           <p className="text-xs sm:text-sm text-gray-500">Total Users</p>
           <p className="text-xl sm:text-2xl font-bold text-primary mt-0.5 sm:mt-1">
-            {usersData.length}
+            {stats.total}
           </p>
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
           <p className="text-xs sm:text-sm text-gray-500">Students</p>
           <p className="text-xl sm:text-2xl font-bold text-blue-600 mt-0.5 sm:mt-1">
-            {usersData.filter((u) => u.role === "Student").length}
+            {stats.students}
           </p>
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
           <p className="text-xs sm:text-sm text-gray-500">Instructors</p>
           <p className="text-xl sm:text-2xl font-bold text-purple-600 mt-0.5 sm:mt-1">
-            {usersData.filter((u) => u.role === "Instructor").length}
+            {stats.instructors}
           </p>
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
           <p className="text-xs sm:text-sm text-gray-500">Active</p>
           <p className="text-xl sm:text-2xl font-bold text-green-600 mt-0.5 sm:mt-1">
-            {usersData.filter((u) => u.status === "Active").length}
+            {stats.active}
           </p>
         </div>
       </div>
@@ -336,23 +400,55 @@ export default function UsersPage() {
       <AdminCard padding="none">
         <DataTable
           columns={columns}
-          data={filteredUsers}
+          data={users}
           emptyMessage="No users found matching your criteria"
         />
 
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100">
           <p className="text-xs sm:text-sm text-gray-500">
-            Showing {filteredUsers.length} of {usersData.length} users
+            Showing {users.length} of {totalUsers} users
+            {(searchQuery || roleFilter || statusFilter) && " (filtered)"}
           </p>
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <AdminButton variant="outline" size="sm" disabled>
+            <AdminButton
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1 || isLoading}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            >
               Previous
             </AdminButton>
-            <AdminButton variant="primary" size="sm">
-              1
-            </AdminButton>
-            <AdminButton variant="outline" size="sm">
+            {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage === 1) {
+                pageNum = i + 1;
+              } else if (currentPage === totalPages) {
+                pageNum = totalPages - 2 + i;
+              } else {
+                pageNum = currentPage - 1 + i;
+              }
+              return (
+                <AdminButton
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "primary" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(pageNum)}
+                  disabled={isLoading}
+                  className={i > 0 ? "hidden sm:inline-flex" : ""}
+                >
+                  {pageNum}
+                </AdminButton>
+              );
+            })}
+            <AdminButton
+              variant="outline"
+              size="sm"
+              disabled={currentPage === totalPages || isLoading}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            >
               Next
             </AdminButton>
           </div>
@@ -374,18 +470,18 @@ export default function UsersPage() {
               <div className="flex items-center gap-3 sm:gap-4">
                 <div
                   className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${
-                    selectedUser.role === "Admin"
+                    selectedUser.role === "ADMIN"
                       ? "bg-purple-100 text-purple-700"
-                      : selectedUser.role === "Instructor"
+                      : selectedUser.role === "INSTRUCTOR"
                       ? "bg-blue-100 text-blue-700"
                       : "bg-primary/10 text-primary"
                   }`}
                 >
-                  <span className="text-base sm:text-xl font-bold">{selectedUser.avatar}</span>
+                  <span className="text-base sm:text-xl font-bold">{getInitials(selectedUser)}</span>
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">
-                    {selectedUser.name}
+                    {getFullName(selectedUser)}
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-500 truncate">{selectedUser.email}</p>
                 </div>
@@ -417,15 +513,15 @@ export default function UsersPage() {
                 <span className="text-xs sm:text-sm text-gray-500">Role</span>
                 <Badge
                   variant={
-                    selectedUser.role === "Admin"
+                    selectedUser.role === "ADMIN"
                       ? "secondary"
-                      : selectedUser.role === "Instructor"
+                      : selectedUser.role === "INSTRUCTOR"
                       ? "primary"
                       : "gray"
                   }
                   size="sm"
                 >
-                  {selectedUser.role}
+                  {formatRole(selectedUser.role || 'STUDENT')}
                 </Badge>
               </div>
               <div className="flex items-center justify-between py-2 sm:py-3 border-b border-gray-100">
@@ -433,30 +529,32 @@ export default function UsersPage() {
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <span
                     className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
-                      selectedUser.status === "Active"
+                      selectedUser.status === "ACTIVE"
                         ? "bg-green-500"
                         : "bg-gray-400"
                     }`}
                   />
                   <span className="text-xs sm:text-sm font-medium">
-                    {selectedUser.status}
+                    {formatStatus(selectedUser.status || 'ACTIVE')}
                   </span>
                 </div>
               </div>
               <div className="flex items-center justify-between py-2 sm:py-3 border-b border-gray-100">
                 <span className="text-xs sm:text-sm text-gray-500">Enrolled Courses</span>
                 <span className="text-xs sm:text-sm font-medium">
-                  {selectedUser.enrolledCourses}
+                  {selectedUser.enrolledCourses ?? 0}
                 </span>
               </div>
               <div className="flex items-center justify-between py-2 sm:py-3 border-b border-gray-100">
                 <span className="text-xs sm:text-sm text-gray-500">Joined</span>
                 <span className="text-xs sm:text-sm font-medium">
-                  {new Date(selectedUser.joinedAt).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                  {selectedUser.createdAt
+                    ? new Date(selectedUser.createdAt).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })
+                    : "-"}
                 </span>
               </div>
             </div>
@@ -468,16 +566,29 @@ export default function UsersPage() {
                 className="flex-1"
                 size="sm"
                 onClick={() => setSelectedUser(null)}
+                disabled={isSaving}
               >
                 Close
               </AdminButton>
-              {selectedUser.status === "Active" ? (
-                <AdminButton variant="danger" className="flex-1" size="sm">
-                  Deactivate
+              {selectedUser.status === "ACTIVE" ? (
+                <AdminButton
+                  variant="danger"
+                  className="flex-1"
+                  size="sm"
+                  onClick={() => handleToggleStatus(selectedUser)}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving..." : "Deactivate"}
                 </AdminButton>
               ) : (
-                <AdminButton variant="primary" className="flex-1" size="sm">
-                  Activate
+                <AdminButton
+                  variant="primary"
+                  className="flex-1"
+                  size="sm"
+                  onClick={() => handleToggleStatus(selectedUser)}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving..." : "Activate"}
                 </AdminButton>
               )}
             </div>

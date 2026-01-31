@@ -1,57 +1,92 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
 import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
 import Badge from "@/components/admin/Badge";
-
-const categoryOptions = [
-  { value: "web-development", label: "Web Development" },
-  { value: "design", label: "Design" },
-  { value: "backend", label: "Backend" },
-  { value: "data-science", label: "Data Science" },
-  { value: "mobile-development", label: "Mobile Development" },
-];
+import { categoryApi, courseApi, Category, CourseDetails } from "@/lib/api";
 
 const levelOptions = [
-  { value: "beginner", label: "Beginner" },
-  { value: "intermediate", label: "Intermediate" },
-  { value: "advanced", label: "Advanced" },
+  { value: "BEGINNER", label: "Beginner" },
+  { value: "INTERMEDIATE", label: "Intermediate" },
+  { value: "ADVANCED", label: "Advanced" },
 ];
 
-// Mock data for existing course
-const existingCourse = {
-  title: "Web Development Masterclass",
-  slug: "web-development-masterclass",
-  summary: "Learn modern web development from scratch with HTML, CSS, JavaScript, and React",
-  description: "This comprehensive course covers everything you need to know to become a professional web developer. From the basics of HTML and CSS to advanced React patterns, you'll learn by building real-world projects.",
-  category: "web-development",
-  level: "beginner",
-  price: "99",
-  status: "published",
-  thumbnail: "/icon/bg.jpg",
-  enrollments: 1234,
-  revenue: 122166,
-  createdAt: "2024-01-15",
-};
-
 export default function EditCoursePage() {
-  const [formData, setFormData] = useState({
-    title: existingCourse.title,
-    slug: existingCourse.slug,
-    summary: existingCourse.summary,
-    description: existingCourse.description,
-    category: existingCourse.category,
-    level: existingCourse.level,
-    price: existingCourse.price,
-    status: existingCourse.status,
-  });
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(
-    existingCourse.thumbnail
-  );
+  const params = useParams();
+  const router = useRouter();
+  const courseId = params.id as string;
+
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [course, setCourse] = useState<CourseDetails | null>(null);
+
+  const [formData, setFormData] = useState({
+    title: "",
+    slug: "",
+    summary: "",
+    description: "",
+    categoryId: "",
+    level: "BEGINNER",
+    price: "",
+    status: "DRAFT",
+  });
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
+  // Fetch categories and course data
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [categoriesRes, courseRes] = await Promise.all([
+        categoryApi.getAll(),
+        courseApi.getById(courseId),
+      ]);
+
+      if (categoriesRes.success && categoriesRes.data) {
+        setCategories(categoriesRes.data);
+      }
+
+      if (courseRes.success && courseRes.data) {
+        const courseData = courseRes.data;
+        setCourse(courseData);
+        setFormData({
+          title: courseData.title || "",
+          slug: courseData.slug || "",
+          summary: courseData.summary || "",
+          description: courseData.description || "",
+          categoryId: courseData.category?.id || courseData.categoryId || "",
+          level: (courseData.level?.toUpperCase() as "BEGINNER" | "INTERMEDIATE" | "ADVANCED") || "BEGINNER",
+          price: courseData.price?.toString() || "0",
+          status: (courseData.status?.toUpperCase() as "DRAFT" | "PUBLISHED") || "DRAFT",
+        });
+        setThumbnailPreview(courseData.thumbnail || null);
+      } else {
+        setError("Course not found");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch course");
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Convert categories to select options
+  const categoryOptions = categories.map((cat) => ({
+    value: cat.id,
+    label: cat.name,
+  }));
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -82,11 +117,95 @@ export default function EditCoursePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSaving(false);
-    console.log(formData);
+    setError(null);
+
+    try {
+      setSaving(true);
+
+      const updateData = {
+        title: formData.title.trim(),
+        summary: formData.summary.trim(),
+        description: formData.description.trim() || undefined,
+        thumbnail: thumbnailPreview || undefined,
+        categoryId: formData.categoryId,
+        level: formData.level as "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
+        price: formData.price ? parseFloat(formData.price) : 0,
+        status: formData.status as "DRAFT" | "PUBLISHED",
+      };
+
+      const response = await courseApi.update(courseId, updateData);
+
+      if (response.success) {
+        // Refresh the data
+        await fetchData();
+      } else {
+        setError(response.message || "Failed to update course");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update course");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      const response = await courseApi.delete(courseId);
+
+      if (response.success) {
+        router.push("/admin/courses");
+      } else {
+        setError(response.message || "Failed to delete course");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete course");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6 max-w-4xl">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl p-4 border border-gray-100">
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+          <div className="bg-white rounded-xl p-6 border border-gray-100">
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-12 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !course) {
+    return (
+      <div className="space-y-6 max-w-4xl">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+          {error}
+        </div>
+        <AdminButton variant="outline" href="/admin/courses">
+          Back to Courses
+        </AdminButton>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -105,9 +224,9 @@ export default function EditCoursePage() {
               Edit Course
             </h1>
             <Badge
-              variant={formData.status === "published" ? "success" : "warning"}
+              variant={formData.status === "PUBLISHED" ? "success" : "warning"}
             >
-              {formData.status === "published" ? "Published" : "Draft"}
+              {formData.status === "PUBLISHED" ? "Published" : "Draft"}
             </Badge>
           </div>
         </div>
@@ -117,7 +236,7 @@ export default function EditCoursePage() {
           </AdminButton>
           <AdminButton
             variant="outline"
-            href={`/admin/courses/1/modules`}
+            href={`/admin/courses/${courseId}/modules`}
             icon={
               <svg
                 width="16"
@@ -143,28 +262,37 @@ export default function EditCoursePage() {
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-xl p-4 border border-gray-100">
           <p className="text-sm text-gray-500">Total Enrollments</p>
           <p className="text-2xl font-bold text-primary mt-1">
-            {existingCourse.enrollments.toLocaleString()}
+            {(course?.enrollments ?? 0).toLocaleString()}
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-gray-100">
           <p className="text-sm text-gray-500">Total Revenue</p>
           <p className="text-2xl font-bold text-green-600 mt-1">
-            ${existingCourse.revenue.toLocaleString()}
+            ${(course?.revenue ?? 0).toLocaleString()}
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-gray-100">
           <p className="text-sm text-gray-500">Created</p>
           <p className="text-2xl font-bold text-gray-600 mt-1">
-            {new Date(existingCourse.createdAt).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
+            {course?.createdAt
+              ? new Date(course.createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "N/A"}
           </p>
         </div>
       </div>
@@ -232,9 +360,9 @@ export default function EditCoursePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <AdminSelect
                 label="Category"
-                name="category"
+                name="categoryId"
                 options={categoryOptions}
-                value={formData.category}
+                value={formData.categoryId}
                 onChange={handleChange}
                 required
               />
@@ -267,10 +395,10 @@ export default function EditCoursePage() {
                   <button
                     type="button"
                     onClick={() =>
-                      setFormData((prev) => ({ ...prev, status: "draft" }))
+                      setFormData((prev) => ({ ...prev, status: "DRAFT" }))
                     }
                     className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      formData.status === "draft"
+                      formData.status === "DRAFT"
                         ? "bg-yellow-100 text-yellow-700 border-2 border-yellow-300"
                         : "bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200"
                     }`}
@@ -280,10 +408,10 @@ export default function EditCoursePage() {
                   <button
                     type="button"
                     onClick={() =>
-                      setFormData((prev) => ({ ...prev, status: "published" }))
+                      setFormData((prev) => ({ ...prev, status: "PUBLISHED" }))
                     }
                     className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      formData.status === "published"
+                      formData.status === "PUBLISHED"
                         ? "bg-green-100 text-green-700 border-2 border-green-300"
                         : "bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200"
                     }`}
@@ -372,6 +500,8 @@ export default function EditCoursePage() {
               variant="ghost"
               type="button"
               className="text-red-500 hover:bg-red-50"
+              onClick={handleDelete}
+              disabled={deleting}
               icon={
                 <svg
                   width="16"
@@ -388,7 +518,7 @@ export default function EditCoursePage() {
                 </svg>
               }
             >
-              Delete Course
+              {deleting ? "Deleting..." : "Delete Course"}
             </AdminButton>
 
             <div className="flex items-center gap-3">

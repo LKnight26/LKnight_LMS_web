@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 // Icons as components
 const DashboardIcon = () => (
@@ -97,7 +98,23 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isLoading } = useAuth();
+
+  // Auth guard - redirect non-admin users
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        router.push('/signin?redirect=/admin');
+      } else if (user.role !== 'ADMIN') {
+        router.push('/');
+      } else {
+        setIsChecking(false);
+      }
+    }
+  }, [user, isLoading, router]);
 
   const isActive = (href: string) => {
     if (href === "/admin") {
@@ -105,6 +122,23 @@ export default function AdminLayout({
     }
     return pathname.startsWith(href);
   };
+
+  // Show loading while checking auth
+  if (isLoading || isChecking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500 text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not admin
+  if (!user || user.role !== 'ADMIN') {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -188,11 +222,15 @@ export default function AdminLayout({
           <div className="p-4 border-t border-white/10">
             <div className="flex items-center gap-3 px-2">
               <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">AD</span>
+                <span className="text-primary font-bold text-sm">
+                  {user.firstName?.[0]}{user.lastName?.[0]}
+                </span>
               </div>
-              <div className="flex-1">
-                <p className="text-white text-sm font-medium">Admin User</p>
-                <p className="text-white/50 text-xs">admin@lknight.com</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-medium truncate">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="text-white/50 text-xs truncate">{user.email}</p>
               </div>
             </div>
           </div>
@@ -252,7 +290,9 @@ export default function AdminLayout({
               {/* Profile */}
               <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
                 <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">AD</span>
+                  <span className="text-white font-bold text-xs">
+                    {user.firstName?.[0]}{user.lastName?.[0]}
+                  </span>
                 </div>
               </div>
             </div>

@@ -3,15 +3,20 @@
 import Image from "next/image";
 import TransitionLink from "./TransitionLink";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const [platformOpen, setPlatformOpen] = useState(false);
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileAccordion, setMobileAccordion] = useState<string | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const platformRef = useRef<HTMLDivElement>(null);
   const enterpriseRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -21,6 +26,9 @@ export default function Navbar() {
       }
       if (enterpriseRef.current && !enterpriseRef.current.contains(event.target as Node)) {
         setEnterpriseOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false);
       }
     };
 
@@ -323,15 +331,125 @@ export default function Navbar() {
                 </svg>
               </button>
 
-              {/* Login Button */}
-              <a href="#" className="px-6 py-2.5 text-[#1E293B] text-sm font-semibold border border-gray-200 rounded-full hover:border-[#FF6F00] hover:text-[#FF6F00] transition-all duration-200">
-                Login
-              </a>
+              {isAuthenticated && user ? (
+                <>
+                  {/* Dashboard Button */}
+                  <TransitionLink
+                    href={isAdmin ? "/admin" : "/courses"}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-[#FF6F00] hover:bg-[#E86400] text-white text-sm font-semibold rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-[#FF6F00]/25"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" />
+                      <rect x="14" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                    {isAdmin ? "Admin Panel" : "Dashboard"}
+                  </TransitionLink>
 
-              {/* Dashboard Button */}
-              <a href="#" className="px-6 py-2.5 bg-[#FF6F00] hover:bg-[#E86400] text-white text-sm font-semibold rounded-full transition-all duration-200 hover:shadow-lg hover:shadow-[#FF6F00]/25">
-                Dashboard
-              </a>
+                  {/* Profile Dropdown */}
+                  <div className="relative" ref={profileRef}>
+                    <button
+                      onClick={() => setProfileOpen(!profileOpen)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-full border border-gray-200 hover:border-[#FF6F00] hover:bg-[#FFF4E5] transition-all duration-200"
+                    >
+                      <div className="w-8 h-8 bg-[#FF6F00] rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">
+                          {user.firstName?.[0]}{user.lastName?.[0]}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium text-[#1E293B] max-w-[100px] truncate">
+                        {user.firstName}
+                      </span>
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        className={`transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
+                      >
+                        <path d="M3 4.5L6 7.5L9 4.5" stroke="#1E293B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+
+                    {/* Profile Dropdown Menu */}
+                    <div className={`absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top-right ${profileOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}>
+                      {/* User Info Header */}
+                      <div className="px-4 py-4 bg-gradient-to-r from-[#000E51] to-[#001a7a]">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-[#FF6F00] rounded-full flex items-center justify-center border-2 border-white/20">
+                            <span className="text-white font-bold text-lg">
+                              {user.firstName?.[0]}{user.lastName?.[0]}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-semibold truncate">
+                              {user.firstName} {user.lastName}
+                            </p>
+                            <p className="text-white/70 text-sm truncate">{user.email}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className="py-2">
+                        <TransitionLink
+                          href="/profile"
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-[#1E293B] hover:bg-[#FFF4E5] hover:text-[#FF6F00] transition-colors"
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                          </svg>
+                          <span className="text-sm font-medium">My Profile</span>
+                        </TransitionLink>
+
+                        <TransitionLink
+                          href="/settings"
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-[#1E293B] hover:bg-[#FFF4E5] hover:text-[#FF6F00] transition-colors"
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                          </svg>
+                          <span className="text-sm font-medium">Settings</span>
+                        </TransitionLink>
+
+                        <div className="border-t border-gray-100 my-2"></div>
+
+                        <button
+                          onClick={() => {
+                            setProfileOpen(false);
+                            logout();
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 w-full text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                          </svg>
+                          <span className="text-sm font-medium">Logout</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Login Button */}
+                  <TransitionLink href="/signin" className="px-6 py-2.5 text-[#1E293B] text-sm font-semibold border border-gray-200 rounded-full hover:border-[#FF6F00] hover:text-[#FF6F00] transition-all duration-200">
+                    Login
+                  </TransitionLink>
+
+                  {/* Sign Up Button */}
+                  <TransitionLink href="/signup" className="px-6 py-2.5 bg-[#FF6F00] hover:bg-[#E86400] text-white text-sm font-semibold rounded-full transition-all duration-200 hover:shadow-lg hover:shadow-[#FF6F00]/25">
+                    Sign Up
+                  </TransitionLink>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -481,15 +599,79 @@ export default function Navbar() {
               English (US)
             </button>
 
-            {/* Auth Buttons */}
-            <div className="flex gap-3">
-              <a href="#" className="flex-1 py-3 text-center text-[#1E293B] text-sm font-semibold border border-gray-200 rounded-full hover:border-[#FF6F00] hover:text-[#FF6F00] transition-all duration-200">
-                Login
-              </a>
-              <a href="#" className="flex-1 py-3 text-center bg-[#FF6F00] hover:bg-[#E86400] text-white text-sm font-semibold rounded-full transition-all duration-200">
-                Dashboard
-              </a>
-            </div>
+            {isAuthenticated && user ? (
+              <>
+                {/* User Info */}
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                  <div className="w-10 h-10 bg-[#FF6F00] rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">
+                      {user.firstName?.[0]}{user.lastName?.[0]}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#1E293B] truncate">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  </div>
+                </div>
+
+                {/* Dashboard & Profile Links */}
+                <div className="space-y-2">
+                  <TransitionLink
+                    href={isAdmin ? "/admin" : "/courses"}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 w-full py-3 px-4 text-white text-sm font-semibold bg-[#FF6F00] rounded-xl hover:bg-[#E86400] transition-all duration-200 shadow-md"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" />
+                      <rect x="14" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                    {isAdmin ? "Admin Panel" : "Dashboard"}
+                  </TransitionLink>
+
+                  <TransitionLink
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 w-full py-3 px-4 text-[#1E293B] text-sm font-medium border border-gray-200 rounded-xl hover:border-[#FF6F00] hover:text-[#FF6F00] transition-all duration-200"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    My Profile
+                  </TransitionLink>
+                </div>
+
+                {/* Logout Button */}
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout();
+                  }}
+                  className="flex items-center justify-center gap-2 w-full py-3 text-red-600 text-sm font-semibold border border-red-200 rounded-full hover:bg-red-50 transition-all duration-200"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                  Logout
+                </button>
+              </>
+            ) : (
+              /* Auth Buttons */
+              <div className="flex gap-3">
+                <TransitionLink href="/signin" onClick={() => setMobileMenuOpen(false)} className="flex-1 py-3 text-center text-[#1E293B] text-sm font-semibold border border-gray-200 rounded-full hover:border-[#FF6F00] hover:text-[#FF6F00] transition-all duration-200">
+                  Login
+                </TransitionLink>
+                <TransitionLink href="/signup" onClick={() => setMobileMenuOpen(false)} className="flex-1 py-3 text-center bg-[#FF6F00] hover:bg-[#E86400] text-white text-sm font-semibold rounded-full transition-all duration-200">
+                  Sign Up
+                </TransitionLink>
+              </div>
+            )}
           </div>
         </div>
       </div>

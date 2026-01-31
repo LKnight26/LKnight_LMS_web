@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StatsCard from "@/components/admin/StatsCard";
 import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import Badge from "@/components/admin/Badge";
 import RevenueChart from "@/components/admin/RevenueChart";
 import LineChart from "@/components/admin/LineChart";
+import { dashboardApi, ChartData, RecentEnrollment, TopCourse, DashboardStats } from "@/lib/api";
 
 // Icons
 const RevenueIcon = () => (
@@ -79,124 +80,97 @@ const EnrollmentsIcon = () => (
   </svg>
 );
 
-// Mock data
-const revenueData = [
-  { label: "Jan", value: 4500 },
-  { label: "Feb", value: 5200 },
-  { label: "Mar", value: 4800 },
-  { label: "Apr", value: 6100 },
-  { label: "May", value: 5800 },
-  { label: "Jun", value: 7200 },
-  { label: "Jul", value: 6900 },
-  { label: "Aug", value: 8100 },
-  { label: "Sep", value: 7400 },
-  { label: "Oct", value: 8900 },
-  { label: "Nov", value: 9200 },
-  { label: "Dec", value: 10500 },
-];
-
-const userGrowthData = [
-  { label: "Jan", value: 120 },
-  { label: "Feb", value: 180 },
-  { label: "Mar", value: 250 },
-  { label: "Apr", value: 320 },
-  { label: "May", value: 410 },
-  { label: "Jun", value: 520 },
-  { label: "Jul", value: 650 },
-  { label: "Aug", value: 780 },
-  { label: "Sep", value: 920 },
-  { label: "Oct", value: 1100 },
-  { label: "Nov", value: 1350 },
-  { label: "Dec", value: 1650 },
-];
-
-const recentEnrollments = [
-  {
-    id: 1,
-    user: "John Doe",
-    avatar: "JD",
-    course: "Web Development Masterclass",
-    price: 99,
-    date: "2 hours ago",
-    status: "completed",
-  },
-  {
-    id: 2,
-    user: "Sarah Smith",
-    avatar: "SS",
-    course: "React Advanced Patterns",
-    price: 149,
-    date: "5 hours ago",
-    status: "completed",
-  },
-  {
-    id: 3,
-    user: "Mike Johnson",
-    avatar: "MJ",
-    course: "Node.js Backend Development",
-    price: 129,
-    date: "1 day ago",
-    status: "completed",
-  },
-  {
-    id: 4,
-    user: "Emily Brown",
-    avatar: "EB",
-    course: "UI/UX Design Fundamentals",
-    price: 79,
-    date: "1 day ago",
-    status: "pending",
-  },
-  {
-    id: 5,
-    user: "David Wilson",
-    avatar: "DW",
-    course: "Python for Data Science",
-    price: 119,
-    date: "2 days ago",
-    status: "completed",
-  },
-];
-
-const topCourses = [
-  {
-    id: 1,
-    title: "Web Development Masterclass",
-    enrollments: 1234,
-    revenue: 122166,
-    trend: 12,
-    rating: 4.9,
-  },
-  {
-    id: 2,
-    title: "React Advanced Patterns",
-    enrollments: 892,
-    revenue: 132908,
-    trend: 8,
-    rating: 4.8,
-  },
-  {
-    id: 3,
-    title: "UI/UX Design Fundamentals",
-    enrollments: 756,
-    revenue: 59724,
-    trend: -3,
-    rating: 4.7,
-  },
-  {
-    id: 4,
-    title: "Node.js Backend Development",
-    enrollments: 654,
-    revenue: 84366,
-    trend: 5,
-    rating: 4.6,
-  },
-];
-
 type Period = "daily" | "weekly" | "monthly" | "yearly";
+
+// Helper function to format relative time
+const formatRelativeTime = (date: string) => {
+  const now = new Date();
+  const enrolledDate = new Date(date);
+  const diffMs = now.getTime() - enrolledDate.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffHours < 1) return "Just now";
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  return enrolledDate.toLocaleDateString();
+};
+
+// Helper function to get initials
+const getInitials = (firstName: string, lastName: string) => {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+};
 
 export default function AdminDashboard() {
   const [period, setPeriod] = useState<Period>("monthly");
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [revenueData, setRevenueData] = useState<ChartData[]>([]);
+  const [userGrowthData, setUserGrowthData] = useState<ChartData[]>([]);
+  const [userGrowthTrend, setUserGrowthTrend] = useState(0);
+  const [recentEnrollments, setRecentEnrollments] = useState<RecentEnrollment[]>([]);
+  const [topCourses, setTopCourses] = useState<TopCourse[]>([]);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
+      try {
+        const [statsRes, revenueRes, userGrowthRes, enrollmentsRes, coursesRes] = await Promise.all([
+          dashboardApi.getStats(period),
+          dashboardApi.getRevenueChart(12),
+          dashboardApi.getUserGrowth(12),
+          dashboardApi.getRecentEnrollments(5),
+          dashboardApi.getTopCourses(4),
+        ]);
+
+        if (statsRes.success && statsRes.data) {
+          setStats(statsRes.data);
+        }
+        if (revenueRes.success && revenueRes.data) {
+          setRevenueData(revenueRes.data);
+        }
+        if (userGrowthRes.success && userGrowthRes.data) {
+          setUserGrowthData(userGrowthRes.data.data || []);
+          setUserGrowthTrend(userGrowthRes.data.trend || 0);
+        }
+        if (enrollmentsRes.success && enrollmentsRes.data) {
+          setRecentEnrollments(enrollmentsRes.data);
+        }
+        if (coursesRes.success && coursesRes.data) {
+          setTopCourses(coursesRes.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [period]);
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="space-y-6 lg:space-y-8 animate-pulse">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-64"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-6 h-32"></div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2 bg-white rounded-xl h-80"></div>
+          <div className="bg-white rounded-xl h-80"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -231,29 +205,41 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
         <StatsCard
           title="Total Revenue"
-          value="$84,574"
-          change={{ value: 12.5, type: "increase" }}
+          value={`$${(stats?.totalRevenue ?? 0).toLocaleString()}`}
+          change={{
+            value: stats?.revenueChange ?? 0,
+            type: (stats?.revenueChange ?? 0) >= 0 ? "increase" : "decrease"
+          }}
           icon={<RevenueIcon />}
           iconBgColor="bg-green-50"
         />
         <StatsCard
           title="Total Users"
-          value="2,847"
-          change={{ value: 8.2, type: "increase" }}
+          value={(stats?.totalUsers ?? 0).toLocaleString()}
+          change={{
+            value: stats?.usersChange ?? 0,
+            type: (stats?.usersChange ?? 0) >= 0 ? "increase" : "decrease"
+          }}
           icon={<UsersIcon />}
           iconBgColor="bg-blue-50"
         />
         <StatsCard
           title="Total Courses"
-          value="156"
-          change={{ value: 3, type: "increase" }}
+          value={(stats?.totalCourses ?? 0).toLocaleString()}
+          change={{
+            value: stats?.coursesChange ?? 0,
+            type: (stats?.coursesChange ?? 0) >= 0 ? "increase" : "decrease"
+          }}
           icon={<CoursesIcon />}
           iconBgColor="bg-purple-50"
         />
         <StatsCard
           title="Enrollments"
-          value="4,532"
-          change={{ value: 2.1, type: "decrease" }}
+          value={(stats?.totalEnrollments ?? 0).toLocaleString()}
+          change={{
+            value: stats?.enrollmentsChange ?? 0,
+            type: (stats?.enrollmentsChange ?? 0) >= 0 ? "increase" : "decrease"
+          }}
           icon={<EnrollmentsIcon />}
           iconBgColor="bg-orange-50"
         />
@@ -286,7 +272,7 @@ export default function AdminDashboard() {
           className="xl:col-span-2"
         >
           <div className="h-64 sm:h-72 lg:h-80">
-            <RevenueChart data={revenueData} />
+            <RevenueChart data={revenueData.length > 0 ? revenueData : [{ label: "No data", value: 0 }]} />
           </div>
         </AdminCard>
 
@@ -295,13 +281,13 @@ export default function AdminDashboard() {
           title="User Growth"
           subtitle="New registrations trend"
           action={
-            <Badge variant="success" size="sm">
-              +24.5%
+            <Badge variant={userGrowthTrend >= 0 ? "success" : "danger"} size="sm">
+              {userGrowthTrend >= 0 ? "+" : ""}{userGrowthTrend.toFixed(1)}%
             </Badge>
           }
         >
           <div className="h-64 sm:h-72 lg:h-80">
-            <LineChart data={userGrowthData} color="#3B82F6" valuePrefix="" />
+            <LineChart data={userGrowthData.length > 0 ? userGrowthData : [{ label: "No data", value: 0 }]} color="#3B82F6" valuePrefix="" />
           </div>
         </AdminCard>
       </div>
@@ -320,32 +306,40 @@ export default function AdminDashboard() {
           padding="none"
         >
           <div className="divide-y divide-gray-50">
-            {recentEnrollments.slice(0, 4).map((enrollment) => (
-              <div
-                key={enrollment.id}
-                className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50/50 transition-colors"
-              >
-                <div className="w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <span className="text-white text-xs sm:text-sm font-semibold">
-                    {enrollment.avatar}
-                  </span>
+            {recentEnrollments.length > 0 ? (
+              recentEnrollments.slice(0, 4).map((enrollment) => (
+                <div
+                  key={enrollment.id}
+                  className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50/50 transition-colors"
+                >
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <span className="text-white text-xs sm:text-sm font-semibold">
+                      {getInitials(enrollment.user.firstName, enrollment.user.lastName)}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
+                      {enrollment.user.firstName} {enrollment.user.lastName}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 truncate mt-0.5">
+                      {enrollment.course.title}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs sm:text-sm font-bold text-primary">
+                      ${enrollment.course.price}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">
+                      {formatRelativeTime(enrollment.enrolledAt)}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
-                    {enrollment.user}
-                  </p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 truncate mt-0.5">
-                    {enrollment.course}
-                  </p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-xs sm:text-sm font-bold text-primary">
-                    ${enrollment.price}
-                  </p>
-                  <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">{enrollment.date}</p>
-                </div>
+              ))
+            ) : (
+              <div className="px-4 sm:px-6 py-8 text-center text-gray-500 text-sm">
+                No recent enrollments
               </div>
-            ))}
+            )}
           </div>
         </AdminCard>
 
@@ -361,55 +355,61 @@ export default function AdminDashboard() {
           padding="none"
         >
           <div className="divide-y divide-gray-50">
-            {topCourses.map((course, index) => (
-              <div
-                key={course.id}
-                className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50/50 transition-colors"
-              >
+            {topCourses.length > 0 ? (
+              topCourses.map((course, index) => (
                 <div
-                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-xs sm:text-sm shadow-sm ${
-                    index === 0
-                      ? "bg-gradient-to-br from-yellow-400 to-yellow-500 text-white"
-                      : index === 1
-                      ? "bg-gradient-to-br from-gray-300 to-gray-400 text-white"
-                      : index === 2
-                      ? "bg-gradient-to-br from-orange-400 to-orange-500 text-white"
-                      : "bg-gray-100 text-gray-500"
-                  }`}
+                  key={course.id}
+                  className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50/50 transition-colors"
                 >
-                  {index + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
-                    {course.title}
-                  </p>
-                  <div className="flex items-center gap-1 sm:gap-2 mt-1">
-                    <span className="text-[10px] sm:text-xs text-gray-500">
-                      {course.enrollments.toLocaleString()} students
-                    </span>
-                    <span className="text-gray-300 hidden sm:inline">|</span>
-                    <span className="text-[10px] sm:text-xs text-yellow-500 hidden sm:flex items-center gap-0.5">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                      </svg>
-                      {course.rating}
-                    </span>
+                  <div
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-xs sm:text-sm shadow-sm ${
+                      index === 0
+                        ? "bg-gradient-to-br from-yellow-400 to-yellow-500 text-white"
+                        : index === 1
+                        ? "bg-gradient-to-br from-gray-300 to-gray-400 text-white"
+                        : index === 2
+                        ? "bg-gradient-to-br from-orange-400 to-orange-500 text-white"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
+                      {course.title}
+                    </p>
+                    <div className="flex items-center gap-1 sm:gap-2 mt-1">
+                      <span className="text-[10px] sm:text-xs text-gray-500">
+                        {(course.enrollments ?? 0).toLocaleString()} students
+                      </span>
+                      <span className="text-gray-300 hidden sm:inline">|</span>
+                      <span className="text-[10px] sm:text-xs text-yellow-500 hidden sm:flex items-center gap-0.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                        {(course.rating ?? 0).toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs sm:text-sm font-bold text-primary">
+                      ${(course.revenue ?? 0).toLocaleString()}
+                    </p>
+                    <Badge
+                      variant={(course.trend ?? 0) >= 0 ? "success" : "danger"}
+                      size="sm"
+                    >
+                      {(course.trend ?? 0) >= 0 ? "+" : ""}
+                      {course.trend ?? 0}%
+                    </Badge>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-xs sm:text-sm font-bold text-primary">
-                    ${course.revenue.toLocaleString()}
-                  </p>
-                  <Badge
-                    variant={course.trend >= 0 ? "success" : "danger"}
-                    size="sm"
-                  >
-                    {course.trend >= 0 ? "+" : ""}
-                    {course.trend}%
-                  </Badge>
-                </div>
+              ))
+            ) : (
+              <div className="px-4 sm:px-6 py-8 text-center text-gray-500 text-sm">
+                No course data available
               </div>
-            ))}
+            )}
           </div>
         </AdminCard>
       </div>

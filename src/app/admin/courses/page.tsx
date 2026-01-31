@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
@@ -8,123 +8,141 @@ import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
 import Badge from "@/components/admin/Badge";
 import DataTable from "@/components/admin/DataTable";
-
-// Mock data
-const coursesData = [
-  {
-    id: "1",
-    title: "Web Development Masterclass",
-    thumbnail: "/icon/bg.jpg",
-    category: "Web Development",
-    level: "Beginner",
-    price: 99,
-    status: "Published",
-    enrollments: 1234,
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    title: "React Advanced Patterns",
-    thumbnail: "/icon/bg.jpg",
-    category: "Web Development",
-    level: "Advanced",
-    price: 149,
-    status: "Published",
-    enrollments: 892,
-    createdAt: "2024-02-20",
-  },
-  {
-    id: "3",
-    title: "UI/UX Design Fundamentals",
-    thumbnail: "/icon/bg.jpg",
-    category: "Design",
-    level: "Beginner",
-    price: 79,
-    status: "Draft",
-    enrollments: 0,
-    createdAt: "2024-03-10",
-  },
-  {
-    id: "4",
-    title: "Node.js Backend Development",
-    thumbnail: "/icon/bg.jpg",
-    category: "Backend",
-    level: "Intermediate",
-    price: 129,
-    status: "Published",
-    enrollments: 654,
-    createdAt: "2024-01-25",
-  },
-  {
-    id: "5",
-    title: "Python for Data Science",
-    thumbnail: "/icon/bg.jpg",
-    category: "Data Science",
-    level: "Intermediate",
-    price: 119,
-    status: "Published",
-    enrollments: 789,
-    createdAt: "2024-02-05",
-  },
-  {
-    id: "6",
-    title: "Mobile App Development with Flutter",
-    thumbnail: "/icon/bg.jpg",
-    category: "Mobile Development",
-    level: "Intermediate",
-    price: 139,
-    status: "Draft",
-    enrollments: 0,
-    createdAt: "2024-03-15",
-  },
-];
-
-const categoryOptions = [
-  { value: "all", label: "All Categories" },
-  { value: "web-development", label: "Web Development" },
-  { value: "design", label: "Design" },
-  { value: "backend", label: "Backend" },
-  { value: "data-science", label: "Data Science" },
-  { value: "mobile-development", label: "Mobile Development" },
-];
+import { courseApi, categoryApi, Course, Category } from "@/lib/api";
 
 const levelOptions = [
-  { value: "all", label: "All Levels" },
-  { value: "beginner", label: "Beginner" },
-  { value: "intermediate", label: "Intermediate" },
-  { value: "advanced", label: "Advanced" },
+  { value: "", label: "All Levels" },
+  { value: "BEGINNER", label: "Beginner" },
+  { value: "INTERMEDIATE", label: "Intermediate" },
+  { value: "ADVANCED", label: "Advanced" },
 ];
 
 const statusOptions = [
-  { value: "all", label: "All Status" },
-  { value: "published", label: "Published" },
-  { value: "draft", label: "Draft" },
+  { value: "", label: "All Status" },
+  { value: "PUBLISHED", label: "Published" },
+  { value: "DRAFT", label: "Draft" },
 ];
 
-type Course = (typeof coursesData)[0];
+interface CourseStats {
+  total: number;
+  published: number;
+  draft: number;
+  totalEnrollments: number;
+}
 
 export default function CoursesPage() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [stats, setStats] = useState<CourseStats>({ total: 0, published: 0, draft: 0, totalEnrollments: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Filters
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [levelFilter, setLevelFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [levelFilter, setLevelFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
-  const filteredCourses = coursesData.filter((course) => {
-    const matchesSearch = course.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      categoryFilter === "all" ||
-      course.category.toLowerCase().replace(" ", "-") === categoryFilter;
-    const matchesLevel =
-      levelFilter === "all" ||
-      course.level.toLowerCase() === levelFilter;
-    const matchesStatus =
-      statusFilter === "all" ||
-      course.status.toLowerCase() === statusFilter;
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCourses, setTotalCourses] = useState(0);
+  const limit = 10;
 
-    return matchesSearch && matchesCategory && matchesLevel && matchesStatus;
-  });
+  // Build category options from API data
+  const categoryOptions = [
+    { value: "", label: "All Categories" },
+    ...categories.map(cat => ({ value: cat.id, label: cat.name }))
+  ];
+
+  // Fetch courses from API
+  const fetchCourses = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const params: {
+        page?: number;
+        limit?: number;
+        search?: string;
+        category?: string;
+        level?: string;
+        status?: string;
+      } = {
+        page: currentPage,
+        limit,
+      };
+
+      if (searchQuery) params.search = searchQuery;
+      if (categoryFilter) params.category = categoryFilter;
+      if (levelFilter) params.level = levelFilter;
+      if (statusFilter) params.status = statusFilter;
+
+      const response = await courseApi.getAll(params);
+
+      if (response.data) {
+        setCourses(response.data.courses || []);
+        if (response.data.pagination) {
+          setTotalPages(response.data.pagination.totalPages);
+          setTotalCourses(response.data.pagination.total);
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch courses');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, searchQuery, categoryFilter, levelFilter, statusFilter]);
+
+  // Fetch categories for filter dropdown
+  const fetchCategories = async () => {
+    try {
+      const response = await categoryApi.getAll();
+      if (response.data) {
+        setCategories(response.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+    }
+  };
+
+  // Fetch course stats
+  const fetchStats = async () => {
+    try {
+      const response = await courseApi.getStats();
+      if (response.data) {
+        setStats(response.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    }
+  };
+
+  // Initial data load
+  useEffect(() => {
+    fetchCategories();
+    fetchStats();
+  }, []);
+
+  // Fetch courses when filters or page changes
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, categoryFilter, levelFilter, statusFilter]);
+
+  // Format level for display
+  const formatLevel = (level: string) => {
+    return level.charAt(0) + level.slice(1).toLowerCase();
+  };
+
+  // Format status for display
+  const formatStatus = (status: string) => {
+    return status.charAt(0) + status.slice(1).toLowerCase();
+  };
 
   const columns = [
     {
@@ -133,19 +151,27 @@ export default function CoursesPage() {
       render: (course: Course) => (
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="w-12 h-8 sm:w-16 sm:h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-            <Image
-              src={course.thumbnail}
-              alt={course.title}
-              width={64}
-              height={40}
-              className="w-full h-full object-cover"
-            />
+            {course.thumbnail ? (
+              <Image
+                src={course.thumbnail}
+                alt={course.title}
+                width={64}
+                height={40}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                <span className="text-xs text-gray-400">No img</span>
+              </div>
+            )}
           </div>
           <div className="min-w-0">
             <p className="font-medium text-gray-900 text-xs sm:text-sm line-clamp-1">
               {course.title}
             </p>
-            <p className="text-[10px] sm:text-xs text-gray-500">{course.category}</p>
+            <p className="text-[10px] sm:text-xs text-gray-500">
+              {course.category?.name || 'Uncategorized'}
+            </p>
           </div>
         </div>
       ),
@@ -157,15 +183,15 @@ export default function CoursesPage() {
       render: (course: Course) => (
         <Badge
           variant={
-            course.level === "Beginner"
+            course.level === "BEGINNER"
               ? "success"
-              : course.level === "Intermediate"
+              : course.level === "INTERMEDIATE"
               ? "warning"
               : "danger"
           }
           size="sm"
         >
-          {course.level}
+          {formatLevel(course.level)}
         </Badge>
       ),
     },
@@ -182,8 +208,8 @@ export default function CoursesPage() {
       header: "Status",
       sortable: true,
       render: (course: Course) => (
-        <Badge variant={course.status === "Published" ? "primary" : "gray"} size="sm">
-          {course.status}
+        <Badge variant={course.status === "PUBLISHED" ? "primary" : "gray"} size="sm">
+          {formatStatus(course.status)}
         </Badge>
       ),
     },
@@ -193,7 +219,7 @@ export default function CoursesPage() {
       sortable: true,
       render: (course: Course) => (
         <span className="text-gray-700 text-xs sm:text-sm">
-          {course.enrollments.toLocaleString()}
+          {(course.enrollments || 0).toLocaleString()}
         </span>
       ),
     },
@@ -259,8 +285,45 @@ export default function CoursesPage() {
     },
   ];
 
+  // Loading skeleton
+  if (isLoading && courses.length === 0) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div>
+            <div className="h-7 w-48 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 w-64 bg-gray-200 rounded animate-pulse mt-2"></div>
+          </div>
+          <div className="h-9 w-36 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
+              <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-7 w-16 bg-gray-200 rounded animate-pulse mt-2"></div>
+            </div>
+          ))}
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-12 bg-gray-100 rounded animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
@@ -302,27 +365,25 @@ export default function CoursesPage() {
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
           <p className="text-xs sm:text-sm text-gray-500">Total Courses</p>
           <p className="text-xl sm:text-2xl font-bold text-primary mt-0.5 sm:mt-1">
-            {coursesData.length}
+            {stats.total}
           </p>
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
           <p className="text-xs sm:text-sm text-gray-500">Published</p>
           <p className="text-xl sm:text-2xl font-bold text-green-600 mt-0.5 sm:mt-1">
-            {coursesData.filter((c) => c.status === "Published").length}
+            {stats.published}
           </p>
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
           <p className="text-xs sm:text-sm text-gray-500">Drafts</p>
           <p className="text-xl sm:text-2xl font-bold text-yellow-600 mt-0.5 sm:mt-1">
-            {coursesData.filter((c) => c.status === "Draft").length}
+            {stats.draft}
           </p>
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
           <p className="text-xs sm:text-sm text-gray-500">Total Enrollments</p>
           <p className="text-xl sm:text-2xl font-bold text-secondary mt-0.5 sm:mt-1">
-            {coursesData
-              .reduce((sum, c) => sum + c.enrollments, 0)
-              .toLocaleString()}
+            {stats.totalEnrollments.toLocaleString()}
           </p>
         </div>
       </div>
@@ -378,26 +439,55 @@ export default function CoursesPage() {
       <AdminCard padding="none">
         <DataTable
           columns={columns}
-          data={filteredCourses}
+          data={courses}
           emptyMessage="No courses found matching your criteria"
         />
 
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100">
           <p className="text-xs sm:text-sm text-gray-500">
-            Showing {filteredCourses.length} of {coursesData.length} courses
+            Showing {courses.length} of {totalCourses} courses
+            {(searchQuery || categoryFilter || levelFilter || statusFilter) && " (filtered)"}
           </p>
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <AdminButton variant="outline" size="sm" disabled>
+            <AdminButton
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1 || isLoading}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            >
               Previous
             </AdminButton>
-            <AdminButton variant="primary" size="sm">
-              1
-            </AdminButton>
-            <AdminButton variant="outline" size="sm" className="hidden sm:inline-flex">
-              2
-            </AdminButton>
-            <AdminButton variant="outline" size="sm">
+            {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage === 1) {
+                pageNum = i + 1;
+              } else if (currentPage === totalPages) {
+                pageNum = totalPages - 2 + i;
+              } else {
+                pageNum = currentPage - 1 + i;
+              }
+              return (
+                <AdminButton
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "primary" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(pageNum)}
+                  disabled={isLoading}
+                  className={i > 0 ? "hidden sm:inline-flex" : ""}
+                >
+                  {pageNum}
+                </AdminButton>
+              );
+            })}
+            <AdminButton
+              variant="outline"
+              size="sm"
+              disabled={currentPage === totalPages || isLoading}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            >
               Next
             </AdminButton>
           </div>

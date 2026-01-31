@@ -1,84 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import Badge from "@/components/admin/Badge";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  icon: string;
-  iconBgColor: string;
-  courseCount: number;
-  order: number;
-}
-
-const initialCategories: Category[] = [
-  {
-    id: "1",
-    name: "Web Development",
-    slug: "web-development",
-    description: "Build modern web applications",
-    icon: "code",
-    iconBgColor: "bg-blue-500",
-    courseCount: 45,
-    order: 1,
-  },
-  {
-    id: "2",
-    name: "Mobile Development",
-    slug: "mobile-development",
-    description: "Create iOS and Android apps",
-    icon: "smartphone",
-    iconBgColor: "bg-green-500",
-    courseCount: 28,
-    order: 2,
-  },
-  {
-    id: "3",
-    name: "Data Science",
-    slug: "data-science",
-    description: "Analyze and visualize data",
-    icon: "chart",
-    iconBgColor: "bg-purple-500",
-    courseCount: 32,
-    order: 3,
-  },
-  {
-    id: "4",
-    name: "Design",
-    slug: "design",
-    description: "UI/UX and graphic design",
-    icon: "palette",
-    iconBgColor: "bg-pink-500",
-    courseCount: 24,
-    order: 4,
-  },
-  {
-    id: "5",
-    name: "Backend Development",
-    slug: "backend-development",
-    description: "Server-side programming",
-    icon: "server",
-    iconBgColor: "bg-orange-500",
-    courseCount: 38,
-    order: 5,
-  },
-  {
-    id: "6",
-    name: "DevOps",
-    slug: "devops",
-    description: "CI/CD and cloud infrastructure",
-    icon: "cloud",
-    iconBgColor: "bg-cyan-500",
-    courseCount: 15,
-    order: 6,
-  },
-];
+import { categoryApi, Category } from "@/lib/api";
 
 const iconOptions = [
   { value: "code", icon: "code", label: "Code" },
@@ -171,10 +98,13 @@ const IconComponent = ({ type }: { type: string }) => {
 };
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -183,65 +113,143 @@ export default function CategoriesPage() {
     iconBgColor: "bg-blue-500",
   });
 
-  const handleAdd = () => {
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setIsLoading(true);
+      const response = await categoryApi.getAll();
+      if (response.success && response.data) {
+        setCategories(response.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+      setError("Failed to load categories");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAdd = async () => {
     if (!formData.name) return;
 
-    const newCategory: Category = {
-      id: Date.now().toString(),
-      name: formData.name,
-      slug: formData.name.toLowerCase().replace(/\s+/g, "-"),
-      description: formData.description,
-      icon: formData.icon,
-      iconBgColor: formData.iconBgColor,
-      courseCount: 0,
-      order: categories.length + 1,
-    };
+    setIsSaving(true);
+    setError(null);
+    try {
+      const response = await categoryApi.create({
+        name: formData.name,
+        description: formData.description,
+        icon: formData.icon,
+        iconBgColor: formData.iconBgColor,
+      });
 
-    setCategories([...categories, newCategory]);
-    setFormData({ name: "", description: "", icon: "code", iconBgColor: "bg-blue-500" });
-    setShowAddModal(false);
+      if (response.success && response.data) {
+        setCategories([...categories, response.data]);
+        setFormData({ name: "", description: "", icon: "code", iconBgColor: "bg-blue-500" });
+        setShowAddModal(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create category");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!editingCategory || !formData.name) return;
 
-    setCategories((prev) =>
-      prev.map((c) =>
-        c.id === editingCategory.id
-          ? {
-              ...c,
-              name: formData.name,
-              slug: formData.name.toLowerCase().replace(/\s+/g, "-"),
-              description: formData.description,
-              icon: formData.icon,
-              iconBgColor: formData.iconBgColor,
-            }
-          : c
-      )
-    );
-    setEditingCategory(null);
-    setFormData({ name: "", description: "", icon: "code", iconBgColor: "bg-blue-500" });
+    setIsSaving(true);
+    setError(null);
+    try {
+      const response = await categoryApi.update(editingCategory.id, {
+        name: formData.name,
+        description: formData.description,
+        icon: formData.icon,
+        iconBgColor: formData.iconBgColor,
+      });
+
+      if (response.success && response.data) {
+        setCategories((prev) =>
+          prev.map((c) => (c.id === editingCategory.id ? response.data! : c))
+        );
+        setEditingCategory(null);
+        setFormData({ name: "", description: "", icon: "code", iconBgColor: "bg-blue-500" });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update category");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-    setDeleteConfirm(null);
+  const handleDelete = async (id: string) => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const response = await categoryApi.delete(id);
+      if (response.success) {
+        setCategories((prev) => prev.filter((c) => c.id !== id));
+        setDeleteConfirm(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete category");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const openEditModal = (category: Category) => {
     setFormData({
       name: category.name,
-      description: category.description,
-      icon: category.icon,
-      iconBgColor: category.iconBgColor,
+      description: category.description || "",
+      icon: category.icon || "code",
+      iconBgColor: category.iconBgColor || "bg-blue-500",
     });
     setEditingCategory(category);
   };
 
-  const totalCourses = categories.reduce((sum, c) => sum + c.courseCount, 0);
+  const totalCourses = categories.reduce((sum, c) => sum + (c.courseCount || 0), 0);
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="space-y-4 sm:space-y-6 animate-pulse">
+        <div className="flex justify-between">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-64"></div>
+          </div>
+          <div className="h-10 bg-gray-200 rounded w-32"></div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-4 h-24"></div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-6 h-40"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+          {error}
+          <button onClick={() => setError(null)} className="ml-2 underline">
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
@@ -293,7 +301,7 @@ export default function CategoriesPage() {
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100 hidden sm:block">
           <p className="text-xs sm:text-sm text-gray-500">Avg Courses/Category</p>
           <p className="text-xl sm:text-2xl font-bold text-blue-600 mt-0.5 sm:mt-1">
-            {Math.round(totalCourses / categories.length)}
+            {categories.length > 0 ? Math.round(totalCourses / categories.length) : 0}
           </p>
         </div>
       </div>
@@ -305,9 +313,9 @@ export default function CategoriesPage() {
             <div className="flex items-start gap-3 sm:gap-4">
               {/* Icon */}
               <div
-                className={`w-10 h-10 sm:w-12 sm:h-12 ${category.iconBgColor} rounded-lg sm:rounded-xl flex items-center justify-center text-white shrink-0`}
+                className={`w-10 h-10 sm:w-12 sm:h-12 ${category.iconBgColor || "bg-blue-500"} rounded-lg sm:rounded-xl flex items-center justify-center text-white shrink-0`}
               >
-                <IconComponent type={category.icon} />
+                <IconComponent type={category.icon || "code"} />
               </div>
 
               {/* Info */}
@@ -317,11 +325,11 @@ export default function CategoriesPage() {
                     {category.name}
                   </h3>
                   <Badge variant="gray" size="sm">
-                    {category.courseCount}
+                    {category.courseCount || 0}
                   </Badge>
                 </div>
                 <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 line-clamp-2">
-                  {category.description}
+                  {category.description || "No description"}
                 </p>
                 <p className="text-[10px] sm:text-xs text-gray-400 mt-1.5 sm:mt-2">
                   /{category.slug}
@@ -535,8 +543,9 @@ export default function CategoriesPage() {
                 className="flex-1"
                 size="sm"
                 onClick={editingCategory ? handleEdit : handleAdd}
+                disabled={isSaving}
               >
-                {editingCategory ? "Save Changes" : "Add Category"}
+                {isSaving ? "Saving..." : editingCategory ? "Save Changes" : "Add Category"}
               </AdminButton>
             </div>
           </div>
@@ -591,8 +600,9 @@ export default function CategoriesPage() {
                 className="flex-1"
                 size="sm"
                 onClick={() => handleDelete(deleteConfirm)}
+                disabled={isSaving}
               >
-                Delete
+                {isSaving ? "Deleting..." : "Delete"}
               </AdminButton>
             </div>
           </div>

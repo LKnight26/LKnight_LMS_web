@@ -1,38 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
-
-const categoryOptions = [
-  { value: "web-development", label: "Web Development" },
-  { value: "design", label: "Design" },
-  { value: "backend", label: "Backend" },
-  { value: "data-science", label: "Data Science" },
-  { value: "mobile-development", label: "Mobile Development" },
-];
+import { categoryApi, courseApi, Category } from "@/lib/api";
 
 const levelOptions = [
-  { value: "beginner", label: "Beginner" },
-  { value: "intermediate", label: "Intermediate" },
-  { value: "advanced", label: "Advanced" },
+  { value: "BEGINNER", label: "Beginner" },
+  { value: "INTERMEDIATE", label: "Intermediate" },
+  { value: "ADVANCED", label: "Advanced" },
 ];
 
 export default function NewCoursePage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
     summary: "",
     description: "",
-    category: "",
-    level: "",
+    categoryId: "",
+    level: "BEGINNER",
     price: "",
-    status: "draft",
   });
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
+  // Fetch categories on mount
+  const fetchCategories = useCallback(async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await categoryApi.getAll();
+      if (response.success && response.data) {
+        setCategories(response.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    } finally {
+      setLoadingCategories(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  // Convert categories to select options
+  const categoryOptions = categories.map((cat) => ({
+    value: cat.id,
+    label: cat.name,
+  }));
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -62,9 +86,51 @@ export default function NewCoursePage() {
     }
   };
 
-  const handleSubmit = (status: "draft" | "published") => {
-    console.log({ ...formData, status, thumbnail });
-    // Here you would submit to your API
+  const handleSubmit = async (status: "DRAFT" | "PUBLISHED") => {
+    setError(null);
+
+    // Validation
+    if (!formData.title.trim()) {
+      setError("Course title is required");
+      return;
+    }
+    if (!formData.summary.trim()) {
+      setError("Course summary is required");
+      return;
+    }
+    if (!formData.categoryId) {
+      setError("Please select a category");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const courseData = {
+        title: formData.title.trim(),
+        summary: formData.summary.trim(),
+        description: formData.description.trim() || undefined,
+        thumbnail: thumbnailPreview || undefined,
+        categoryId: formData.categoryId,
+        instructorId: "", // Will be auto-assigned by backend
+        level: formData.level as "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
+        price: formData.price ? parseFloat(formData.price) : 0,
+        status,
+      };
+
+      const response = await courseApi.create(courseData);
+
+      if (response.success && response.data) {
+        // Redirect to edit page or modules page
+        router.push(`/admin/courses/${response.data.id}/modules`);
+      } else {
+        setError(response.message || "Failed to create course");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create course");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -105,7 +171,14 @@ export default function NewCoursePage() {
         </AdminButton>
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit("draft"); }}>
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit("DRAFT"); }}>
         <div className="space-y-4 sm:space-y-6">
           {/* Basic Information */}
           <AdminCard title="Basic Information" subtitle="Course title and description">
@@ -166,14 +239,25 @@ export default function NewCoursePage() {
           {/* Course Details */}
           <AdminCard title="Course Details" subtitle="Category, level, and pricing">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <AdminSelect
-                label="Category"
-                name="category"
-                options={categoryOptions}
-                value={formData.category}
-                onChange={handleChange}
-                required
-              />
+              {loadingCategories ? (
+                <div className="space-y-1.5">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <div className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-500">
+                    Loading categories...
+                  </div>
+                </div>
+              ) : (
+                <AdminSelect
+                  label="Category"
+                  name="categoryId"
+                  options={categoryOptions}
+                  value={formData.categoryId}
+                  onChange={handleChange}
+                  required
+                />
+              )}
 
               <AdminSelect
                 label="Level"
@@ -286,18 +370,20 @@ export default function NewCoursePage() {
             <AdminButton
               variant="ghost"
               type="button"
-              onClick={() => handleSubmit("draft")}
+              onClick={() => handleSubmit("DRAFT")}
+              disabled={loading}
               className="order-2"
             >
-              Save as Draft
+              {loading ? "Saving..." : "Save as Draft"}
             </AdminButton>
             <AdminButton
               variant="secondary"
               type="button"
-              onClick={() => handleSubmit("published")}
+              onClick={() => handleSubmit("PUBLISHED")}
+              disabled={loading}
               className="order-1 sm:order-3"
             >
-              Publish Course
+              {loading ? "Publishing..." : "Publish Course"}
             </AdminButton>
           </div>
         </div>

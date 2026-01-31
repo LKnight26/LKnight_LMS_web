@@ -1,100 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import Badge from "@/components/admin/Badge";
+import { courseApi, moduleApi, lessonApi, Module, Lesson, CourseDetails } from "@/lib/api";
 
-interface Lesson {
-  id: string;
-  title: string;
-  videoUrl: string;
-  duration: number;
-  order: number;
-}
-
-interface Module {
-  id: string;
-  title: string;
-  summary: string;
-  order: number;
-  lessons: Lesson[];
+interface ModuleWithExpanded extends Module {
   isExpanded: boolean;
 }
-
-// Mock data
-const initialModules: Module[] = [
-  {
-    id: "1",
-    title: "Getting Started",
-    summary: "Introduction to the course and setup",
-    order: 1,
-    isExpanded: true,
-    lessons: [
-      {
-        id: "1-1",
-        title: "Welcome to the Course",
-        videoUrl: "https://example.com/video1.mp4",
-        duration: 180,
-        order: 1,
-      },
-      {
-        id: "1-2",
-        title: "Setting Up Your Development Environment",
-        videoUrl: "https://example.com/video2.mp4",
-        duration: 600,
-        order: 2,
-      },
-      {
-        id: "1-3",
-        title: "Course Overview and Resources",
-        videoUrl: "https://example.com/video3.mp4",
-        duration: 420,
-        order: 3,
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "Core Fundamentals",
-    summary: "Learn the essential building blocks",
-    order: 2,
-    isExpanded: false,
-    lessons: [
-      {
-        id: "2-1",
-        title: "Understanding the Basics",
-        videoUrl: "https://example.com/video4.mp4",
-        duration: 900,
-        order: 1,
-      },
-      {
-        id: "2-2",
-        title: "Working with Data",
-        videoUrl: "https://example.com/video5.mp4",
-        duration: 1200,
-        order: 2,
-      },
-    ],
-  },
-  {
-    id: "3",
-    title: "Advanced Concepts",
-    summary: "Deep dive into advanced topics",
-    order: 3,
-    isExpanded: false,
-    lessons: [
-      {
-        id: "3-1",
-        title: "Advanced Patterns",
-        videoUrl: "https://example.com/video6.mp4",
-        duration: 1500,
-        order: 1,
-      },
-    ],
-  },
-];
 
 const formatDuration = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -103,11 +19,19 @@ const formatDuration = (seconds: number) => {
 };
 
 export default function ModulesPage() {
-  const [modules, setModules] = useState<Module[]>(initialModules);
-  const [editingModule, setEditingModule] = useState<string | null>(null);
-  const [editingLesson, setEditingLesson] = useState<string | null>(null);
+  const params = useParams();
+  const courseId = params.id as string;
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [course, setCourse] = useState<CourseDetails | null>(null);
+  const [modules, setModules] = useState<ModuleWithExpanded[]>([]);
   const [showAddModule, setShowAddModule] = useState(false);
   const [showAddLesson, setShowAddLesson] = useState<string | null>(null);
+  const [savingModule, setSavingModule] = useState(false);
+  const [savingLesson, setSavingLesson] = useState(false);
+  const [deletingModule, setDeletingModule] = useState<string | null>(null);
+  const [deletingLesson, setDeletingLesson] = useState<string | null>(null);
 
   const [newModule, setNewModule] = useState({ title: "", summary: "" });
   const [newLesson, setNewLesson] = useState({
@@ -115,6 +39,40 @@ export default function ModulesPage() {
     videoUrl: "",
     duration: 0,
   });
+
+  // Fetch course and modules
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [courseRes, modulesRes] = await Promise.all([
+        courseApi.getById(courseId),
+        moduleApi.getByCourse(courseId),
+      ]);
+
+      if (courseRes.success && courseRes.data) {
+        setCourse(courseRes.data);
+      }
+
+      if (modulesRes.success && modulesRes.data) {
+        // Add isExpanded property to each module
+        const modulesWithExpanded = (modulesRes.data as Module[]).map((mod, index) => ({
+          ...mod,
+          isExpanded: index === 0, // First module expanded by default
+        }));
+        setModules(modulesWithExpanded);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const toggleModule = (moduleId: string) => {
     setModules((prev) =>
@@ -124,66 +82,163 @@ export default function ModulesPage() {
     );
   };
 
-  const handleAddModule = () => {
-    if (!newModule.title) return;
+  const handleAddModule = async () => {
+    if (!newModule.title.trim()) {
+      setError("Module title is required");
+      return;
+    }
 
-    const module: Module = {
-      id: Date.now().toString(),
-      title: newModule.title,
-      summary: newModule.summary,
-      order: modules.length + 1,
-      lessons: [],
-      isExpanded: true,
-    };
+    try {
+      setSavingModule(true);
+      setError(null);
 
-    setModules([...modules, module]);
-    setNewModule({ title: "", summary: "" });
-    setShowAddModule(false);
+      const response = await moduleApi.create(courseId, {
+        title: newModule.title.trim(),
+        summary: newModule.summary.trim() || undefined,
+      });
+
+      if (response.success && response.data) {
+        // Add new module to list
+        setModules([...modules, { ...response.data, isExpanded: true }]);
+        setNewModule({ title: "", summary: "" });
+        setShowAddModule(false);
+      } else {
+        setError(response.message || "Failed to create module");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create module");
+    } finally {
+      setSavingModule(false);
+    }
   };
 
-  const handleAddLesson = (moduleId: string) => {
-    if (!newLesson.title) return;
+  const handleAddLesson = async (moduleId: string) => {
+    if (!newLesson.title.trim()) {
+      setError("Lesson title is required");
+      return;
+    }
 
-    setModules((prev) =>
-      prev.map((m) => {
-        if (m.id === moduleId) {
-          const lesson: Lesson = {
-            id: `${moduleId}-${Date.now()}`,
-            title: newLesson.title,
-            videoUrl: newLesson.videoUrl,
-            duration: newLesson.duration,
-            order: m.lessons.length + 1,
-          };
-          return { ...m, lessons: [...m.lessons, lesson] };
-        }
-        return m;
-      })
-    );
+    try {
+      setSavingLesson(true);
+      setError(null);
 
-    setNewLesson({ title: "", videoUrl: "", duration: 0 });
-    setShowAddLesson(null);
+      const response = await lessonApi.create(moduleId, {
+        title: newLesson.title.trim(),
+        videoUrl: newLesson.videoUrl.trim() || undefined,
+        duration: newLesson.duration || 0,
+      });
+
+      if (response.success && response.data) {
+        // Add lesson to the module
+        setModules((prev) =>
+          prev.map((m) => {
+            if (m.id === moduleId) {
+              return {
+                ...m,
+                lessons: [...m.lessons, response.data as Lesson],
+              };
+            }
+            return m;
+          })
+        );
+        setNewLesson({ title: "", videoUrl: "", duration: 0 });
+        setShowAddLesson(null);
+      } else {
+        setError(response.message || "Failed to create lesson");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create lesson");
+    } finally {
+      setSavingLesson(false);
+    }
   };
 
-  const deleteModule = (moduleId: string) => {
-    setModules((prev) => prev.filter((m) => m.id !== moduleId));
+  const deleteModule = async (moduleId: string) => {
+    if (!confirm("Are you sure you want to delete this module? All lessons will be deleted.")) {
+      return;
+    }
+
+    try {
+      setDeletingModule(moduleId);
+      setError(null);
+
+      const response = await moduleApi.delete(moduleId);
+
+      if (response.success) {
+        setModules((prev) => prev.filter((m) => m.id !== moduleId));
+      } else {
+        setError(response.message || "Failed to delete module");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete module");
+    } finally {
+      setDeletingModule(null);
+    }
   };
 
-  const deleteLesson = (moduleId: string, lessonId: string) => {
-    setModules((prev) =>
-      prev.map((m) => {
-        if (m.id === moduleId) {
-          return { ...m, lessons: m.lessons.filter((l) => l.id !== lessonId) };
-        }
-        return m;
-      })
-    );
+  const deleteLesson = async (moduleId: string, lessonId: string) => {
+    if (!confirm("Are you sure you want to delete this lesson?")) {
+      return;
+    }
+
+    try {
+      setDeletingLesson(lessonId);
+      setError(null);
+
+      const response = await lessonApi.delete(lessonId);
+
+      if (response.success) {
+        setModules((prev) =>
+          prev.map((m) => {
+            if (m.id === moduleId) {
+              return { ...m, lessons: m.lessons.filter((l) => l.id !== lessonId) };
+            }
+            return m;
+          })
+        );
+      } else {
+        setError(response.message || "Failed to delete lesson");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete lesson");
+    } finally {
+      setDeletingLesson(null);
+    }
   };
 
   const totalLessons = modules.reduce((sum, m) => sum + m.lessons.length, 0);
   const totalDuration = modules.reduce(
-    (sum, m) => sum + m.lessons.reduce((lSum, l) => lSum + l.duration, 0),
+    (sum, m) => sum + m.lessons.reduce((lSum, l) => lSum + (l.duration || 0), 0),
     0
   );
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl p-4 border border-gray-100">
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+              </div>
+            ))}
+          </div>
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-6 border border-gray-100 mb-4">
+              <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+              <div className="space-y-3">
+                {[1, 2, 3].map((j) => (
+                  <div key={j} className="h-12 bg-gray-100 rounded"></div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -195,7 +250,9 @@ export default function ModulesPage() {
               Courses
             </a>
             <span>/</span>
-            <span>Web Development Masterclass</span>
+            <a href={`/admin/courses/${courseId}`} className="hover:text-primary">
+              {course?.title || "Course"}
+            </a>
           </div>
           <h1 className="text-2xl font-bold text-primary font-outfit">
             Module Management
@@ -204,28 +261,49 @@ export default function ModulesPage() {
             Organize your course content into modules and lessons
           </p>
         </div>
-        <AdminButton
-          variant="secondary"
-          onClick={() => setShowAddModule(true)}
-          icon={
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-          }
-        >
-          Add Module
-        </AdminButton>
+        <div className="flex gap-2">
+          <AdminButton
+            variant="outline"
+            href={`/admin/courses/${courseId}`}
+          >
+            Edit Course
+          </AdminButton>
+          <AdminButton
+            variant="secondary"
+            onClick={() => setShowAddModule(true)}
+            icon={
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            }
+          >
+            Add Module
+          </AdminButton>
+        </div>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+          {error}
+          <button
+            onClick={() => setError(null)}
+            className="float-right text-red-500 hover:text-red-700"
+          >
+            &times;
+          </button>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
@@ -270,12 +348,20 @@ export default function ModulesPage() {
             <div className="flex justify-end gap-2">
               <AdminButton
                 variant="ghost"
-                onClick={() => setShowAddModule(false)}
+                onClick={() => {
+                  setShowAddModule(false);
+                  setNewModule({ title: "", summary: "" });
+                }}
+                disabled={savingModule}
               >
                 Cancel
               </AdminButton>
-              <AdminButton variant="primary" onClick={handleAddModule}>
-                Add Module
+              <AdminButton
+                variant="primary"
+                onClick={handleAddModule}
+                disabled={savingModule}
+              >
+                {savingModule ? "Adding..." : "Add Module"}
               </AdminButton>
             </div>
           </div>
@@ -320,7 +406,9 @@ export default function ModulesPage() {
                   </Badge>
                   <h3 className="font-semibold text-gray-900">{module.title}</h3>
                 </div>
-                <p className="text-sm text-gray-500 mt-0.5">{module.summary}</p>
+                {module.summary && (
+                  <p className="text-sm text-gray-500 mt-0.5">{module.summary}</p>
+                )}
               </div>
 
               {/* Lesson Count */}
@@ -354,21 +442,29 @@ export default function ModulesPage() {
                 </AdminButton>
                 <button
                   onClick={() => deleteModule(module.id)}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  disabled={deletingModule === module.id}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  </svg>
+                  {deletingModule === module.id ? (
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                      <path d="M12 2a10 10 0 0 1 10 10" />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  )}
                 </button>
               </div>
 
@@ -432,7 +528,11 @@ export default function ModulesPage() {
                         <AdminButton
                           variant="ghost"
                           size="sm"
-                          onClick={() => setShowAddLesson(null)}
+                          onClick={() => {
+                            setShowAddLesson(null);
+                            setNewLesson({ title: "", videoUrl: "", duration: 0 });
+                          }}
+                          disabled={savingLesson}
                         >
                           Cancel
                         </AdminButton>
@@ -440,8 +540,9 @@ export default function ModulesPage() {
                           variant="primary"
                           size="sm"
                           onClick={() => handleAddLesson(module.id)}
+                          disabled={savingLesson}
                         >
-                          Add Lesson
+                          {savingLesson ? "Adding..." : "Add Lesson"}
                         </AdminButton>
                       </div>
                     </div>
@@ -510,43 +611,36 @@ export default function ModulesPage() {
 
                         {/* Duration */}
                         <span className="text-sm text-gray-500">
-                          {formatDuration(lesson.duration)}
+                          {formatDuration(lesson.duration || 0)}
                         </span>
 
                         {/* Actions */}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="p-1.5 text-gray-400 hover:text-primary hover:bg-gray-100 rounded-lg transition-colors">
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </button>
                           <button
                             onClick={() => deleteLesson(module.id, lesson.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            disabled={deletingLesson === lesson.id}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                           >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            </svg>
+                            {deletingLesson === lesson.id ? (
+                              <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                                <path d="M12 2a10 10 0 0 1 10 10" />
+                              </svg>
+                            ) : (
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </div>
