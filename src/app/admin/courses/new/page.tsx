@@ -7,6 +7,7 @@ import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
 import { categoryApi, courseApi, Category } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 
 const levelOptions = [
   { value: "BEGINNER", label: "Beginner" },
@@ -16,6 +17,7 @@ const levelOptions = [
 
 export default function NewCoursePage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -92,14 +94,17 @@ export default function NewCoursePage() {
     // Validation
     if (!formData.title.trim()) {
       setError("Course title is required");
+      showToast("Course title is required", "error");
       return;
     }
     if (!formData.summary.trim()) {
       setError("Course summary is required");
+      showToast("Course summary is required", "error");
       return;
     }
     if (!formData.categoryId) {
       setError("Please select a category");
+      showToast("Please select a category", "error");
       return;
     }
 
@@ -121,13 +126,21 @@ export default function NewCoursePage() {
       const response = await courseApi.create(courseData);
 
       if (response.success && response.data) {
+        const message = status === "PUBLISHED"
+          ? "Course published successfully!"
+          : "Course saved as draft!";
+        showToast(message, "success");
         // Redirect to edit page or modules page
         router.push(`/admin/courses/${response.data.id}/modules`);
       } else {
-        setError(response.message || "Failed to create course");
+        const errorMsg = response.message || "Failed to create course";
+        setError(errorMsg);
+        showToast(errorMsg, "error");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create course");
+      const errorMsg = err instanceof Error ? err.message : "Failed to create course";
+      setError(errorMsg);
+      showToast(errorMsg, "error");
     } finally {
       setLoading(false);
     }

@@ -7,7 +7,9 @@ import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
 import Badge from "@/components/admin/Badge";
+import ConfirmModal from "@/components/admin/ConfirmModal";
 import { categoryApi, courseApi, Category, CourseDetails } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 
 const levelOptions = [
   { value: "BEGINNER", label: "Beginner" },
@@ -18,6 +20,7 @@ const levelOptions = [
 export default function EditCoursePage() {
   const params = useParams();
   const router = useRouter();
+  const { showToast } = useToast();
   const courseId = params.id as string;
 
   const [loading, setLoading] = useState(true);
@@ -26,6 +29,7 @@ export default function EditCoursePage() {
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [course, setCourse] = useState<CourseDetails | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -136,34 +140,41 @@ export default function EditCoursePage() {
       const response = await courseApi.update(courseId, updateData);
 
       if (response.success) {
+        showToast("Course updated successfully!", "success");
         // Refresh the data
         await fetchData();
       } else {
-        setError(response.message || "Failed to update course");
+        const errorMsg = response.message || "Failed to update course";
+        setError(errorMsg);
+        showToast(errorMsg, "error");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update course");
+      const errorMsg = err instanceof Error ? err.message : "Failed to update course";
+      setError(errorMsg);
+      showToast(errorMsg, "error");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
-      return;
-    }
-
     try {
       setDeleting(true);
       const response = await courseApi.delete(courseId);
 
       if (response.success) {
+        showToast("Course deleted successfully!", "success");
+        setShowDeleteModal(false);
         router.push("/admin/courses");
       } else {
-        setError(response.message || "Failed to delete course");
+        const errorMsg = response.message || "Failed to delete course";
+        setError(errorMsg);
+        showToast(errorMsg, "error");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete course");
+      const errorMsg = err instanceof Error ? err.message : "Failed to delete course";
+      setError(errorMsg);
+      showToast(errorMsg, "error");
     } finally {
       setDeleting(false);
     }
@@ -500,7 +511,7 @@ export default function EditCoursePage() {
               variant="ghost"
               type="button"
               className="text-red-500 hover:bg-red-50"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteModal(true)}
               disabled={deleting}
               icon={
                 <svg
@@ -560,6 +571,19 @@ export default function EditCoursePage() {
           </div>
         </div>
       </form>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="Delete Course"
+        message="Are you sure you want to delete this course? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={deleting}
+      />
     </div>
   );
 }

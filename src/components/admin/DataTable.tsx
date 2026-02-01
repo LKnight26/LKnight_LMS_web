@@ -7,6 +7,7 @@ interface Column<T> {
   header: string;
   render?: (item: T) => React.ReactNode;
   sortable?: boolean;
+  className?: string;
 }
 
 interface DataTableProps<T> {
@@ -62,7 +63,7 @@ export default function DataTable<T extends { id: string | number }>({
                   onClick={() => column.sortable && handleSort(column.key)}
                   className={`px-3 sm:px-4 py-2.5 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${
                     column.sortable ? "cursor-pointer hover:text-primary select-none" : ""
-                  }`}
+                  } ${column.className || ""}`}
                 >
                   <div className="flex items-center gap-1">
                     {column.header}
@@ -126,7 +127,7 @@ export default function DataTable<T extends { id: string | number }>({
                   } ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}
                 >
                   {columns.map((column) => (
-                    <td key={column.key} className="px-3 sm:px-4 py-3 sm:py-4 text-xs sm:text-sm text-gray-700">
+                    <td key={column.key} className={`px-3 sm:px-4 py-3 sm:py-4 text-xs sm:text-sm text-gray-700 ${column.className || ""}`}>
                       {column.render
                         ? column.render(item)
                         : String((item as Record<string, unknown>)[column.key] ?? "")}

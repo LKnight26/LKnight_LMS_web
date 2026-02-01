@@ -8,7 +8,9 @@ import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
 import Badge from "@/components/admin/Badge";
 import DataTable from "@/components/admin/DataTable";
+import ConfirmModal from "@/components/admin/ConfirmModal";
 import { courseApi, categoryApi, Course, Category } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 
 const levelOptions = [
   { value: "", label: "All Levels" },
@@ -31,11 +33,20 @@ interface CourseStats {
 }
 
 export default function CoursesPage() {
+  const { showToast } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stats, setStats] = useState<CourseStats>({ total: 0, published: 0, draft: 0, totalEnrollments: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Delete modal state
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    courseId: string;
+    courseTitle: string;
+  }>({ isOpen: false, courseId: "", courseTitle: "" });
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,6 +126,37 @@ export default function CoursesPage() {
       }
     } catch (err) {
       console.error('Failed to fetch stats:', err);
+    }
+  };
+
+  // Open delete modal
+  const openDeleteModal = (courseId: string, courseTitle: string) => {
+    setDeleteModal({ isOpen: true, courseId, courseTitle });
+  };
+
+  // Handle delete course
+  const handleDelete = async () => {
+    const { courseId } = deleteModal;
+
+    try {
+      setDeletingId(courseId);
+      const response = await courseApi.delete(courseId);
+
+      if (response.success) {
+        showToast("Course deleted successfully!", "success");
+        setDeleteModal({ isOpen: false, courseId: "", courseTitle: "" });
+        // Refresh data
+        fetchCourses();
+        fetchStats();
+      } else {
+        const errorMsg = response.message || "Failed to delete course";
+        showToast(errorMsg, "error");
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to delete course";
+      showToast(errorMsg, "error");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -279,6 +321,31 @@ export default function CoursesPage() {
             className="hidden sm:inline-flex"
           >
             Modules
+          </AdminButton>
+          <AdminButton
+            variant="ghost"
+            size="sm"
+            onClick={() => openDeleteModal(course.id, course.title)}
+            disabled={deletingId === course.id}
+            icon={
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="sm:w-4 sm:h-4"
+              >
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            }
+            className="px-2 sm:px-3 text-red-500 hover:bg-red-50"
+          >
+            <span className="hidden sm:inline">{deletingId === course.id ? "..." : "Delete"}</span>
           </AdminButton>
         </div>
       ),
@@ -493,6 +560,19 @@ export default function CoursesPage() {
           </div>
         </div>
       </AdminCard>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, courseId: "", courseTitle: "" })}
+        onConfirm={handleDelete}
+        title="Delete Course"
+        message={`Are you sure you want to delete "${deleteModal.courseTitle}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={deletingId === deleteModal.courseId}
+      />
     </div>
   );
 }

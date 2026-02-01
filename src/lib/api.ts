@@ -97,6 +97,7 @@ export interface User {
   lastName: string;
   role?: string;
   status?: string;
+  accessAll?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -276,7 +277,10 @@ export interface CoursesResponse {
 export interface Lesson {
   id: string;
   title: string;
+  description?: string;
   videoUrl?: string;
+  content?: string;  // Base64 encoded video/image
+  contentType?: string;  // MIME type
   duration: number;
   order: number;
   moduleId?: string;
@@ -286,6 +290,9 @@ export interface Module {
   id: string;
   title: string;
   summary?: string;
+  description?: string;
+  content?: string;  // Base64 encoded video/image
+  contentType?: string;  // MIME type
   order: number;
   courseId?: string;
   lessons: Lesson[];
@@ -298,11 +305,17 @@ export interface Module {
 export interface ModuleInput {
   title: string;
   summary?: string;
+  description?: string;
+  content?: string;
+  contentType?: string;
 }
 
 export interface LessonInput {
   title: string;
+  description?: string;
   videoUrl?: string;
+  content?: string;
+  contentType?: string;
   duration?: number;
 }
 
@@ -453,6 +466,113 @@ export const userApi = {
       active: number;
       inactive: number;
     }>('/users/stats'),
+};
+
+// Enrollment API for user dashboard
+export interface EnrolledCourse {
+  enrollmentId: string;
+  progress: number;
+  status: string;
+  enrolledAt: string;
+  completedAt?: string;
+  course: {
+    id: string;
+    title: string;
+    slug: string;
+    summary?: string;
+    thumbnail?: string;
+    level: string;
+    price: number;
+    category?: { id: string; name: string; slug: string };
+    instructor?: string;
+    moduleCount: number;
+    lessonCount: number;
+    enrollments: number;
+  };
+}
+
+export interface UserDashboardStats {
+  totalEnrolled: number;
+  inProgress: number;
+  completed: number;
+  avgProgress: number;
+}
+
+// Course with enrollment status for dashboard
+export interface CourseWithStatus {
+  id: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  thumbnail?: string;
+  level: string;
+  price: number;
+  status?: 'DRAFT' | 'PUBLISHED';
+  category?: { id: string; name: string; slug: string };
+  instructor?: string;
+  moduleCount: number;
+  lessonCount: number;
+  enrollments: number;
+  isEnrolled: boolean;
+  hasAccess: boolean;
+  enrollmentId?: string;
+  progress: number;
+  enrolledAt?: string;
+}
+
+// Checkout course details
+export interface CheckoutCourse {
+  id: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  description?: string;
+  thumbnail?: string;
+  level: string;
+  price: number;
+  category?: { id: string; name: string; slug: string };
+  instructor?: string;
+  moduleCount: number;
+  lessonCount: number;
+  enrollments: number;
+  modules: { id: string; title: string; lessonCount: number }[];
+  hasAccess: boolean;
+  isEnrolled: boolean;
+  enrollmentId?: string;
+}
+
+export const enrollmentApi = {
+  // Get user's enrolled courses
+  getMyCourses: () =>
+    api.get<EnrolledCourse[]>('/enrollments/my-courses'),
+
+  // Get user's dashboard stats
+  getMyStats: () =>
+    api.get<UserDashboardStats>('/enrollments/my-stats'),
+
+  // Get all courses with enrollment status
+  getAllCoursesWithStatus: () =>
+    api.get<CourseWithStatus[]>('/enrollments/all-courses'),
+
+  // Get checkout details for a course
+  getCheckoutDetails: (courseId: string) =>
+    api.get<CheckoutCourse>(`/enrollments/checkout/${courseId}`),
+
+  // Purchase/enroll in a single course
+  purchaseCourse: (courseId: string) =>
+    api.post<{ enrollmentId: string; course: { id: string; title: string; slug: string } }>(`/enrollments/purchase/${courseId}`, {}),
+
+  // Enroll in all available courses (free access for now)
+  enrollInAll: () =>
+    api.post<{ enrolled: number }>('/enrollments/enroll-all', {}),
+
+  // Create single enrollment
+  create: (data: { userId: string; courseId: string }) =>
+    api.post<unknown>('/enrollments', data),
+
+  // Update progress
+  updateProgress: (enrollmentId: string, progress: number) =>
+    api.patch<unknown>(`/enrollments/${enrollmentId}/progress`, { progress }),
 };
 
 export default api;

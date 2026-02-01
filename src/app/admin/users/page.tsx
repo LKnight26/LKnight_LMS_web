@@ -96,7 +96,11 @@ export default function UsersPage() {
 
       if (response.data) {
         setUsers(Array.isArray(response.data) ? response.data : []);
-        if (response.count) {
+        // Handle pagination from response
+        if (response.pagination) {
+          setTotalUsers(response.pagination.total || 0);
+          setTotalPages(response.pagination.totalPages || 1);
+        } else if (response.count) {
           setTotalUsers(response.count);
           setTotalPages(Math.ceil(response.count / limit));
         }
@@ -156,9 +160,9 @@ export default function UsersPage() {
       key: "name",
       header: "User",
       render: (user: UserDetails) => (
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-3">
           <div
-            className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
               user.role === "ADMIN"
                 ? "bg-purple-100 text-purple-700"
                 : user.role === "INSTRUCTOR"
@@ -166,11 +170,11 @@ export default function UsersPage() {
                 : "bg-primary/10 text-primary"
             }`}
           >
-            <span className="text-xs sm:text-sm font-semibold">{getInitials(user)}</span>
+            <span className="text-sm font-semibold">{getInitials(user)}</span>
           </div>
           <div className="min-w-0">
-            <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">{getFullName(user)}</p>
-            <p className="text-[10px] sm:text-xs text-gray-500 truncate">{user.email}</p>
+            <p className="font-medium text-gray-900 text-sm">{getFullName(user)}</p>
+            <p className="text-xs text-gray-500">{user.email}</p>
           </div>
         </div>
       ),
@@ -196,13 +200,12 @@ export default function UsersPage() {
     },
     {
       key: "enrolledCourses",
-      header: "Enrolled",
+      header: "Courses",
       sortable: true,
+      className: "hidden md:table-cell",
       render: (user: UserDetails) => (
-        <span className="text-gray-700 text-xs sm:text-sm">
-          {(user.enrolledCourses ?? 0) > 0
-            ? `${user.enrolledCourses} courses`
-            : "-"}
+        <span className="text-gray-600 text-sm">
+          {(user.enrolledCourses ?? 0) > 0 ? user.enrolledCourses : "-"}
         </span>
       ),
     },
@@ -211,14 +214,14 @@ export default function UsersPage() {
       header: "Status",
       sortable: true,
       render: (user: UserDetails) => (
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-2">
           <span
-            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
+            className={`w-2 h-2 rounded-full ${
               user.status === "ACTIVE" ? "bg-green-500" : "bg-gray-400"
             }`}
           />
           <span
-            className={`text-xs sm:text-sm ${
+            className={`text-sm ${
               user.status === "ACTIVE" ? "text-green-600" : "text-gray-500"
             }`}
           >
@@ -231,8 +234,9 @@ export default function UsersPage() {
       key: "createdAt",
       header: "Joined",
       sortable: true,
+      className: "hidden lg:table-cell",
       render: (user: UserDetails) => (
-        <span className="text-gray-500 text-xs sm:text-sm">
+        <span className="text-gray-500 text-sm">
           {user.createdAt
             ? new Date(user.createdAt).toLocaleDateString("en-US", {
                 month: "short",
@@ -245,34 +249,30 @@ export default function UsersPage() {
     },
     {
       key: "actions",
-      header: "Actions",
+      header: "",
       render: (user: UserDetails) => (
-        <div className="flex items-center gap-1 sm:gap-2">
-          <AdminButton
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelectedUser(user)}
-            icon={
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="sm:w-4 sm:h-4"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            }
-            className="px-2 sm:px-3"
-          >
-            <span className="hidden sm:inline">View</span>
-          </AdminButton>
-        </div>
+        <AdminButton
+          variant="ghost"
+          size="sm"
+          onClick={() => setSelectedUser(user)}
+          icon={
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          }
+        >
+          View
+        </AdminButton>
       ),
     },
   ];
@@ -328,30 +328,64 @@ export default function UsersPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
-          <p className="text-xs sm:text-sm text-gray-500">Total Users</p>
-          <p className="text-xl sm:text-2xl font-bold text-primary mt-0.5 sm:mt-1">
-            {stats.total}
-          </p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Total Users</p>
+              <p className="text-2xl font-bold text-primary mt-1">{stats.total}</p>
+            </div>
+            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
-          <p className="text-xs sm:text-sm text-gray-500">Students</p>
-          <p className="text-xl sm:text-2xl font-bold text-blue-600 mt-0.5 sm:mt-1">
-            {stats.students}
-          </p>
+        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Students</p>
+              <p className="text-2xl font-bold text-blue-600 mt-1">{stats.students}</p>
+            </div>
+            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c3 3 9 3 12 0v-5" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
-          <p className="text-xs sm:text-sm text-gray-500">Instructors</p>
-          <p className="text-xl sm:text-2xl font-bold text-purple-600 mt-0.5 sm:mt-1">
-            {stats.instructors}
-          </p>
+        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Instructors</p>
+              <p className="text-2xl font-bold text-purple-600 mt-1">{stats.instructors}</p>
+            </div>
+            <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-600">
+                <circle cx="12" cy="8" r="5" />
+                <path d="M20 21a8 8 0 1 0-16 0" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
-          <p className="text-xs sm:text-sm text-gray-500">Active</p>
-          <p className="text-xl sm:text-2xl font-bold text-green-600 mt-0.5 sm:mt-1">
-            {stats.active}
-          </p>
+        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Active Users</p>
+              <p className="text-2xl font-bold text-green-600 mt-1">{stats.active}</p>
+            </div>
+            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-600">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
