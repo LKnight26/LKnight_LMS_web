@@ -24,7 +24,10 @@ npm run lint     # Run ESLint
 ### Route Structure
 
 - **Public pages**: `/`, `/about`, `/contact`, `/pricing`, `/courses`, `/vault`
-- **Admin panel**: `/admin/*` with dedicated layout (`src/app/admin/layout.tsx`)
+- **Auth pages**: `/signin`, `/signup`, `/profile`
+- **User dashboard**: `/dashboard/*` - Protected, requires authentication
+  - Course viewing, checkout, enrolled courses
+- **Admin panel**: `/admin/*` - Protected, requires ADMIN role
   - Dashboard, courses, users, categories, analytics, settings
 
 ### Component Organization
@@ -32,12 +35,32 @@ npm run lint     # Run ESLint
 - `src/components/` - Public site components (Navbar, Footer, sections)
 - `src/components/admin/` - Admin UI components with barrel export (`index.ts`)
 - `src/components/vault/` - Vault/community feature components
+- `src/components/ui/` - Shared UI components (Toast)
 
 ### Layout System
 
-- Root layout (`src/app/layout.tsx`) - Applies fonts and NavigationProgress
-- Admin layout (`src/app/admin/layout.tsx`) - Sidebar navigation, header, completely separate from public site
+- Root layout (`src/app/layout.tsx`) - Applies fonts, NavigationProgress, and `Providers` (AuthContext)
+- Admin layout (`src/app/admin/layout.tsx`) - Sidebar navigation, header, admin-only guard, completely separate from public site
+- Dashboard layout (`src/app/dashboard/layout.tsx`) - Auth-protected user dashboard with Navbar/Footer
 - `template.tsx` - Used for page transition animations
+
+### Authentication System
+
+`src/context/AuthContext.tsx` provides:
+- `AuthProvider` - Wraps app via `src/components/Providers.tsx`
+- `useAuth()` hook - Returns `{ user, token, isAuthenticated, isAdmin, login, signup, logout, updateUser, isLoading }`
+- `withAuth()` HOC - For protecting components (optional `requireAdmin` option)
+- Auth state stored in localStorage (`token`, `user`)
+
+### API Layer
+
+`src/lib/api.ts` contains typed API client connecting to backend at `NEXT_PUBLIC_API_URL` (default: `http://localhost:5000/api`):
+- `api.get/post/put/patch/delete` - Base methods with auto auth header
+- `authApi` - Login, signup, profile management
+- `courseApi`, `categoryApi`, `moduleApi`, `lessonApi` - Course content CRUD
+- `userApi` - User management (admin)
+- `dashboardApi` - Admin dashboard stats/charts
+- `enrollmentApi` - User course enrollment and progress
 
 ### Navigation
 

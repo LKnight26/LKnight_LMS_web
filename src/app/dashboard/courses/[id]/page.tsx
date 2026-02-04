@@ -531,7 +531,21 @@ function VideoPlayer({ lesson }: { lesson: Lesson | null }) {
   };
 
   // Get video URL
-  const videoUrl = lesson?.videoUrl || (lesson?.content ? `data:${lesson.contentType || 'video/mp4'};base64,${lesson.content}` : null);
+  // Check if content is already a data URL (starts with "data:") or needs to be constructed
+  const getVideoUrl = () => {
+    if (lesson?.videoUrl) return lesson.videoUrl;
+    if (!lesson?.content) return null;
+
+    // If content already starts with "data:", it's a complete data URL
+    if (lesson.content.startsWith('data:')) {
+      return lesson.content;
+    }
+
+    // Otherwise, construct the data URL from base64 content
+    return `data:${lesson.contentType || 'video/mp4'};base64,${lesson.content}`;
+  };
+
+  const videoUrl = getVideoUrl();
 
   if (!lesson) {
     return (
