@@ -11,6 +11,20 @@ npm run start    # Start production server
 npm run lint     # Run ESLint
 ```
 
+## Environment Variables
+
+Required in `.env`:
+```bash
+NEXT_PUBLIC_API_URL='http://localhost:5000/api'  # Backend API URL
+# Production: 'https://lknightlmsbackend-production.up.railway.app/api'
+```
+
+## Git Remotes
+
+This repo has two remotes - push to both when deploying:
+- `origin` - Developer repo (MianHaziq/LKnight-Lms)
+- `client` - Client repo (LKnight26/LKnight_LMS_web) - Connected to Vercel
+
 ## Tech Stack
 
 - Next.js 16 with App Router and TypeScript
@@ -23,7 +37,8 @@ npm run lint     # Run ESLint
 
 ### Route Structure
 
-- **Public pages**: `/`, `/about`, `/contact`, `/pricing`, `/courses`, `/vault`
+- **Public pages**: `/`, `/about`, `/contact`, `/pricing`, `/courses`, `/vault`, `/privacy`, `/terms`
+- **Coming Soon pages**: `/blog`, `/careers`, `/categories`, `/community`, `/help`, `/instructors`
 - **Auth pages**: `/signin`, `/signup`, `/profile`
 - **User dashboard**: `/dashboard/*` - Protected, requires authentication
   - Course viewing, checkout, enrolled courses
@@ -81,3 +96,31 @@ Use utility classes: `.text-primary`, `.bg-primary`, `.text-secondary`, `.bg-sec
 ### Path Alias
 
 `@/*` maps to `./src/*` (e.g., `import Navbar from "@/components/Navbar"`)
+
+### SEO System
+
+`src/lib/seo.ts` provides centralized SEO configuration:
+- `siteConfig` - Site name, URL, description, keywords
+- `defaultMetadata` - Base metadata exported from root layout
+- `createMetadata()` - Helper for page-specific metadata
+- JSON-LD schema generators: `organizationSchema`, `websiteSchema`, `educationalOrganizationSchema`, `createCourseSchema()`, `createFAQSchema()`, `createBreadcrumbSchema()`
+- `src/components/JsonLd.tsx` - Component to render JSON-LD in head
+
+For client component pages, create a `layout.tsx` to export metadata (client components can't export metadata directly).
+
+### Coming Soon Pages
+
+Use `src/components/ComingSoon.tsx` for placeholder pages:
+```tsx
+import ComingSoon from "@/components/ComingSoon";
+
+export default function PageName() {
+  return (
+    <ComingSoon
+      title="Page Title"
+      description="Description text"
+      icon="rocket" // options: rocket, users, briefcase, edit, help, grid, community
+    />
+  );
+}
+```
