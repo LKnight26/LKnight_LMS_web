@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { courseApi, lessonApi, CourseDetails, Module, Lesson, enrollmentApi, CheckoutCourse } from "@/lib/api";
+import { courseApi, lessonApi, documentApi, CourseDetails, Module, Lesson, enrollmentApi, CheckoutCourse, Document as DocType } from "@/lib/api";
 
 // Format duration from seconds to mm:ss
 const formatDuration = (seconds: number) => {
@@ -38,6 +38,9 @@ export default function CourseLearningPage() {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [courseDocuments, setCourseDocuments] = useState<DocType[]>([]);
+  const [lessonDocuments, setLessonDocuments] = useState<DocType[]>([]);
+  const [downloadingDoc, setDownloadingDoc] = useState<string | null>(null);
 
   const fetchCourse = useCallback(async () => {
     try {
@@ -52,7 +55,14 @@ export default function CourseLearningPage() {
         return;
       }
 
-      const response = await courseApi.getById(courseId);
+      const [response, docsRes] = await Promise.all([
+        courseApi.getById(courseId),
+        documentApi.getByCourse(courseId),
+      ]);
+
+      if (docsRes.success && docsRes.data) {
+        setCourseDocuments(docsRes.data as DocType[]);
+      }
 
       if (response.data) {
         setCourse(response.data);
@@ -64,11 +74,17 @@ export default function CourseLearningPage() {
           if (response.data.modules[0].lessons?.length > 0) {
             const firstLesson = response.data.modules[0].lessons[0];
             setSelectedLesson(firstLesson);
-            // Fetch full lesson data
+            // Fetch full lesson data and documents
             try {
-              const lessonRes = await lessonApi.getById(firstLesson.id);
+              const [lessonRes, lessonDocsRes] = await Promise.all([
+                lessonApi.getById(firstLesson.id),
+                documentApi.getByLesson(firstLesson.id),
+              ]);
               if (lessonRes.data) {
                 setSelectedLesson(lessonRes.data);
+              }
+              if (lessonDocsRes.success && lessonDocsRes.data) {
+                setLessonDocuments(lessonDocsRes.data as DocType[]);
               }
             } catch (err) {
               console.error("Failed to fetch first lesson:", err);
@@ -105,19 +121,46 @@ export default function CourseLearningPage() {
   const handleLessonClick = async (lesson: Lesson) => {
     // Set basic lesson info first for immediate UI feedback
     setSelectedLesson(lesson);
+    setLessonDocuments([]);
     // Scroll to video player on mobile
     if (window.innerWidth < 1024) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    // Fetch full lesson data with video content
+    // Fetch full lesson data and documents in parallel
     try {
-      const response = await lessonApi.getById(lesson.id);
+      const [response, docsRes] = await Promise.all([
+        lessonApi.getById(lesson.id),
+        documentApi.getByLesson(lesson.id),
+      ]);
       if (response.data) {
         setSelectedLesson(response.data);
       }
+      if (docsRes.success && docsRes.data) {
+        setLessonDocuments(docsRes.data as DocType[]);
+      }
     } catch (err) {
       console.error("Failed to fetch lesson details:", err);
+    }
+  };
+
+  // Download document
+  const handleDownload = async (docId: string, fileName: string) => {
+    try {
+      setDownloadingDoc(docId);
+      const res = await documentApi.getById(docId);
+      if (res.success && res.data && res.data.content) {
+        const link = document.createElement("a");
+        link.href = res.data.content;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      console.error("Failed to download document:", err);
+    } finally {
+      setDownloadingDoc(null);
     }
   };
 
@@ -249,6 +292,23 @@ export default function CourseLearningPage() {
                 )}
               </div>
             </div>
+
+            {/* Lesson Documents */}
+            {lessonDocuments.length > 0 && (
+              <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-100">
+                <h3 className="font-semibold text-[#000E51] mb-3 flex items-center gap-2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#FF6F00]">
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                  </svg>
+                  Lesson Materials
+                </h3>
+                <div className="space-y-2">
+                  {lessonDocuments.map((doc) => (
+                    <DocumentDownloadItem key={doc.id} doc={doc} onDownload={handleDownload} isDownloading={downloadingDoc === doc.id} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Modules Sidebar */}
@@ -267,6 +327,26 @@ export default function CourseLearningPage() {
                 <div className="h-full bg-gradient-to-r from-[#FF6F00] to-[#ff8c33] rounded-full w-0 transition-all duration-500" />
               </div>
             </div>
+
+            {/* Course Materials */}
+            {courseDocuments.length > 0 && (
+              <div className="bg-white rounded-xl p-4 border border-gray-100">
+                <h3 className="font-semibold text-[#000E51] mb-3 flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#FF6F00]">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  Course Materials
+                </h3>
+                <div className="space-y-1.5">
+                  {courseDocuments.map((doc) => (
+                    <DocumentDownloadItem key={doc.id} doc={doc} onDownload={handleDownload} isDownloading={downloadingDoc === doc.id} />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Module List */}
             <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
@@ -341,6 +421,16 @@ export default function CourseLearningPage() {
                           </div>
                         </button>
                       ))}
+
+                      {/* Module Documents */}
+                      {module.documents && module.documents.length > 0 && (
+                        <div className="px-4 py-2 border-t border-gray-50">
+                          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">Module Materials</p>
+                          {module.documents.map((doc) => (
+                            <DocumentDownloadItem key={doc.id} doc={doc} onDownload={handleDownload} isDownloading={downloadingDoc === doc.id} compact />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -356,6 +446,70 @@ export default function CourseLearningPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// File type icon helper
+const fileTypeConfig: Record<string, { color: string; label: string }> = {
+  "application/pdf": { color: "text-red-500 bg-red-50", label: "PDF" },
+  "application/msword": { color: "text-blue-500 bg-blue-50", label: "DOC" },
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { color: "text-blue-500 bg-blue-50", label: "DOCX" },
+  "application/vnd.ms-excel": { color: "text-green-600 bg-green-50", label: "XLS" },
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { color: "text-green-600 bg-green-50", label: "XLSX" },
+  "application/vnd.ms-powerpoint": { color: "text-orange-500 bg-orange-50", label: "PPT" },
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": { color: "text-orange-500 bg-orange-50", label: "PPTX" },
+  "text/plain": { color: "text-gray-500 bg-gray-50", label: "TXT" },
+  "text/csv": { color: "text-green-600 bg-green-50", label: "CSV" },
+};
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Document Download Item Component
+function DocumentDownloadItem({
+  doc,
+  onDownload,
+  isDownloading,
+  compact = false,
+}: {
+  doc: DocType;
+  onDownload: (id: string, fileName: string) => void;
+  isDownloading: boolean;
+  compact?: boolean;
+}) {
+  const config = fileTypeConfig[doc.fileType] || { color: "text-gray-500 bg-gray-50", label: "FILE" };
+
+  return (
+    <button
+      onClick={() => onDownload(doc.id, doc.fileName)}
+      disabled={isDownloading}
+      className={`w-full flex items-center gap-3 rounded-lg hover:bg-gray-50 transition-colors text-left disabled:opacity-60 ${
+        compact ? "px-2 py-1.5" : "px-3 py-2.5"
+      }`}
+    >
+      <div className={`flex-shrink-0 rounded-lg flex items-center justify-center ${config.color} ${compact ? "w-7 h-7" : "w-9 h-9"}`}>
+        <span className={`font-bold ${compact ? "text-[8px]" : "text-[10px]"}`}>{config.label}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className={`font-medium text-gray-700 truncate ${compact ? "text-xs" : "text-sm"}`}>{doc.title}</p>
+        {!compact && <p className="text-xs text-gray-400">{formatFileSize(doc.fileSize)}</p>}
+      </div>
+      {isDownloading ? (
+        <svg className={`animate-spin text-[#FF6F00] ${compact ? "w-3.5 h-3.5" : "w-4 h-4"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+          <path d="M12 2a10 10 0 0 1 10 10" />
+        </svg>
+      ) : (
+        <svg className={`text-gray-400 flex-shrink-0 ${compact ? "w-3.5 h-3.5" : "w-4 h-4"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+      )}
+    </button>
   );
 }
 

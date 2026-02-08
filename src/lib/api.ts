@@ -95,9 +95,13 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  avatar?: string;
   role?: string;
   status?: string;
   accessAll?: boolean;
+  isEmailVerified?: boolean;
+  hasPassword?: boolean;
+  isGoogleUser?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -105,6 +109,7 @@ export interface User {
 export interface AuthResponse {
   user: User;
   token: string;
+  isNewUser?: boolean;
 }
 
 export const authApi = {
@@ -114,8 +119,8 @@ export const authApi = {
   signin: (data: { email: string; password: string }) =>
     api.post<AuthResponse>('/auth/signin', data),
 
-  googleLogin: (idToken: string) =>
-    api.post<AuthResponse>('/auth/google', { idToken }),
+  googleLogin: (token: string, type: 'credential' | 'accessToken' = 'credential') =>
+    api.post<AuthResponse>('/auth/google', type === 'credential' ? { credential: token } : { accessToken: token }),
 
   getMe: (userId: string) => api.get<User>(`/auth/me/${userId}`),
 
@@ -284,6 +289,7 @@ export interface Lesson {
   duration: number;
   order: number;
   moduleId?: string;
+  documents?: Document[];
 }
 
 export interface Module {
@@ -296,6 +302,7 @@ export interface Module {
   order: number;
   courseId?: string;
   lessons: Lesson[];
+  documents?: Document[];
   lessonCount?: number;
   _count?: {
     lessons: number;
@@ -322,6 +329,7 @@ export interface LessonInput {
 // Extended Course type with full details
 export interface CourseDetails extends Course {
   modules?: Module[];
+  documents?: Document[];
   totalDuration?: number;
   totalLessons?: number;
   revenue?: number;
@@ -573,6 +581,156 @@ export const enrollmentApi = {
   // Update progress
   updateProgress: (enrollmentId: string, progress: number) =>
     api.patch<unknown>(`/enrollments/${enrollmentId}/progress`, { progress }),
+};
+
+// Team API
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  description?: string;
+  image?: string;
+  email?: string;
+  facebook?: string;
+  linkedin?: string;
+  order: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TeamMemberInput {
+  name: string;
+  role: string;
+  description?: string;
+  image?: string;
+  email?: string;
+  facebook?: string;
+  linkedin?: string;
+  isActive?: boolean;
+}
+
+export const teamApi = {
+  getAll: (includeInactive?: boolean) =>
+    api.get<TeamMember[]>(`/team${includeInactive ? '?all=true' : ''}`),
+
+  getById: (id: string) => api.get<TeamMember>(`/team/${id}`),
+
+  create: (data: TeamMemberInput) => api.post<TeamMember>('/team', data),
+
+  update: (id: string, data: Partial<TeamMemberInput>) =>
+    api.put<TeamMember>(`/team/${id}`, data),
+
+  delete: (id: string) => api.delete<void>(`/team/${id}`),
+
+  reorder: (members: { id: string }[]) =>
+    api.patch<void>('/team/reorder', { members }),
+};
+
+// Testimonial API
+export interface Testimonial {
+  id: string;
+  name: string;
+  content: string;
+  rating: number;
+  image?: string;
+  gender: string;
+  showOnHome: boolean;
+  showOnAbout: boolean;
+  showOnCourses: boolean;
+  showOnDashboard: boolean;
+  isActive: boolean;
+  order: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TestimonialInput {
+  name: string;
+  content: string;
+  rating?: number;
+  image?: string;
+  gender?: string;
+  showOnHome?: boolean;
+  showOnAbout?: boolean;
+  showOnCourses?: boolean;
+  showOnDashboard?: boolean;
+  isActive?: boolean;
+}
+
+export const testimonialApi = {
+  getByPage: (page: 'home' | 'about' | 'courses' | 'dashboard') =>
+    api.get<Testimonial[]>(`/testimonials?page=${page}`),
+
+  getAll: (includeInactive?: boolean) =>
+    api.get<Testimonial[]>(`/testimonials${includeInactive ? '?all=true' : ''}`),
+
+  getById: (id: string) => api.get<Testimonial>(`/testimonials/${id}`),
+
+  create: (data: TestimonialInput) => api.post<Testimonial>('/testimonials', data),
+
+  update: (id: string, data: Partial<TestimonialInput>) =>
+    api.put<Testimonial>(`/testimonials/${id}`, data),
+
+  delete: (id: string) => api.delete<void>(`/testimonials/${id}`),
+
+  reorder: (testimonials: { id: string }[]) =>
+    api.patch<void>('/testimonials/reorder', { testimonials }),
+};
+
+// Document API
+export interface Document {
+  id: string;
+  title: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  content?: string; // Base64 encoded - only returned from getById
+  order: number;
+  courseId?: string;
+  moduleId?: string;
+  lessonId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DocumentInput {
+  title: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  content: string; // Base64 encoded file
+}
+
+export const documentApi = {
+  // Course documents
+  getByCourse: (courseId: string) =>
+    api.get<Document[]>(`/courses/${courseId}/documents`),
+
+  uploadToCourse: (courseId: string, data: DocumentInput) =>
+    api.post<Document>(`/courses/${courseId}/documents`, data),
+
+  // Module documents
+  getByModule: (moduleId: string) =>
+    api.get<Document[]>(`/modules/${moduleId}/documents`),
+
+  uploadToModule: (moduleId: string, data: DocumentInput) =>
+    api.post<Document>(`/modules/${moduleId}/documents`, data),
+
+  // Lesson documents
+  getByLesson: (lessonId: string) =>
+    api.get<Document[]>(`/lessons/${lessonId}/documents`),
+
+  uploadToLesson: (lessonId: string, data: DocumentInput) =>
+    api.post<Document>(`/lessons/${lessonId}/documents`, data),
+
+  // Standalone
+  getById: (id: string) => api.get<Document>(`/documents/${id}`),
+
+  update: (id: string, data: Partial<DocumentInput>) =>
+    api.put<Document>(`/documents/${id}`, data),
+
+  delete: (id: string) => api.delete<void>(`/documents/${id}`),
 };
 
 export default api;

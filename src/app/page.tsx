@@ -6,6 +6,7 @@ import FeaturedCoursesSection from "@/components/FeaturedCoursesSection";
 import WhyChooseSection from "@/components/WhyChooseSection";
 import CEOSection from "@/components/CEOSection";
 import CTASection from "@/components/CTASection";
+import TestimonialSection from "@/components/TestimonialSection";
 import Footer from "@/components/Footer";
 import { createMetadata } from "@/lib/seo";
 
@@ -32,6 +33,7 @@ export default function Home() {
       <WhyChooseSection />
       <CEOSection />
       <CTASection />
+      <TestimonialSection page="home" />
       <Footer />
     </div>
   );

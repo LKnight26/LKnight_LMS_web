@@ -9,3 +9,4 @@ export { default as RevenueChart } from "./RevenueChart";
 export { default as LineChart } from "./LineChart";
 export { default as PieChart } from "./PieChart";
 export { default as EnrollmentChart } from "./EnrollmentChart";
+export { default as DocumentManager } from "./DocumentManager";

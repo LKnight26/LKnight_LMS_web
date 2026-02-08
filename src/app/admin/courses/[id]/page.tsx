@@ -8,7 +8,8 @@ import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
 import Badge from "@/components/admin/Badge";
 import ConfirmModal from "@/components/admin/ConfirmModal";
-import { categoryApi, courseApi, Category, CourseDetails } from "@/lib/api";
+import { categoryApi, courseApi, documentApi, Category, CourseDetails, Document as DocType } from "@/lib/api";
+import { DocumentManager } from "@/components/admin";
 import { useToast } from "@/components/ui/Toast";
 
 const levelOptions = [
@@ -30,6 +31,7 @@ export default function EditCoursePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [course, setCourse] = useState<CourseDetails | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [courseDocuments, setCourseDocuments] = useState<DocType[]>([]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -79,6 +81,16 @@ export default function EditCoursePage() {
       setError(err instanceof Error ? err.message : "Failed to fetch course");
     } finally {
       setLoading(false);
+    }
+
+    // Fetch documents separately so a failure here doesn't break the page
+    try {
+      const docsRes = await documentApi.getByCourse(courseId);
+      if (docsRes.success && docsRes.data) {
+        setCourseDocuments(Array.isArray(docsRes.data) ? docsRes.data : []);
+      }
+    } catch {
+      // Silently fail - documents section will just show empty
     }
   }, [courseId]);
 
@@ -503,6 +515,16 @@ export default function EditCoursePage() {
                 </label>
               </div>
             </div>
+          </AdminCard>
+
+          {/* Course Documents */}
+          <AdminCard title="Course Documents" subtitle="Upload documents for the entire course (syllabus, overview, etc.)">
+            <DocumentManager
+              entityType="course"
+              entityId={courseId}
+              documents={courseDocuments}
+              onDocumentsChange={setCourseDocuments}
+            />
           </AdminCard>
 
           {/* Actions */}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FeaturedCoursesSection from "@/components/FeaturedCoursesSection";
+import TestimonialSection from "@/components/TestimonialSection";
 
 export default function CoursesPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,6 +78,7 @@ export default function CoursesPage() {
         viewAllHref="/courses/all"
       />
 
+      <TestimonialSection page="courses" />
       <Footer />
     </div>
   );
