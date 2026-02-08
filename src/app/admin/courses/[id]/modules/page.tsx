@@ -7,8 +7,9 @@ import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import Badge from "@/components/admin/Badge";
 import ConfirmModal from "@/components/admin/ConfirmModal";
-import { courseApi, moduleApi, lessonApi, Module, Lesson, CourseDetails } from "@/lib/api";
+import { courseApi, moduleApi, lessonApi, documentApi, Module, Lesson, CourseDetails, Document as DocType } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import { DocumentManager } from "@/components/admin";
 
 interface ModuleWithExpanded extends Module {
   isExpanded: boolean;
@@ -62,6 +63,10 @@ export default function ModulesPage() {
     lessonId: string;
     title: string;
   }>({ isOpen: false, moduleId: "", lessonId: "", title: "" });
+
+  // Document states for edit modals
+  const [editModuleDocuments, setEditModuleDocuments] = useState<DocType[]>([]);
+  const [editLessonDocuments, setEditLessonDocuments] = useState<DocType[]>([]);
 
   // New module form
   const [newModule, setNewModule] = useState({
@@ -247,7 +252,7 @@ export default function ModulesPage() {
   };
 
   // Edit Module
-  const openEditModule = (module: ModuleWithExpanded) => {
+  const openEditModule = async (module: ModuleWithExpanded) => {
     setEditModuleData({
       title: module.title,
       summary: module.summary || "",
@@ -256,7 +261,18 @@ export default function ModulesPage() {
       contentType: module.contentType || "",
     });
     setEditModuleContentPreview(module.content || null);
+    setEditModuleDocuments([]);
     setShowEditModule(module.id);
+
+    // Fetch module documents
+    try {
+      const res = await documentApi.getByModule(module.id);
+      if (res.success && res.data) {
+        setEditModuleDocuments(res.data as DocType[]);
+      }
+    } catch {
+      // Documents will show as empty - non-blocking
+    }
   };
 
   const handleEditModule = async () => {
@@ -383,7 +399,7 @@ export default function ModulesPage() {
   };
 
   // Edit Lesson
-  const openEditLesson = (moduleId: string, lesson: Lesson) => {
+  const openEditLesson = async (moduleId: string, lesson: Lesson) => {
     setEditLessonData({
       title: lesson.title,
       description: lesson.description || "",
@@ -393,7 +409,18 @@ export default function ModulesPage() {
       duration: lesson.duration || 0,
     });
     setEditLessonContentPreview(lesson.content || null);
+    setEditLessonDocuments([]);
     setShowEditLesson({ moduleId, lessonId: lesson.id });
+
+    // Fetch lesson documents
+    try {
+      const res = await documentApi.getByLesson(lesson.id);
+      if (res.success && res.data) {
+        setEditLessonDocuments(res.data as DocType[]);
+      }
+    } catch {
+      // Documents will show as empty - non-blocking
+    }
   };
 
   const handleEditLesson = async () => {
@@ -779,6 +806,21 @@ export default function ModulesPage() {
                     setEditModuleContentPreview(null);
                   }}
                 />
+
+                {/* Module Documents */}
+                {showEditModule && (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">
+                      Module Documents
+                    </label>
+                    <DocumentManager
+                      entityType="module"
+                      entityId={showEditModule}
+                      documents={editModuleDocuments}
+                      onDocumentsChange={setEditModuleDocuments}
+                    />
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
                 <AdminButton
@@ -850,6 +892,21 @@ export default function ModulesPage() {
                     setEditLessonContentPreview(null);
                   }}
                 />
+
+                {/* Lesson Documents */}
+                {showEditLesson && (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">
+                      Lesson Documents
+                    </label>
+                    <DocumentManager
+                      entityType="lesson"
+                      entityId={showEditLesson.lessonId}
+                      documents={editLessonDocuments}
+                      onDocumentsChange={setEditLessonDocuments}
+                    />
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
                 <AdminButton
@@ -1203,6 +1260,7 @@ export default function ModulesPage() {
         variant="danger"
         isLoading={deletingLesson === deleteLessonModal.lessonId}
       />
+
     </div>
   );
 }

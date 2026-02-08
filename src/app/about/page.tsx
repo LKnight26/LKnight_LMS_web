@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MeetTheTeam from "@/components/MeetTheTeam";
+import TestimonialSection from "@/components/TestimonialSection";
 import Image from "next/image";
 import { createMetadata } from "@/lib/seo";
 
@@ -301,6 +302,7 @@ export default function AboutPage() {
 
       {/* Meet the Team Section */}
       <MeetTheTeam />
+      <TestimonialSection page="about" />
 
       <Footer />
     </div>

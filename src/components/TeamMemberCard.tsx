@@ -1,13 +1,22 @@
 import Image from "next/image";
 
 interface TeamMemberCardProps {
-  image: string;
+  image?: string;
   name: string;
   role: string;
   description: string;
-  email: string;
+  email?: string;
   facebook?: string;
   linkedin?: string;
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 export default function TeamMemberCard({
@@ -19,6 +28,9 @@ export default function TeamMemberCard({
   facebook,
   linkedin,
 }: TeamMemberCardProps) {
+  const isBase64 = image && image.startsWith("data:");
+  const hasImage = image && image.trim() !== "";
+
   return (
     <div
       className="bg-white rounded-xl border border-gray-100 overflow-hidden flex-shrink-0 w-[280px] sm:w-[300px] lg:w-[340px]"
@@ -28,12 +40,28 @@ export default function TeamMemberCard({
     >
       {/* Image Container */}
       <div className="relative w-full h-[260px] sm:h-[280px] lg:h-[300px] bg-gray-50">
-        <Image
-          src={image}
-          alt={name}
-          fill
-          className="object-cover object-top"
-        />
+        {hasImage ? (
+          isBase64 ? (
+            <img
+              src={image}
+              alt={name}
+              className="w-full h-full object-cover object-top"
+            />
+          ) : (
+            <Image
+              src={image}
+              alt={name}
+              fill
+              className="object-cover object-top"
+            />
+          )
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#000E51] to-[#1a2a7a]">
+            <span className="text-white text-5xl sm:text-6xl font-bold opacity-80">
+              {getInitials(name)}
+            </span>
+          </div>
+        )}
 
         {/* Social Icons */}
         <div className="absolute bottom-3 right-3 flex items-center gap-2">
@@ -91,36 +119,38 @@ export default function TeamMemberCard({
         </p>
 
         {/* Email */}
-        <div className="flex items-center gap-2">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z"
-              stroke="#94A3B8"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M22 6L12 13L2 6"
-              stroke="#94A3B8"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <a
-            href={`mailto:${email}`}
-            className="text-[#64748B] text-xs lg:text-[12px] hover:text-[#FF6F00] transition-colors truncate"
-          >
-            {email}
-          </a>
-        </div>
+        {email && (
+          <div className="flex items-center gap-2">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z"
+                stroke="#94A3B8"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M22 6L12 13L2 6"
+                stroke="#94A3B8"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <a
+              href={`mailto:${email}`}
+              className="text-[#64748B] text-xs lg:text-[12px] hover:text-[#FF6F00] transition-colors truncate"
+            >
+              {email}
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

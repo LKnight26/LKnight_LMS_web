@@ -12,6 +12,7 @@ interface AuthContextType {
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<User>;
   signup: (firstName: string, lastName: string, email: string, password: string) => Promise<User>;
+  googleLogin: (token: string, type?: 'credential' | 'accessToken') => Promise<User>;
   logout: () => void;
   updateUser: (user: User) => void;
 }
@@ -95,6 +96,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const googleLogin = async (token: string, type: 'credential' | 'accessToken' = 'credential'): Promise<User> => {
+    const response = await authApi.googleLogin(token, type);
+
+    if (response.success && response.data) {
+      const { user: userData, token: authToken } = response.data;
+      setUser(userData);
+      setToken(authToken);
+      localStorage.setItem("token", authToken);
+      localStorage.setItem("user", JSON.stringify(userData));
+      return userData;
+    } else {
+      throw new Error(response.message || "Google login failed");
+    }
+  };
+
   const logout = useCallback(() => {
     setUser(null);
     setToken(null);
@@ -116,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin: user?.role === "ADMIN",
     login,
     signup,
+    googleLogin,
     logout,
     updateUser,
   };
