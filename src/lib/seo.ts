@@ -72,9 +72,7 @@ export const defaultMetadata: Metadata = {
     creator: "@lknightlms",
   },
   verification: {
-    // Add your verification codes here when you have them
-    // google: "your-google-verification-code",
-    // yandex: "your-yandex-verification-code",
+    google: "googledcee5e0222d41472",
   },
   alternates: {
     canonical: siteConfig.url,
