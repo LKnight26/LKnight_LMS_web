@@ -9,6 +9,7 @@ import {
   organizationSchema,
   websiteSchema,
   educationalOrganizationSchema,
+  localBusinessSchema,
 } from "@/lib/seo";
 
 const outfit = Outfit({
@@ -46,6 +47,7 @@ export default function RootLayout({
         <JsonLd data={organizationSchema} />
         <JsonLd data={websiteSchema} />
         <JsonLd data={educationalOrganizationSchema} />
+        <JsonLd data={localBusinessSchema} />
       </head>
       <body className={`${outfit.variable} ${inter.variable} antialiased`}>
         <Providers>

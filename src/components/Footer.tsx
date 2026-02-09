@@ -156,6 +156,35 @@ export default function Footer() {
               ))}
             </ul>
           </div>
+
+          {/* Contact Info */}
+          <div className="sm:col-span-2 lg:col-span-4 lg:col-start-1 mt-4 lg:mt-0">
+            <h3 className="text-[#000E51] font-semibold text-sm mb-4">Contact Us</h3>
+            <ul className="space-y-3">
+              <li>
+                <a
+                  href="mailto:inquiries@lknightproductions.com"
+                  className="text-[#64748B] text-sm hover:text-[#FF6F00] transition-colors duration-200"
+                >
+                  inquiries@lknightproductions.com
+                </a>
+              </li>
+              <li>
+                <a
+                  href="tel:+18329535517"
+                  className="text-[#64748B] text-sm hover:text-[#FF6F00] transition-colors duration-200"
+                >
+                  (832) 953-5517
+                </a>
+              </li>
+              <li>
+                <span className="text-[#64748B] text-sm leading-relaxed">
+                  7312 Louetta Rd. Ste. B118-160,<br />
+                  Spring, Texas 77379
+                </span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 

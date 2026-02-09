@@ -137,6 +137,21 @@ export const authApi = {
     api.post<void>('/auth/reset-password', { token, newPassword }),
 };
 
+// Contact API
+export interface ContactFormData {
+  firstName: string;
+  lastName?: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+}
+
+export const contactApi = {
+  submit: (data: ContactFormData) =>
+    api.post<void>('/contact', data),
+};
+
 // Dashboard API
 export interface DashboardStats {
   totalRevenue: number;

@@ -2,10 +2,19 @@ import { Metadata } from "next";
 import { createMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createMetadata({
-  title: "Contact Us - Get in Touch",
+  title: "Contact Us - LKnight Learning Hub | Spring, Texas",
   description:
-    "Have questions about LKnight Learning Hub? Contact our support team for assistance with courses, subscriptions, or partnership inquiries.",
-  keywords: ["contact", "support", "help", "customer service", "inquiries"],
+    "Contact LKnight Learning Hub by LKnight Productions. Call (832) 953-5517, email inquiries@lknightproductions.com, or visit us at 7312 Louetta Rd. Ste. B118-160, Spring, Texas 77379. Get help with courses, enrollments, and partnerships.",
+  keywords: [
+    "contact LKnight Learning Hub",
+    "LKnight Productions contact",
+    "lknightlearninghub contact",
+    "Spring Texas education",
+    "(832) 953-5517",
+    "inquiries@lknightproductions.com",
+    "online course support",
+    "LMS customer service",
+  ],
   canonical: "/contact",
 });
 

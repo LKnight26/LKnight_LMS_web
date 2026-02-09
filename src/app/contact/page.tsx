@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { contactApi } from "@/lib/api";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,11 @@ export default function ContactPage() {
     subject: "general",
     message: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -26,16 +32,40 @@ export default function ContactPage() {
     setFormData((prev) => ({ ...prev, subject: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+    setSubmitStatus(null);
+    setIsLoading(true);
+
+    try {
+      const response = await contactApi.submit(formData);
+      setSubmitStatus({
+        type: "success",
+        message: response.message || "Message sent successfully! We'll get back to you soon.",
+      });
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        subject: "general",
+        message: "",
+      });
+    } catch (err) {
+      setSubmitStatus({
+        type: "error",
+        message: err instanceof Error ? err.message : "Failed to send message. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const subjects = [
     { value: "general", label: "General Inquiry" },
-    { value: "support", label: "General Inquiry" },
-    { value: "sales", label: "General Inquiry" },
-    { value: "other", label: "General Inquiry" },
+    { value: "support", label: "Technical Support" },
+    { value: "sales", label: "Course Enrollment" },
+    { value: "other", label: "Other" },
   ];
 
   return (
@@ -87,7 +117,7 @@ export default function ContactPage() {
                         />
                       </svg>
                     </div>
-                    <span className="text-sm">+1012 3456 789</span>
+                    <a href="tel:+18329535517" className="text-sm hover:underline">(832) 953-5517</a>
                   </div>
 
                   {/* Email */}
@@ -106,7 +136,7 @@ export default function ContactPage() {
                         />
                       </svg>
                     </div>
-                    <span className="text-sm">demo@gmail.com</span>
+                    <a href="mailto:inquiries@lknightproductions.com" className="text-sm hover:underline">inquiries@lknightproductions.com</a>
                   </div>
 
                   {/* Address */}
@@ -126,9 +156,9 @@ export default function ContactPage() {
                       </svg>
                     </div>
                     <span className="text-sm leading-relaxed">
-                      132 Dartmouth Street Boston,
+                      7312 Louetta Rd. Ste. B118-160,
                       <br />
-                      Massachusetts 02156 United States
+                      Spring, Texas 77379
                     </span>
                   </div>
                 </div>
@@ -185,6 +215,19 @@ export default function ContactPage() {
 
             {/* Right Side - Contact Form */}
             <div className="flex-1 p-6 md:p-10 lg:p-12 relative">
+              {/* Status Message */}
+              {submitStatus && (
+                <div
+                  className={`p-4 rounded-lg mb-2 text-sm ${
+                    submitStatus.type === "success"
+                      ? "bg-green-50 border border-green-200 text-green-700"
+                      : "bg-red-50 border border-red-200 text-red-600"
+                  }`}
+                >
+                  {submitStatus.message}
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Name Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
@@ -238,7 +281,7 @@ export default function ContactPage() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      placeholder="+1 012 3456 789"
+                      placeholder="+1 (832) 953-5517"
                       className="w-full border-b border-gray-300 pb-2 text-sm text-gray-900 focus:outline-none focus:border-[#1a1f4e] transition-colors bg-transparent placeholder:text-gray-900"
                     />
                   </div>
@@ -303,21 +346,34 @@ export default function ContactPage() {
                 <div className="flex justify-end pt-4">
                   <button
                     type="submit"
-                    className="bg-[#FF6F00] hover:bg-[#e66300] text-white px-8 py-3 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                    disabled={isLoading}
+                    className="bg-[#FF6F00] hover:bg-[#e66300] text-white px-8 py-3 rounded-md text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    Contact us
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z"
-                        fill="white"
-                      />
-                    </svg>
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        Contact us
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z"
+                            fill="white"
+                          />
+                        </svg>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
