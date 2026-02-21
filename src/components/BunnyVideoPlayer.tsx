@@ -9,43 +9,24 @@ interface BunnyVideoPlayerProps {
 }
 
 export default function BunnyVideoPlayer({ lesson, onHalfWatched }: BunnyVideoPlayerProps) {
-  const halfWatchedRef = useRef(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const onHalfWatchedRef = useRef(onHalfWatched);
   onHalfWatchedRef.current = onHalfWatched;
 
-  // Reset half-watched flag when lesson changes
+  // Timer-based progress: mark complete after user spends half the lesson duration on this page
+  // Bunny Stream iframes don't expose playback events cross-origin
   useEffect(() => {
-    halfWatchedRef.current = false;
-  }, [lesson.id]);
+    const durationSec = lesson.duration || 0;
+    if (durationSec <= 0) return;
 
-  // Listen for Bunny Stream player messages
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (halfWatchedRef.current) return;
-      try {
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        if (data?.event === 'timeupdate' && data?.data) {
-          const { currentTime, duration } = data.data;
-          if (duration > 0 && currentTime > duration / 2) {
-            halfWatchedRef.current = true;
-            onHalfWatchedRef.current?.();
-          }
-        }
-        if (data?.event === 'progress' && typeof data?.data?.percentage === 'number') {
-          if (data.data.percentage >= 50) {
-            halfWatchedRef.current = true;
-            onHalfWatchedRef.current?.();
-          }
-        }
-      } catch {
-        // ignore non-JSON messages
-      }
-    };
+    // Wait for half the video duration (minimum 10s, maximum 5min)
+    const halfDurationMs = Math.min(Math.max(durationSec * 500, 10000), 300000);
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
+    const timer = setTimeout(() => {
+      onHalfWatchedRef.current?.();
+    }, halfDurationMs);
+
+    return () => clearTimeout(timer);
+  }, [lesson.id, lesson.duration]);
 
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -175,7 +156,6 @@ export default function BunnyVideoPlayer({ lesson, onHalfWatched }: BunnyVideoPl
   return (
     <div className="aspect-video rounded-2xl overflow-hidden bg-black">
       <iframe
-        ref={iframeRef}
         src={embedUrl}
         loading="lazy"
         className="w-full h-full border-0"
