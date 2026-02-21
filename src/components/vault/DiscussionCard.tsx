@@ -156,8 +156,6 @@ function CommentItem({
               className={`text-xs font-medium ${
                 comment.isAdmin
                   ? "text-[#FF6F00]"
-                  : comment.isOwn
-                  ? "text-blue-400"
                   : "text-white/70"
               }`}
             >
@@ -294,6 +292,8 @@ export default function DiscussionCard({
   const [submittingComment, setSubmittingComment] = useState(false);
   const [isLiked, setIsLiked] = useState(discussion.isLiked);
   const [likesCount, setLikesCount] = useState(discussion.likesCount);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const commentObserverRef = useRef<HTMLDivElement>(null);
 
   const catColor = categoryColors[discussion.category] || "#6B7280";
@@ -390,12 +390,15 @@ export default function DiscussionCard({
   };
 
   const handleDelete = async () => {
-    if (!confirm("Delete this discussion?")) return;
+    setDeleting(true);
     try {
       const res = await vaultApi.deleteDiscussion(discussion.id);
       if (res.success) onDelete(discussion.id);
     } catch {
       // fail silently
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -439,8 +442,8 @@ export default function DiscussionCard({
         {/* Delete (only for own posts) */}
         {discussion.isOwn && (
           <button
-            onClick={handleDelete}
-            className="text-white/20 hover:text-red-400 transition-colors p-1"
+            onClick={() => setShowDeleteModal(true)}
+            className="text-white/20 hover:text-red-400 transition-colors p-1 cursor-pointer"
             title="Delete discussion"
           >
             <svg
@@ -515,8 +518,6 @@ export default function DiscussionCard({
             className={`text-sm ${
               discussion.isAdmin
                 ? "text-[#FF6F00] font-medium"
-                : discussion.isOwn
-                ? "text-blue-400"
                 : "text-white/70"
             }`}
           >
@@ -593,6 +594,48 @@ export default function DiscussionCard({
           </button>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => !deleting && setShowDeleteModal(false)}
+          />
+          <div className="relative w-full max-w-[400px] bg-[#0A1628] rounded-xl overflow-hidden shadow-2xl">
+            <div className="p-5 sm:p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 6H5H21" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h3 className="text-white text-base font-semibold">Delete Discussion</h3>
+              </div>
+              <p className="text-white/60 text-sm mb-6">
+                Are you sure you want to delete this discussion? This action cannot be undone and all comments will be removed.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {deleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Expanded Comments Section */}
       {expanded && (

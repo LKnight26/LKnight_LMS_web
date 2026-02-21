@@ -41,8 +41,9 @@ export default function CoursesPage() {
 function CoursesContent() {
   const searchParams = useSearchParams();
   const categoryFromUrl = searchParams.get("category") || "";
+  const searchFromUrl = searchParams.get("search") || "";
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchFromUrl);
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
   const [categories, setCategories] = useState<Category[]>([]);
   const [courses, setCourses] = useState<CourseCardProps[]>([]);

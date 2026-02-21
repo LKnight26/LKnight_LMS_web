@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 interface StartDiscussionModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export default function StartDiscussionModal({
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { isAdmin } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +91,7 @@ export default function StartDiscussionModal({
                 Start a Discussion
               </h2>
               <p className="text-white/50 text-xs sm:text-sm">
-                Share anonymously with the community
+                {isAdmin ? "Post as Admin" : "Share anonymously with the community"}
               </p>
             </div>
           </div>
@@ -97,7 +99,7 @@ export default function StartDiscussionModal({
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
           >
             <svg
               width="16"
@@ -127,7 +129,7 @@ export default function StartDiscussionModal({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-[#000E51] border border-white/10 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-white text-sm focus:outline-none focus:border-[#FF6F00] transition-colors"
+              className="w-full bg-[#000E51] border border-white/10 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-white text-sm focus:outline-none focus:border-[#FF6F00] transition-colors cursor-pointer"
               required
             >
               <option value="" disabled>
@@ -171,38 +173,65 @@ export default function StartDiscussionModal({
             />
           </div>
 
-          {/* Privacy Notice */}
-          <div className="flex items-start gap-2 sm:gap-3 bg-[#FF6F00]/10 rounded-lg p-3 sm:p-4">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="flex-shrink-0 mt-0.5 w-4 h-4 sm:w-5 sm:h-5"
-            >
-              <rect
-                x="3"
-                y="11"
+          {/* Privacy Notice - Only show for non-admin users */}
+          {!isAdmin && (
+            <div className="flex items-start gap-2 sm:gap-3 bg-[#FF6F00]/10 rounded-lg p-3 sm:p-4">
+              <svg
                 width="18"
-                height="11"
-                rx="2"
-                stroke="#FF6F00"
-                strokeWidth="1.5"
-              />
-              <path
-                d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11"
-                stroke="#FF6F00"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <p className="text-white/60 text-xs leading-relaxed">
-              Your identity is protected. Your post will be shared anonymously
-              with other members. We never share your real identity.
-            </p>
-          </div>
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex-shrink-0 mt-0.5 w-4 h-4 sm:w-5 sm:h-5"
+              >
+                <rect
+                  x="3"
+                  y="11"
+                  width="18"
+                  height="11"
+                  rx="2"
+                  stroke="#FF6F00"
+                  strokeWidth="1.5"
+                />
+                <path
+                  d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11"
+                  stroke="#FF6F00"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <p className="text-white/60 text-xs leading-relaxed">
+                Your identity is protected. Your post will be shared anonymously
+                with other members. We never share your real identity.
+              </p>
+            </div>
+          )}
+
+          {/* Admin Notice */}
+          {isAdmin && (
+            <div className="flex items-start gap-2 sm:gap-3 bg-[#FF6F00]/10 rounded-lg p-3 sm:p-4">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex-shrink-0 mt-0.5 w-4 h-4 sm:w-5 sm:h-5"
+              >
+                <path
+                  d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                  stroke="#FF6F00"
+                  strokeWidth="1.5"
+                />
+                <path d="M12 8V12" stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="12" cy="16" r="1" fill="#FF6F00" />
+              </svg>
+              <p className="text-white/60 text-xs leading-relaxed">
+                You are posting as <span className="text-[#FF6F00] font-medium">Admin</span>. Your post will be visible with the Admin badge.
+              </p>
+            </div>
+          )}
 
           {/* Error */}
           {error && (
@@ -213,9 +242,9 @@ export default function StartDiscussionModal({
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-[#FF6F00] hover:bg-[#E56300] disabled:opacity-60 text-white font-semibold py-3 sm:py-3.5 rounded-lg transition-colors duration-200 text-sm sm:text-base"
+            className="w-full bg-[#FF6F00] hover:bg-[#E56300] disabled:opacity-60 text-white font-semibold py-3 sm:py-3.5 rounded-lg transition-colors duration-200 text-sm sm:text-base cursor-pointer"
           >
-            {submitting ? "Posting..." : "Post Discussion Anonymously"}
+            {submitting ? "Posting..." : isAdmin ? "Post Discussion" : "Post Discussion Anonymously"}
           </button>
         </form>
       </div>

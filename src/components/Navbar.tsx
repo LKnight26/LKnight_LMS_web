@@ -322,14 +322,14 @@ export default function Navbar() {
 
             {/* Right Section - Desktop */}
             <div className="hidden lg:flex items-center gap-3">
-              {/* Globe Icon */}
-              <button className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 hover:border-[#FF6F00] hover:bg-[#FFF4E5] transition-all duration-200">
+              {/* Globe Icon - Navigate to Vault */}
+              <TransitionLink href="/vault" className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 hover:border-[#FF6F00] hover:bg-[#FFF4E5] transition-all duration-200 cursor-pointer">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="12" cy="12" r="10" stroke="#1E293B" strokeWidth="1.5"/>
                   <path d="M2 12H22" stroke="#1E293B" strokeWidth="1.5" strokeLinecap="round"/>
                   <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="#1E293B" strokeWidth="1.5"/>
                 </svg>
-              </button>
+              </TransitionLink>
 
               {isAuthenticated && user ? (
                 <>
@@ -589,15 +589,15 @@ export default function Navbar() {
 
           {/* Mobile Menu Footer */}
           <div className="p-4 border-t border-gray-100 space-y-3">
-            {/* Globe/Language */}
-            <button className="flex items-center gap-3 w-full py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
+            {/* Globe - Navigate to Vault */}
+            <TransitionLink href="/vault" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors cursor-pointer">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
                 <path d="M2 12H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="currentColor" strokeWidth="1.5"/>
               </svg>
-              English (US)
-            </button>
+              The Vault
+            </TransitionLink>
 
             {isAuthenticated && user ? (
               <>

@@ -122,6 +122,18 @@ p, span, a, li, ul, ol, div, button, input, textarea, select, label, table, td, 
   }
 }
 
+/* All buttons and clickable links should have pointer cursor */
+button:not(:disabled),
+[role="button"]:not(:disabled),
+a[href],
+select,
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+summary {
+  cursor: pointer;
+}
+
 /* Smooth scroll behavior */
 html {
   scroll-behavior: smooth;
