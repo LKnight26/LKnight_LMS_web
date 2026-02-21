@@ -4,34 +4,14 @@ import { useState, useEffect } from "react";
 import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
-import AdminSelect from "@/components/admin/AdminSelect";
 import Badge from "@/components/admin/Badge";
-import { settingsApi } from "@/lib/api";
+import { settingsApi, authApi } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 interface SettingsState {
-  siteName: string;
-  contactEmail: string;
-  supportEmail: string;
-  currency: string;
-  defaultCourseStatus: string;
-  enrollmentNotifications: boolean;
-  marketingEmails: boolean;
   maintenanceMode: boolean;
   hiddenPages: string[];
 }
-
-const currencyOptions = [
-  { value: "USD", label: "USD - US Dollar" },
-  { value: "EUR", label: "EUR - Euro" },
-  { value: "GBP", label: "GBP - British Pound" },
-  { value: "PKR", label: "PKR - Pakistani Rupee" },
-  { value: "INR", label: "INR - Indian Rupee" },
-];
-
-const courseStatusOptions = [
-  { value: "draft", label: "Draft (Hidden until published)" },
-  { value: "published", label: "Published (Visible immediately)" },
-];
 
 const navPages = [
   { id: "vault", label: "The Vault", description: "Anonymous leadership discussion forum" },
@@ -44,19 +24,32 @@ const navPages = [
 ];
 
 export default function SettingsPage() {
+  const { user } = useAuth();
+
   const [settings, setSettings] = useState<SettingsState>({
-    siteName: "LKnight LMS",
-    contactEmail: "contact@lknight.com",
-    supportEmail: "support@lknight.com",
-    currency: "USD",
-    defaultCourseStatus: "draft",
-    enrollmentNotifications: true,
-    marketingEmails: false,
     maintenanceMode: false,
     hiddenPages: [],
   });
 
-  const [logo, setLogo] = useState<string | null>(null);
+  // Admin profile
+  const [adminProfile, setAdminProfile] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  // Password change
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -68,17 +61,9 @@ export default function SettingsPage() {
         const res = await settingsApi.getSettings();
         if (res.success && res.data) {
           setSettings({
-            siteName: res.data.siteName,
-            contactEmail: res.data.contactEmail,
-            supportEmail: res.data.supportEmail,
-            currency: res.data.currency,
-            defaultCourseStatus: res.data.defaultCourseStatus,
-            enrollmentNotifications: res.data.enrollmentNotifications,
-            marketingEmails: res.data.marketingEmails,
             maintenanceMode: res.data.maintenanceMode,
             hiddenPages: res.data.hiddenPages || [],
           });
-          if (res.data.logo) setLogo(res.data.logo);
         }
       } catch {
         // Use defaults if API fails
@@ -89,13 +74,16 @@ export default function SettingsPage() {
     fetchSettings();
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setSettings((prev) => ({ ...prev, [name]: value }));
-    setSaved(false);
-  };
+  // Load admin profile from auth context
+  useEffect(() => {
+    if (user) {
+      setAdminProfile({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+      });
+    }
+  }, [user]);
 
   const handleToggle = (key: keyof SettingsState) => {
     setSettings((prev) => ({
@@ -118,24 +106,12 @@ export default function SettingsPage() {
     setSaved(false);
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogo(reader.result as string);
-        setSaved(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSave = async () => {
     setSaving(true);
     try {
       const res = await settingsApi.updateSettings({
-        ...settings,
-        logo: logo || undefined,
+        maintenanceMode: settings.maintenanceMode,
+        hiddenPages: settings.hiddenPages,
       });
       if (res.success) {
         setSaved(true);
@@ -144,6 +120,72 @@ export default function SettingsPage() {
       // fail silently
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAdminProfile((prev) => ({ ...prev, [name]: value }));
+    setProfileSaved(false);
+  };
+
+  const handleProfileSave = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    try {
+      const res = await authApi.updateProfile(user.id, {
+        firstName: adminProfile.firstName,
+        lastName: adminProfile.lastName,
+      });
+      if (res.success) {
+        setProfileSaved(true);
+      }
+    } catch {
+      // fail silently
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+    setPasswordError(null);
+    setPasswordSuccess(false);
+  };
+
+  const handlePasswordSave = async () => {
+    if (!user) return;
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    if (!passwordData.currentPassword || !passwordData.newPassword) {
+      setPasswordError("Both current and new password are required");
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters");
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("New passwords do not match");
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      const res = await authApi.changePassword(user.id, {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+      if (res.success) {
+        setPasswordSuccess(true);
+        setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      }
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : "Failed to change password");
+    } finally {
+      setSavingPassword(false);
     }
   };
 
@@ -223,6 +265,104 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Admin Details */}
+      <AdminCard
+        title="Admin Details"
+        subtitle="Your admin account information"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <AdminInput
+              label="First Name"
+              name="firstName"
+              value={adminProfile.firstName}
+              onChange={handleProfileChange}
+              placeholder="First Name"
+            />
+            <AdminInput
+              label="Last Name"
+              name="lastName"
+              value={adminProfile.lastName}
+              onChange={handleProfileChange}
+              placeholder="Last Name"
+            />
+          </div>
+          <AdminInput
+            label="Email"
+            name="email"
+            type="email"
+            value={adminProfile.email}
+            onChange={() => {}}
+            placeholder="admin@example.com"
+            disabled
+          />
+          <div className="flex items-center gap-3">
+            <AdminButton
+              variant="secondary"
+              onClick={handleProfileSave}
+              disabled={savingProfile}
+              size="sm"
+            >
+              {savingProfile ? "Saving..." : "Update Profile"}
+            </AdminButton>
+            {profileSaved && (
+              <Badge variant="success" size="sm">
+                Profile Updated
+              </Badge>
+            )}
+          </div>
+        </div>
+      </AdminCard>
+
+      {/* Change Password */}
+      <AdminCard
+        title="Change Password"
+        subtitle="Update your admin password"
+      >
+        <div className="space-y-4">
+          <AdminInput
+            label="Current Password"
+            name="currentPassword"
+            type="password"
+            value={passwordData.currentPassword}
+            onChange={handlePasswordChange}
+            placeholder="Enter current password"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <AdminInput
+              label="New Password"
+              name="newPassword"
+              type="password"
+              value={passwordData.newPassword}
+              onChange={handlePasswordChange}
+              placeholder="Enter new password"
+            />
+            <AdminInput
+              label="Confirm New Password"
+              name="confirmPassword"
+              type="password"
+              value={passwordData.confirmPassword}
+              onChange={handlePasswordChange}
+              placeholder="Confirm new password"
+            />
+          </div>
+          {passwordError && (
+            <p className="text-sm text-red-600">{passwordError}</p>
+          )}
+          {passwordSuccess && (
+            <p className="text-sm text-green-600">Password changed successfully</p>
+          )}
+          <AdminButton
+            variant="secondary"
+            onClick={handlePasswordSave}
+            disabled={savingPassword}
+            size="sm"
+          >
+            {savingPassword ? "Changing..." : "Change Password"}
+          </AdminButton>
+        </div>
+      </AdminCard>
+
       {/* Page Visibility */}
       <AdminCard
         title="Page Visibility"
@@ -269,294 +409,39 @@ export default function SettingsPage() {
         </div>
       </AdminCard>
 
-      {/* General Settings */}
+      {/* Maintenance Mode */}
       <AdminCard
-        title="General Settings"
-        subtitle="Basic information about your LMS"
+        title="Maintenance Mode"
+        subtitle="Control site availability"
+        className="border-yellow-200"
       >
-        <div className="space-y-3 sm:space-y-4">
-          <AdminInput
-            label="Site Name"
-            name="siteName"
-            value={settings.siteName}
-            onChange={handleChange}
-            placeholder="Your LMS Name"
-          />
-
-          {/* Logo Upload */}
-          <div className="space-y-1.5">
-            <label className="block text-xs sm:text-sm font-medium text-gray-700">
-              Site Logo
-            </label>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl bg-gray-100 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
-                {logo ? (
-                  <img
-                    src={logo}
-                    alt="Logo"
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-sm sm:text-lg">LK</span>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoChange}
-                    className="hidden"
-                  />
-                  <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-colors">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="sm:w-4 sm:h-4"
-                    >
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                    Upload Logo
-                  </span>
-                </label>
-                <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
-                  PNG or JPG, max 1MB
-                </p>
-              </div>
+        <div className="flex items-center justify-between p-3 sm:p-4 bg-yellow-50 rounded-lg sm:rounded-xl border border-yellow-200 gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-medium text-gray-900 text-sm sm:text-base">Maintenance Mode</p>
+              {settings.maintenanceMode && (
+                <Badge variant="warning" size="sm">
+                  Active
+                </Badge>
+              )}
             </div>
+            <p className="text-xs sm:text-sm text-gray-500">
+              Put the site in maintenance mode. Users will see a maintenance
+              page.
+            </p>
           </div>
-        </div>
-      </AdminCard>
-
-      {/* Contact Settings */}
-      <AdminCard
-        title="Contact Information"
-        subtitle="Email addresses for communication"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          <AdminInput
-            label="Contact Email"
-            name="contactEmail"
-            type="email"
-            value={settings.contactEmail}
-            onChange={handleChange}
-            placeholder="contact@example.com"
-            icon={
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="sm:w-4 sm:h-4"
-              >
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                <polyline points="22,6 12,13 2,6" />
-              </svg>
-            }
-          />
-          <AdminInput
-            label="Support Email"
-            name="supportEmail"
-            type="email"
-            value={settings.supportEmail}
-            onChange={handleChange}
-            placeholder="support@example.com"
-            icon={
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="sm:w-4 sm:h-4"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            }
-          />
-        </div>
-      </AdminCard>
-
-      {/* Course Settings */}
-      <AdminCard
-        title="Course Settings"
-        subtitle="Default settings for courses"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          <AdminSelect
-            label="Default Currency"
-            name="currency"
-            options={currencyOptions}
-            value={settings.currency}
-            onChange={handleChange}
-          />
-          <AdminSelect
-            label="Default Course Status"
-            name="defaultCourseStatus"
-            options={courseStatusOptions}
-            value={settings.defaultCourseStatus}
-            onChange={handleChange}
-          />
-        </div>
-      </AdminCard>
-
-      {/* Notification Settings */}
-      <AdminCard
-        title="Notifications"
-        subtitle="Configure email notifications"
-      >
-        <div className="space-y-3 sm:space-y-4">
-          {/* Toggle Items */}
-          <div className="flex items-center justify-between py-2 sm:py-3 border-b border-gray-100 gap-3">
-            <div className="min-w-0">
-              <p className="font-medium text-gray-900 text-sm sm:text-base">
-                Enrollment Notifications
-              </p>
-              <p className="text-xs sm:text-sm text-gray-500">
-                Receive email when a user enrolls in a course
-              </p>
-            </div>
-            <button
-              onClick={() => handleToggle("enrollmentNotifications")}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 shrink-0 ${
-                settings.enrollmentNotifications ? "bg-primary" : "bg-gray-300"
+          <button
+            onClick={() => handleToggle("maintenanceMode")}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 shrink-0 ${
+              settings.maintenanceMode ? "bg-yellow-500" : "bg-gray-300"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                settings.maintenanceMode ? "translate-x-6" : "translate-x-1"
               }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                  settings.enrollmentNotifications ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between py-2 sm:py-3 border-b border-gray-100 gap-3">
-            <div className="min-w-0">
-              <p className="font-medium text-gray-900 text-sm sm:text-base">Marketing Emails</p>
-              <p className="text-xs sm:text-sm text-gray-500">
-                Send promotional emails to users
-              </p>
-            </div>
-            <button
-              onClick={() => handleToggle("marketingEmails")}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 shrink-0 ${
-                settings.marketingEmails ? "bg-primary" : "bg-gray-300"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                  settings.marketingEmails ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-      </AdminCard>
-
-      {/* Danger Zone */}
-      <AdminCard
-        title="Danger Zone"
-        subtitle="Irreversible and destructive actions"
-        className="border-red-200"
-      >
-        <div className="space-y-3 sm:space-y-4">
-          {/* Maintenance Mode */}
-          <div className="flex items-center justify-between p-3 sm:p-4 bg-yellow-50 rounded-lg sm:rounded-xl border border-yellow-200 gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-medium text-gray-900 text-sm sm:text-base">Maintenance Mode</p>
-                {settings.maintenanceMode && (
-                  <Badge variant="warning" size="sm">
-                    Active
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs sm:text-sm text-gray-500">
-                Put the site in maintenance mode. Users will see a maintenance
-                page.
-              </p>
-            </div>
-            <button
-              onClick={() => handleToggle("maintenanceMode")}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 shrink-0 ${
-                settings.maintenanceMode ? "bg-yellow-500" : "bg-gray-300"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                  settings.maintenanceMode ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-
-          {/* Clear Cache */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl border border-gray-200 gap-3">
-            <div className="min-w-0">
-              <p className="font-medium text-gray-900 text-sm sm:text-base">Clear Cache</p>
-              <p className="text-xs sm:text-sm text-gray-500">
-                Clear all cached data. This may temporarily slow down the site.
-              </p>
-            </div>
-            <AdminButton variant="outline" size="sm" className="self-start sm:self-auto shrink-0">
-              Clear Cache
-            </AdminButton>
-          </div>
-
-          {/* Delete All Data */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-red-50 rounded-lg sm:rounded-xl border border-red-200 gap-3">
-            <div className="min-w-0">
-              <p className="font-medium text-red-700 text-sm sm:text-base">Delete All Data</p>
-              <p className="text-xs sm:text-sm text-red-500">
-                Permanently delete all courses, users, and data. This cannot be
-                undone.
-              </p>
-            </div>
-            <AdminButton variant="danger" size="sm" className="self-start sm:self-auto shrink-0">
-              Delete All
-            </AdminButton>
-          </div>
-        </div>
-      </AdminCard>
-
-      {/* System Info */}
-      <AdminCard title="System Information" subtitle="Technical details">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-          <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
-            <p className="text-[10px] sm:text-xs text-gray-500">Version</p>
-            <p className="text-xs sm:text-sm font-medium text-gray-900">1.0.0</p>
-          </div>
-          <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
-            <p className="text-[10px] sm:text-xs text-gray-500">Framework</p>
-            <p className="text-xs sm:text-sm font-medium text-gray-900">Next.js 16</p>
-          </div>
-          <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
-            <p className="text-[10px] sm:text-xs text-gray-500">Database</p>
-            <p className="text-xs sm:text-sm font-medium text-gray-900">PostgreSQL</p>
-          </div>
-          <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
-            <p className="text-[10px] sm:text-xs text-gray-500">Environment</p>
-            <p className="text-xs sm:text-sm font-medium text-gray-900">Development</p>
-          </div>
+            />
+          </button>
         </div>
       </AdminCard>
     </div>

@@ -28,6 +28,7 @@ export default function NewCoursePage() {
     slug: "",
     summary: "",
     description: "",
+    instructorName: "",
     categoryId: "",
     level: "BEGINNER",
     price: "",
@@ -116,6 +117,7 @@ export default function NewCoursePage() {
         summary: formData.summary.trim(),
         description: formData.description.trim() || undefined,
         thumbnail: thumbnailPreview || undefined,
+        instructorName: formData.instructorName.trim() || undefined,
         categoryId: formData.categoryId,
         instructorId: "", // Will be auto-assigned by backend
         level: formData.level as "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
@@ -292,6 +294,15 @@ export default function NewCoursePage() {
                 icon={
                   <span className="text-gray-400 font-medium">$</span>
                 }
+              />
+
+              <AdminInput
+                label="Teacher Name"
+                name="instructorName"
+                value={formData.instructorName}
+                onChange={handleChange}
+                placeholder="e.g., John Smith"
+                helperText="Name displayed as the course instructor"
               />
             </div>
           </AdminCard>

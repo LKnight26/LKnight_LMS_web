@@ -258,6 +258,7 @@ export interface Course {
   summary?: string;
   description?: string;
   thumbnail?: string;
+  instructorName?: string;
   price: number;
   level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
   status: 'DRAFT' | 'PUBLISHED';
@@ -276,6 +277,7 @@ export interface CourseInput {
   summary?: string;
   description?: string;
   thumbnail?: string;
+  instructorName?: string;
   categoryId: string;
   instructorId: string;
   level?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';

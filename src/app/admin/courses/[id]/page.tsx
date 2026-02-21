@@ -38,6 +38,7 @@ export default function EditCoursePage() {
     slug: "",
     summary: "",
     description: "",
+    instructorName: "",
     categoryId: "",
     level: "BEGINNER",
     price: "",
@@ -68,6 +69,7 @@ export default function EditCoursePage() {
           slug: courseData.slug || "",
           summary: courseData.summary || "",
           description: courseData.description || "",
+          instructorName: courseData.instructorName || "",
           categoryId: courseData.category?.id || courseData.categoryId || "",
           level: (courseData.level?.toUpperCase() as "BEGINNER" | "INTERMEDIATE" | "ADVANCED") || "BEGINNER",
           price: courseData.price?.toString() || "0",
@@ -143,6 +145,7 @@ export default function EditCoursePage() {
         summary: formData.summary.trim(),
         description: formData.description.trim() || undefined,
         thumbnail: thumbnailPreview || undefined,
+        instructorName: formData.instructorName.trim() || undefined,
         categoryId: formData.categoryId,
         level: formData.level as "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
         price: formData.price ? parseFloat(formData.price) : 0,
@@ -408,6 +411,15 @@ export default function EditCoursePage() {
                 placeholder="99"
                 helperText="Set to 0 for free courses"
                 icon={<span className="text-gray-400 font-medium">$</span>}
+              />
+
+              <AdminInput
+                label="Teacher Name"
+                name="instructorName"
+                value={formData.instructorName}
+                onChange={handleChange}
+                placeholder="e.g., John Smith"
+                helperText="Name displayed as the course instructor"
               />
 
               <div className="space-y-1.5">
