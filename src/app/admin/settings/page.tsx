@@ -253,15 +253,13 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={() => handlePageToggle(page.id)}
-                  className={`relative w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors duration-200 shrink-0 ${
-                    isVisible ? "bg-primary" : "bg-gray-200"
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 shrink-0 ${
+                    isVisible ? "bg-primary" : "bg-gray-300"
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-                      isVisible
-                        ? "translate-x-5 sm:translate-x-7"
-                        : "translate-x-0.5 sm:translate-x-1"
+                    className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                      isVisible ? "translate-x-6" : "translate-x-1"
                     }`}
                   />
                 </button>
@@ -439,17 +437,13 @@ export default function SettingsPage() {
             </div>
             <button
               onClick={() => handleToggle("enrollmentNotifications")}
-              className={`relative w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors duration-200 shrink-0 ${
-                settings.enrollmentNotifications
-                  ? "bg-primary"
-                  : "bg-gray-200"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 shrink-0 ${
+                settings.enrollmentNotifications ? "bg-primary" : "bg-gray-300"
               }`}
             >
               <span
-                className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-                  settings.enrollmentNotifications
-                    ? "translate-x-5 sm:translate-x-7"
-                    : "translate-x-0.5 sm:translate-x-1"
+                className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                  settings.enrollmentNotifications ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>
@@ -464,15 +458,13 @@ export default function SettingsPage() {
             </div>
             <button
               onClick={() => handleToggle("marketingEmails")}
-              className={`relative w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors duration-200 shrink-0 ${
-                settings.marketingEmails ? "bg-primary" : "bg-gray-200"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 shrink-0 ${
+                settings.marketingEmails ? "bg-primary" : "bg-gray-300"
               }`}
             >
               <span
-                className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-                  settings.marketingEmails
-                    ? "translate-x-5 sm:translate-x-7"
-                    : "translate-x-0.5 sm:translate-x-1"
+                className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                  settings.marketingEmails ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>
@@ -505,15 +497,13 @@ export default function SettingsPage() {
             </div>
             <button
               onClick={() => handleToggle("maintenanceMode")}
-              className={`relative w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors duration-200 shrink-0 ${
-                settings.maintenanceMode ? "bg-yellow-500" : "bg-gray-200"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 shrink-0 ${
+                settings.maintenanceMode ? "bg-yellow-500" : "bg-gray-300"
               }`}
             >
               <span
-                className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-                  settings.maintenanceMode
-                    ? "translate-x-5 sm:translate-x-7"
-                    : "translate-x-0.5 sm:translate-x-1"
+                className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                  settings.maintenanceMode ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { vaultApi, type VaultDiscussion, type VaultComment } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 // Category slug -> color mapping
 const categoryColors: Record<string, string> = {
@@ -295,6 +296,7 @@ export default function DiscussionCard({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const commentObserverRef = useRef<HTMLDivElement>(null);
+  const { isAdmin: currentUserIsAdmin } = useAuth();
 
   const catColor = categoryColors[discussion.category] || "#6B7280";
   const catLabel = categoryLabels[discussion.category] || discussion.category;
@@ -439,8 +441,8 @@ export default function DiscussionCard({
           </div>
         </div>
 
-        {/* Delete (only for own posts) */}
-        {discussion.isOwn && (
+        {/* Delete (own posts or admin) */}
+        {(discussion.isOwn || currentUserIsAdmin) && (
           <button
             onClick={() => setShowDeleteModal(true)}
             className="text-white/20 hover:text-red-400 transition-colors p-1 cursor-pointer"
