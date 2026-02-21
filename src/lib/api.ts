@@ -967,4 +967,36 @@ export const vaultApi = {
   getStats: () => api.get<VaultStats>('/vault/stats'),
 };
 
+// ============================================
+// SETTINGS API
+// ============================================
+
+export interface Settings {
+  id: string;
+  siteName: string;
+  logo: string | null;
+  contactEmail: string;
+  supportEmail: string;
+  currency: string;
+  defaultCourseStatus: string;
+  enrollmentNotifications: boolean;
+  marketingEmails: boolean;
+  maintenanceMode: boolean;
+  hiddenPages: string[];
+  updatedAt: string;
+}
+
+export interface PublicSettings {
+  hiddenPages: string[];
+}
+
+export const settingsApi = {
+  getSettings: () => api.get<Settings>('/settings'),
+
+  getPublicSettings: () => api.get<PublicSettings>('/settings/public'),
+
+  updateSettings: (data: Partial<Omit<Settings, 'id' | 'updatedAt'>>) =>
+    api.put<Settings>('/settings', data),
+};
+
 export default api;

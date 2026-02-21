@@ -4,6 +4,7 @@ import Image from "next/image";
 import TransitionLink from "./TransitionLink";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { settingsApi } from "@/lib/api";
 
 export default function Navbar() {
   const [platformOpen, setPlatformOpen] = useState(false);
@@ -11,12 +12,28 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileAccordion, setMobileAccordion] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [hiddenPages, setHiddenPages] = useState<string[]>([]);
 
   const platformRef = useRef<HTMLDivElement>(null);
   const enterpriseRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
+
+  // Fetch hidden pages from settings
+  useEffect(() => {
+    const fetchHiddenPages = async () => {
+      try {
+        const res = await settingsApi.getPublicSettings();
+        if (res.success && res.data) {
+          setHiddenPages(res.data.hiddenPages || []);
+        }
+      } catch {
+        // Use defaults (no pages hidden)
+      }
+    };
+    fetchHiddenPages();
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -199,22 +216,24 @@ export default function Navbar() {
             {/* Center Navigation - Desktop */}
             <div className="hidden lg:flex items-center gap-1">
               {/* The Vault Button */}
-              <TransitionLink
-                href="/vault"
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#FF6F001A] hover:bg-[#FF6F0033] text-[#FF6F00] text-sm font-semibold rounded-lg transition-all duration-200 mr-4"
-              >
-                <Image
-                  src="/icon/vault.svg"
-                  alt="Vault"
-                  width={18}
-                  height={18}
-                  className="w-[18px] h-[18px]"
-                />
-                The Vault
-              </TransitionLink>
+              {!hiddenPages.includes("vault") && (
+                <TransitionLink
+                  href="/vault"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#FF6F001A] hover:bg-[#FF6F0033] text-[#FF6F00] text-sm font-semibold rounded-lg transition-all duration-200 mr-4"
+                >
+                  <Image
+                    src="/icon/vault.svg"
+                    alt="Vault"
+                    width={18}
+                    height={18}
+                    className="w-[18px] h-[18px]"
+                  />
+                  The Vault
+                </TransitionLink>
+              )}
 
               {/* Platform Dropdown */}
-              <div
+              {!hiddenPages.includes("platform") && <div
                 className="relative"
                 ref={platformRef}
                 onMouseEnter={() => {
@@ -257,10 +276,10 @@ export default function Navbar() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>}
 
               {/* Enterprise Dropdown */}
-              <div
+              {!hiddenPages.includes("enterprise") && <div
                 className="relative"
                 ref={enterpriseRef}
                 onMouseEnter={() => {
@@ -303,33 +322,43 @@ export default function Navbar() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>}
 
               {/* Regular Links */}
-              <TransitionLink href="/courses" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
-                Courses
-              </TransitionLink>
-              <TransitionLink href="/pricing" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
-                Pricing
-              </TransitionLink>
-              <TransitionLink href="/about" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
-                About
-              </TransitionLink>
-              <TransitionLink href="/contact" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
-                Contact
-              </TransitionLink>
+              {!hiddenPages.includes("courses") && (
+                <TransitionLink href="/courses" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
+                  Courses
+                </TransitionLink>
+              )}
+              {!hiddenPages.includes("pricing") && (
+                <TransitionLink href="/pricing" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
+                  Pricing
+                </TransitionLink>
+              )}
+              {!hiddenPages.includes("about") && (
+                <TransitionLink href="/about" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
+                  About
+                </TransitionLink>
+              )}
+              {!hiddenPages.includes("contact") && (
+                <TransitionLink href="/contact" className="px-4 py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors">
+                  Contact
+                </TransitionLink>
+              )}
             </div>
 
             {/* Right Section - Desktop */}
             <div className="hidden lg:flex items-center gap-3">
               {/* Globe Icon - Navigate to Vault */}
-              <TransitionLink href="/vault" className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 hover:border-[#FF6F00] hover:bg-[#FFF4E5] transition-all duration-200 cursor-pointer">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="10" stroke="#1E293B" strokeWidth="1.5"/>
-                  <path d="M2 12H22" stroke="#1E293B" strokeWidth="1.5" strokeLinecap="round"/>
-                  <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="#1E293B" strokeWidth="1.5"/>
-                </svg>
-              </TransitionLink>
+              {!hiddenPages.includes("vault") && (
+                <TransitionLink href="/vault" className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 hover:border-[#FF6F00] hover:bg-[#FFF4E5] transition-all duration-200 cursor-pointer">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="#1E293B" strokeWidth="1.5"/>
+                    <path d="M2 12H22" stroke="#1E293B" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="#1E293B" strokeWidth="1.5"/>
+                  </svg>
+                </TransitionLink>
+              )}
 
               {isAuthenticated && user ? (
                 <>
@@ -500,104 +529,120 @@ export default function Navbar() {
           {/* Mobile Menu Content */}
           <div className="flex-1 overflow-y-auto py-4">
             {/* The Vault Button - Mobile */}
-            <div className="px-4 mb-4">
-              <TransitionLink
-                href="/vault"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-[#FF6F001A] hover:bg-[#FF6F0033] text-[#FF6F00] text-sm font-semibold rounded-lg transition-all duration-200"
-              >
-                <Image
-                  src="/icon/vault.svg"
-                  alt="Vault"
-                  width={18}
-                  height={18}
-                  className="w-[18px] h-[18px]"
-                />
-                The Vault
-              </TransitionLink>
-            </div>
+            {!hiddenPages.includes("vault") && (
+              <div className="px-4 mb-4">
+                <TransitionLink
+                  href="/vault"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-[#FF6F001A] hover:bg-[#FF6F0033] text-[#FF6F00] text-sm font-semibold rounded-lg transition-all duration-200"
+                >
+                  <Image
+                    src="/icon/vault.svg"
+                    alt="Vault"
+                    width={18}
+                    height={18}
+                    className="w-[18px] h-[18px]"
+                  />
+                  The Vault
+                </TransitionLink>
+              </div>
+            )}
 
             {/* Mobile Navigation Links */}
             <div className="px-4 space-y-1">
               {/* Platform Accordion */}
-              <div className="border-b border-gray-100">
-                <button
-                  onClick={() => toggleMobileAccordion("platform")}
-                  className="flex items-center justify-between w-full py-3 text-[#1E293B] text-base font-medium"
-                >
-                  Platform
-                  <ChevronDown className={`transition-transform duration-300 ${mobileAccordion === "platform" ? "rotate-180" : ""}`} />
-                </button>
-                <div className={`overflow-hidden transition-all duration-300 ${mobileAccordion === "platform" ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
-                  <div className="pb-3 space-y-3">
-                    {platformItems.map((item, index) => (
-                      <a key={index} href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#FFF4E5] flex-shrink-0">
-                          {item.icon}
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-semibold text-[#000E51]">{item.title}</h4>
-                          <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{item.description}</p>
-                        </div>
-                      </a>
-                    ))}
+              {!hiddenPages.includes("platform") && (
+                <div className="border-b border-gray-100">
+                  <button
+                    onClick={() => toggleMobileAccordion("platform")}
+                    className="flex items-center justify-between w-full py-3 text-[#1E293B] text-base font-medium"
+                  >
+                    Platform
+                    <ChevronDown className={`transition-transform duration-300 ${mobileAccordion === "platform" ? "rotate-180" : ""}`} />
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-300 ${mobileAccordion === "platform" ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
+                    <div className="pb-3 space-y-3">
+                      {platformItems.map((item, index) => (
+                        <a key={index} href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#FFF4E5] flex-shrink-0">
+                            {item.icon}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-semibold text-[#000E51]">{item.title}</h4>
+                            <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{item.description}</p>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Enterprise Accordion */}
-              <div className="border-b border-gray-100">
-                <button
-                  onClick={() => toggleMobileAccordion("enterprise")}
-                  className="flex items-center justify-between w-full py-3 text-[#1E293B] text-base font-medium"
-                >
-                  Enterprise
-                  <ChevronDown className={`transition-transform duration-300 ${mobileAccordion === "enterprise" ? "rotate-180" : ""}`} />
-                </button>
-                <div className={`overflow-hidden transition-all duration-300 ${mobileAccordion === "enterprise" ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
-                  <div className="pb-3 space-y-3">
-                    {enterpriseItems.map((item, index) => (
-                      <a key={index} href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#FFF4E5] flex-shrink-0">
-                          {item.icon}
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-semibold text-[#000E51]">{item.title}</h4>
-                          <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{item.description}</p>
-                        </div>
-                      </a>
-                    ))}
+              {!hiddenPages.includes("enterprise") && (
+                <div className="border-b border-gray-100">
+                  <button
+                    onClick={() => toggleMobileAccordion("enterprise")}
+                    className="flex items-center justify-between w-full py-3 text-[#1E293B] text-base font-medium"
+                  >
+                    Enterprise
+                    <ChevronDown className={`transition-transform duration-300 ${mobileAccordion === "enterprise" ? "rotate-180" : ""}`} />
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-300 ${mobileAccordion === "enterprise" ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
+                    <div className="pb-3 space-y-3">
+                      {enterpriseItems.map((item, index) => (
+                        <a key={index} href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#FFF4E5] flex-shrink-0">
+                            {item.icon}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-semibold text-[#000E51]">{item.title}</h4>
+                            <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{item.description}</p>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Simple Links */}
-              <TransitionLink href="/courses" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
-                Courses
-              </TransitionLink>
-              <TransitionLink href="/pricing" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
-                Pricing
-              </TransitionLink>
-              <TransitionLink href="/about" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
-                About
-              </TransitionLink>
-              <TransitionLink href="/contact" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
-                Contact
-              </TransitionLink>
+              {!hiddenPages.includes("courses") && (
+                <TransitionLink href="/courses" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
+                  Courses
+                </TransitionLink>
+              )}
+              {!hiddenPages.includes("pricing") && (
+                <TransitionLink href="/pricing" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
+                  Pricing
+                </TransitionLink>
+              )}
+              {!hiddenPages.includes("about") && (
+                <TransitionLink href="/about" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
+                  About
+                </TransitionLink>
+              )}
+              {!hiddenPages.includes("contact") && (
+                <TransitionLink href="/contact" onClick={() => setMobileMenuOpen(false)} className="block py-3 text-[#1E293B] text-base font-medium border-b border-gray-100 hover:text-[#FF6F00] transition-colors">
+                  Contact
+                </TransitionLink>
+              )}
             </div>
           </div>
 
           {/* Mobile Menu Footer */}
           <div className="p-4 border-t border-gray-100 space-y-3">
             {/* Globe - Navigate to Vault */}
-            <TransitionLink href="/vault" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors cursor-pointer">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M2 12H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="currentColor" strokeWidth="1.5"/>
-              </svg>
-              The Vault
-            </TransitionLink>
+            {!hiddenPages.includes("vault") && (
+              <TransitionLink href="/vault" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors cursor-pointer">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M2 12H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+                The Vault
+              </TransitionLink>
+            )}
 
             {isAuthenticated && user ? (
               <>

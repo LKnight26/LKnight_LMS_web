@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
 import Badge from "@/components/admin/Badge";
+import { settingsApi } from "@/lib/api";
 
-interface Settings {
+interface SettingsState {
   siteName: string;
   contactEmail: string;
   supportEmail: string;
@@ -16,6 +17,7 @@ interface Settings {
   enrollmentNotifications: boolean;
   marketingEmails: boolean;
   maintenanceMode: boolean;
+  hiddenPages: string[];
 }
 
 const currencyOptions = [
@@ -31,8 +33,18 @@ const courseStatusOptions = [
   { value: "published", label: "Published (Visible immediately)" },
 ];
 
+const navPages = [
+  { id: "vault", label: "The Vault", description: "Anonymous leadership discussion forum" },
+  { id: "platform", label: "Platform", description: "Platform dropdown menu in navbar" },
+  { id: "enterprise", label: "Enterprise", description: "Enterprise dropdown menu in navbar" },
+  { id: "courses", label: "Courses", description: "Courses page link in navbar" },
+  { id: "pricing", label: "Pricing", description: "Pricing page link in navbar" },
+  { id: "about", label: "About", description: "About page link in navbar" },
+  { id: "contact", label: "Contact", description: "Contact page link in navbar" },
+];
+
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>({
+  const [settings, setSettings] = useState<SettingsState>({
     siteName: "LKnight LMS",
     contactEmail: "contact@lknight.com",
     supportEmail: "support@lknight.com",
@@ -41,11 +53,41 @@ export default function SettingsPage() {
     enrollmentNotifications: true,
     marketingEmails: false,
     maintenanceMode: false,
+    hiddenPages: [],
   });
 
   const [logo, setLogo] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch settings on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await settingsApi.getSettings();
+        if (res.success && res.data) {
+          setSettings({
+            siteName: res.data.siteName,
+            contactEmail: res.data.contactEmail,
+            supportEmail: res.data.supportEmail,
+            currency: res.data.currency,
+            defaultCourseStatus: res.data.defaultCourseStatus,
+            enrollmentNotifications: res.data.enrollmentNotifications,
+            marketingEmails: res.data.marketingEmails,
+            maintenanceMode: res.data.maintenanceMode,
+            hiddenPages: res.data.hiddenPages || [],
+          });
+          if (res.data.logo) setLogo(res.data.logo);
+        }
+      } catch {
+        // Use defaults if API fails
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -55,11 +97,24 @@ export default function SettingsPage() {
     setSaved(false);
   };
 
-  const handleToggle = (key: keyof Settings) => {
+  const handleToggle = (key: keyof SettingsState) => {
     setSettings((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
+    setSaved(false);
+  };
+
+  const handlePageToggle = (pageId: string) => {
+    setSettings((prev) => {
+      const isHidden = prev.hiddenPages.includes(pageId);
+      return {
+        ...prev,
+        hiddenPages: isHidden
+          ? prev.hiddenPages.filter((p) => p !== pageId)
+          : [...prev.hiddenPages, pageId],
+      };
+    });
     setSaved(false);
   };
 
@@ -77,11 +132,28 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSaving(false);
-    setSaved(true);
+    try {
+      const res = await settingsApi.updateSettings({
+        ...settings,
+        logo: logo || undefined,
+      });
+      if (res.success) {
+        setSaved(true);
+      }
+    } catch {
+      // fail silently
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-4xl">
@@ -150,6 +222,54 @@ export default function SettingsPage() {
           </AdminButton>
         </div>
       </div>
+
+      {/* Page Visibility */}
+      <AdminCard
+        title="Page Visibility"
+        subtitle="Show or hide pages from the navigation bar"
+      >
+        <div className="space-y-1">
+          {navPages.map((page) => {
+            const isVisible = !settings.hiddenPages.includes(page.id);
+            return (
+              <div
+                key={page.id}
+                className="flex items-center justify-between py-2.5 sm:py-3 border-b border-gray-100 last:border-0 gap-3"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900 text-sm sm:text-base">
+                      {page.label}
+                    </p>
+                    {!isVisible && (
+                      <Badge variant="warning" size="sm">
+                        Hidden
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    {page.description}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handlePageToggle(page.id)}
+                  className={`relative w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors duration-200 shrink-0 ${
+                    isVisible ? "bg-primary" : "bg-gray-200"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+                      isVisible
+                        ? "translate-x-5 sm:translate-x-7"
+                        : "translate-x-0.5 sm:translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </AdminCard>
 
       {/* General Settings */}
       <AdminCard
