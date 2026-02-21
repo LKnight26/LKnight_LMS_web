@@ -211,6 +211,55 @@ export const dashboardApi = {
     api.get<TopCourse[]>(`/admin/dashboard/top-courses${limit ? `?limit=${limit}` : ''}`),
 };
 
+// Analytics API (admin analytics page)
+export interface AnalyticsOverview {
+  totalRevenue: { value: number; currency: string };
+  totalUsers: { value: number };
+  totalEnrollments: { value: number };
+  avgOrderValue: { value: number };
+  completionRate: number;
+  averageRating: number;
+  avgSessionDuration: number;
+  satisfactionRate: number;
+}
+
+export const analyticsApi = {
+  getOverview: (period?: string) =>
+    api.get<AnalyticsOverview>(
+      `/admin/dashboard/analytics/overview${period ? `?period=${period}` : ''}`
+    ),
+
+  getRevenueChart: (months?: number) =>
+    api.get<ChartData[]>(
+      `/admin/dashboard/revenue-chart${months ? `?months=${months}` : ''}`
+    ),
+
+  getUserGrowth: (months?: number) =>
+    api.get<{ data: ChartData[]; trend: number }>(
+      `/admin/dashboard/user-growth${months ? `?months=${months}` : ''}`
+    ),
+
+  getEnrollmentChart: (months?: number) =>
+    api.get<ChartData[]>(
+      `/admin/dashboard/analytics/enrollment-chart${months ? `?months=${months}` : ''}`
+    ),
+
+  getEnrollmentsByCourse: (limit?: number) =>
+    api.get<ChartData[]>(
+      `/admin/dashboard/analytics/enrollments-by-course${limit ? `?limit=${limit}` : ''}`
+    ),
+
+  getRevenueByCategory: () =>
+    api.get<(ChartData & { color?: string })[]>(
+      `/admin/dashboard/analytics/revenue-by-category`
+    ),
+
+  getTopCourses: (limit?: number) =>
+    api.get<TopCourse[]>(
+      `/admin/dashboard/top-courses${limit ? `?limit=${limit}` : ''}`
+    ),
+};
+
 // Categories API
 export interface Category {
   id: string;

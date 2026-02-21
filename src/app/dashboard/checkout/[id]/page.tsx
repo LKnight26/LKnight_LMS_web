@@ -80,8 +80,18 @@ function CheckoutContent() {
 
         // PAID COURSE: redirect to Stripe Checkout
         if ("sessionUrl" in response.data && response.data.sessionUrl) {
-          window.location.href = response.data.sessionUrl;
-          // Don't setIsPurchasing(false) — page is navigating away
+          const sessionUrl = response.data.sessionUrl;
+
+          // Validate the URL is a legitimate Stripe checkout URL
+          if (!sessionUrl.startsWith("https://checkout.stripe.com")) {
+            setError("Invalid checkout URL received. Please try again or contact support.");
+            setIsPurchasing(false);
+            return;
+          }
+
+          window.location.href = sessionUrl;
+          // Re-enable button after 10s if redirect stalls (slow connection)
+          setTimeout(() => setIsPurchasing(false), 10000);
           return;
         }
       }

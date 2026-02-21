@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import StatsCard from "@/components/admin/StatsCard";
@@ -9,87 +9,172 @@ import LineChart from "@/components/admin/LineChart";
 import PieChart from "@/components/admin/PieChart";
 import EnrollmentChart from "@/components/admin/EnrollmentChart";
 import Badge from "@/components/admin/Badge";
-
-// Mock data
-const monthlyRevenue = [
-  { label: "Jan", value: 12500 },
-  { label: "Feb", value: 15200 },
-  { label: "Mar", value: 14800 },
-  { label: "Apr", value: 18100 },
-  { label: "May", value: 17800 },
-  { label: "Jun", value: 21200 },
-  { label: "Jul", value: 19900 },
-  { label: "Aug", value: 23400 },
-  { label: "Sep", value: 22100 },
-  { label: "Oct", value: 25600 },
-  { label: "Nov", value: 24300 },
-  { label: "Dec", value: 28500 },
-];
-
-const userGrowth = [
-  { label: "Jan", value: 320 },
-  { label: "Feb", value: 480 },
-  { label: "Mar", value: 650 },
-  { label: "Apr", value: 820 },
-  { label: "May", value: 1010 },
-  { label: "Jun", value: 1320 },
-  { label: "Jul", value: 1550 },
-  { label: "Aug", value: 1840 },
-  { label: "Sep", value: 2120 },
-  { label: "Oct", value: 2450 },
-  { label: "Nov", value: 2680 },
-  { label: "Dec", value: 2847 },
-];
-
-const enrollmentsByMonth = [
-  { label: "Jan", value: 245 },
-  { label: "Feb", value: 312 },
-  { label: "Mar", value: 289 },
-  { label: "Apr", value: 378 },
-  { label: "May", value: 356 },
-  { label: "Jun", value: 423 },
-  { label: "Jul", value: 401 },
-  { label: "Aug", value: 467 },
-  { label: "Sep", value: 445 },
-  { label: "Oct", value: 512 },
-  { label: "Nov", value: 489 },
-  { label: "Dec", value: 534 },
-];
-
-const topCourses = [
-  { name: "Web Development Masterclass", revenue: 45200, enrollments: 456, trend: 12, rating: 4.9 },
-  { name: "React Advanced Patterns", revenue: 38900, enrollments: 312, trend: 8, rating: 4.8 },
-  { name: "Python for Data Science", revenue: 32400, enrollments: 287, trend: 15, rating: 4.7 },
-  { name: "Node.js Backend Development", revenue: 28700, enrollments: 234, trend: -3, rating: 4.6 },
-  { name: "UI/UX Design Fundamentals", revenue: 24100, enrollments: 198, trend: 5, rating: 4.5 },
-];
-
-const revenueByCategory = [
-  { name: "Web Development", value: 85400 },
-  { name: "Mobile Dev", value: 48200 },
-  { name: "Data Science", value: 41600 },
-  { name: "Backend", value: 36400 },
-  { name: "Design", value: 31400 },
-];
-
-const enrollmentsByCourse = [
-  { name: "Web Development Masterclass", enrollments: 456 },
-  { name: "React Advanced Patterns", enrollments: 312 },
-  { name: "Python for Data Science", enrollments: 287 },
-  { name: "Node.js Backend Development", enrollments: 234 },
-  { name: "UI/UX Design Fundamentals", enrollments: 198 },
-  { name: "JavaScript Essentials", enrollments: 176 },
-  { name: "TypeScript Deep Dive", enrollments: 145 },
-  { name: "Database Design", enrollments: 132 },
-];
+import {
+  analyticsApi,
+  AnalyticsOverview,
+  ChartData,
+  TopCourse,
+} from "@/lib/api";
 
 type Period = "7d" | "30d" | "90d" | "12m" | "all";
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState<Period>("12m");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const totalRevenue = monthlyRevenue.reduce((sum, m) => sum + m.value, 0);
-  const totalEnrollments = enrollmentsByMonth.reduce((sum, m) => sum + m.value, 0);
+  const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
+  const [revenueData, setRevenueData] = useState<ChartData[]>([]);
+  const [userGrowthData, setUserGrowthData] = useState<ChartData[]>([]);
+  const [userGrowthTrend, setUserGrowthTrend] = useState(0);
+  const [enrollmentChartData, setEnrollmentChartData] = useState<ChartData[]>([]);
+  const [enrollmentsByCourse, setEnrollmentsByCourse] = useState<ChartData[]>([]);
+  const [revenueByCategory, setRevenueByCategory] = useState<{ name: string; value: number }[]>([]);
+  const [topCourses, setTopCourses] = useState<TopCourse[]>([]);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [
+          overviewRes,
+          revenueRes,
+          userGrowthRes,
+          enrollmentChartRes,
+          enrollmentsCourseRes,
+          revenueCategoryRes,
+          topCoursesRes,
+        ] = await Promise.all([
+          analyticsApi.getOverview(period),
+          analyticsApi.getRevenueChart(12),
+          analyticsApi.getUserGrowth(12),
+          analyticsApi.getEnrollmentChart(12),
+          analyticsApi.getEnrollmentsByCourse(8),
+          analyticsApi.getRevenueByCategory(),
+          analyticsApi.getTopCourses(5),
+        ]);
+
+        if (overviewRes.success && overviewRes.data) {
+          setOverview(overviewRes.data);
+        }
+        if (revenueRes.success && revenueRes.data) {
+          setRevenueData(revenueRes.data);
+        }
+        if (userGrowthRes.success && userGrowthRes.data) {
+          setUserGrowthData(userGrowthRes.data.data || []);
+          setUserGrowthTrend(userGrowthRes.data.trend || 0);
+        }
+        if (enrollmentChartRes.success && enrollmentChartRes.data) {
+          setEnrollmentChartData(enrollmentChartRes.data);
+        }
+        if (enrollmentsCourseRes.success && enrollmentsCourseRes.data) {
+          setEnrollmentsByCourse(enrollmentsCourseRes.data);
+        }
+        if (revenueCategoryRes.success && revenueCategoryRes.data) {
+          setRevenueByCategory(
+            revenueCategoryRes.data.map((item) => ({
+              name: item.label,
+              value: item.value,
+            }))
+          );
+        }
+        if (topCoursesRes.success && topCoursesRes.data) {
+          setTopCourses(topCoursesRes.data);
+        }
+      } catch (err) {
+        console.error("Failed to load analytics:", err);
+        setError("Failed to load analytics data. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, [period]);
+
+  const totalRevenue = overview?.totalRevenue?.value ?? 0;
+  const totalUsers = overview?.totalUsers?.value ?? 0;
+  const totalEnrollments = overview?.totalEnrollments?.value ?? 0;
+  const avgOrderValue = overview?.avgOrderValue?.value ?? 0;
+  const completionRate = overview?.completionRate ?? 0;
+  const averageRating = overview?.averageRating ?? 0;
+  const avgSessionDuration = overview?.avgSessionDuration ?? 0;
+  const satisfactionRate = overview?.satisfactionRate ?? 0;
+
+  const enrollmentChartTrend =
+    enrollmentChartData.length >= 2
+      ? (() => {
+          const last = enrollmentChartData[enrollmentChartData.length - 1]?.value ?? 0;
+          const prev = enrollmentChartData[enrollmentChartData.length - 2]?.value ?? 0;
+          return prev > 0 ? Math.round(((last - prev) / prev) * 100) : 0;
+        })()
+      : 0;
+
+  const totalEnrollmentsByCourse = enrollmentsByCourse.reduce(
+    (sum, c) => sum + c.value,
+    0
+  );
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="space-y-6 lg:space-y-8 animate-pulse">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-64"></div>
+          </div>
+          <div className="h-10 bg-gray-200 rounded w-64"></div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-6 h-32"></div>
+          ))}
+        </div>
+        <div className="bg-white rounded-xl h-80"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-white rounded-xl h-72"></div>
+          <div className="bg-white rounded-xl h-72"></div>
+        </div>
+        <div className="bg-white rounded-xl h-80"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-white rounded-xl h-80"></div>
+          <div className="bg-white rounded-xl h-80"></div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-6 h-32"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg text-center max-w-md">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Failed to Load Analytics</h2>
+          <p className="text-gray-500 text-sm mb-4">{error}</p>
+          <button
+            onClick={() => setPeriod((p) => p)}
+            className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -158,7 +243,6 @@ export default function AnalyticsPage() {
         <StatsCard
           title="Total Revenue"
           value={`$${totalRevenue.toLocaleString()}`}
-          change={{ value: 18.2, type: "increase" }}
           icon={
             <svg
               width="24"
@@ -179,8 +263,7 @@ export default function AnalyticsPage() {
         />
         <StatsCard
           title="Total Users"
-          value="2,847"
-          change={{ value: 12.5, type: "increase" }}
+          value={totalUsers.toLocaleString()}
           icon={
             <svg
               width="24"
@@ -204,7 +287,6 @@ export default function AnalyticsPage() {
         <StatsCard
           title="Enrollments"
           value={totalEnrollments.toLocaleString()}
-          change={{ value: 8.7, type: "increase" }}
           icon={
             <svg
               width="24"
@@ -225,8 +307,7 @@ export default function AnalyticsPage() {
         />
         <StatsCard
           title="Avg Order Value"
-          value="$87.50"
-          change={{ value: 3.2, type: "decrease" }}
+          value={`$${avgOrderValue.toFixed(2)}`}
           icon={
             <svg
               width="24"
@@ -251,7 +332,7 @@ export default function AnalyticsPage() {
       {/* Revenue Chart - Full Width */}
       <AdminCard
         title="Revenue Overview"
-        subtitle="Monthly revenue performance for the current year"
+        subtitle="Monthly revenue performance"
         action={
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -262,7 +343,13 @@ export default function AnalyticsPage() {
         }
       >
         <div className="h-64 sm:h-72 lg:h-80">
-          <RevenueChart data={monthlyRevenue} />
+          {revenueData.length > 0 ? (
+            <RevenueChart data={revenueData} />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              No revenue data available
+            </div>
+          )}
         </div>
       </AdminCard>
 
@@ -271,40 +358,58 @@ export default function AnalyticsPage() {
         {/* User Growth */}
         <AdminCard
           title="User Growth"
-          subtitle="Cumulative user registrations"
+          subtitle="New user registrations per month"
           action={
-            <Badge variant="success" size="sm">
-              +790%
-            </Badge>
+            userGrowthTrend !== 0 ? (
+              <Badge variant={userGrowthTrend >= 0 ? "success" : "danger"} size="sm">
+                {userGrowthTrend >= 0 ? "+" : ""}
+                {userGrowthTrend}%
+              </Badge>
+            ) : null
           }
         >
           <div className="h-56 sm:h-64 lg:h-72">
-            <LineChart
-              data={userGrowth}
-              color="#3B82F6"
-              valuePrefix=""
-              valueSuffix=" users"
-            />
+            {userGrowthData.length > 0 ? (
+              <LineChart
+                data={userGrowthData}
+                color="#3B82F6"
+                valuePrefix=""
+                valueSuffix=" users"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                No user data available
+              </div>
+            )}
           </div>
         </AdminCard>
 
-        {/* Enrollments */}
+        {/* Monthly Enrollments */}
         <AdminCard
           title="Monthly Enrollments"
           subtitle="Course enrollments per month"
           action={
-            <Badge variant="success" size="sm">
-              +118%
-            </Badge>
+            enrollmentChartTrend !== 0 ? (
+              <Badge variant={enrollmentChartTrend >= 0 ? "success" : "danger"} size="sm">
+                {enrollmentChartTrend >= 0 ? "+" : ""}
+                {enrollmentChartTrend}%
+              </Badge>
+            ) : null
           }
         >
           <div className="h-56 sm:h-64 lg:h-72">
-            <LineChart
-              data={enrollmentsByMonth}
-              color="#A855F7"
-              valuePrefix=""
-              valueSuffix=" enrollments"
-            />
+            {enrollmentChartData.length > 0 ? (
+              <LineChart
+                data={enrollmentChartData}
+                color="#A855F7"
+                valuePrefix=""
+                valueSuffix=" enrollments"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                No enrollment data available
+              </div>
+            )}
           </div>
         </AdminCard>
       </div>
@@ -314,13 +419,27 @@ export default function AnalyticsPage() {
         title="Enrollments by Course"
         subtitle="Student enrollment distribution across courses"
         action={
-          <Badge variant="primary" size="sm" className="hidden sm:inline-flex">
-            {enrollmentsByCourse.reduce((sum, c) => sum + c.enrollments, 0).toLocaleString()} total
-          </Badge>
+          totalEnrollmentsByCourse > 0 ? (
+            <Badge variant="primary" size="sm" className="hidden sm:inline-flex">
+              {totalEnrollmentsByCourse.toLocaleString()} total
+            </Badge>
+          ) : null
         }
       >
         <div className="h-72 sm:h-80 lg:h-96">
-          <EnrollmentChart data={enrollmentsByCourse} layout="vertical" />
+          {enrollmentsByCourse.length > 0 ? (
+            <EnrollmentChart
+              data={enrollmentsByCourse.map((item) => ({
+                name: item.label,
+                enrollments: item.value,
+              }))}
+              layout="vertical"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              No enrollment data available
+            </div>
+          )}
         </div>
       </AdminCard>
 
@@ -332,57 +451,63 @@ export default function AnalyticsPage() {
           subtitle="Ranked by revenue"
           padding="none"
         >
-          <div className="divide-y divide-gray-50">
-            {topCourses.map((course, index) => (
-              <div
-                key={course.name}
-                className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50/50 transition-colors"
-              >
+          {topCourses.length > 0 ? (
+            <div className="divide-y divide-gray-50">
+              {topCourses.map((course, index) => (
                 <div
-                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-sm ${
-                    index === 0
-                      ? "bg-linear-to-br from-yellow-400 to-yellow-500 text-white"
-                      : index === 1
-                      ? "bg-linear-to-br from-gray-300 to-gray-400 text-white"
-                      : index === 2
-                      ? "bg-linear-to-br from-orange-400 to-orange-500 text-white"
-                      : "bg-gray-100 text-gray-500"
-                  }`}
+                  key={course.id}
+                  className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50/50 transition-colors"
                 >
-                  {index + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
-                    {course.name}
-                  </p>
-                  <div className="flex items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1">
-                    <span className="text-[10px] sm:text-xs text-gray-500">
-                      {course.enrollments} students
-                    </span>
-                    <span className="text-gray-300 hidden sm:inline">|</span>
-                    <span className="text-[10px] sm:text-xs text-yellow-500 hidden sm:flex items-center gap-0.5">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                      </svg>
-                      {course.rating}
-                    </span>
+                  <div
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-sm ${
+                      index === 0
+                        ? "bg-linear-to-br from-yellow-400 to-yellow-500 text-white"
+                        : index === 1
+                        ? "bg-linear-to-br from-gray-300 to-gray-400 text-white"
+                        : index === 2
+                        ? "bg-linear-to-br from-orange-400 to-orange-500 text-white"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
+                      {course.title}
+                    </p>
+                    <div className="flex items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1">
+                      <span className="text-[10px] sm:text-xs text-gray-500">
+                        {course.enrollments} students
+                      </span>
+                      <span className="text-gray-300 hidden sm:inline">|</span>
+                      <span className="text-[10px] sm:text-xs text-yellow-500 hidden sm:flex items-center gap-0.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                        {course.rating}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs sm:text-sm font-bold text-primary">
+                      ${course.revenue.toLocaleString()}
+                    </p>
+                    <Badge
+                      variant={course.trend >= 0 ? "success" : "danger"}
+                      size="sm"
+                    >
+                      {course.trend >= 0 ? "+" : ""}
+                      {course.trend}%
+                    </Badge>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-xs sm:text-sm font-bold text-primary">
-                    ${course.revenue.toLocaleString()}
-                  </p>
-                  <Badge
-                    variant={course.trend >= 0 ? "success" : "danger"}
-                    size="sm"
-                  >
-                    {course.trend >= 0 ? "+" : ""}
-                    {course.trend}%
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
+              No course data available
+            </div>
+          )}
         </AdminCard>
 
         {/* Revenue by Category - Pie Chart */}
@@ -391,11 +516,21 @@ export default function AnalyticsPage() {
           subtitle="Distribution across categories"
         >
           <div className="h-64 sm:h-72 lg:h-[340px]">
-            <PieChart
-              data={revenueByCategory}
-              centerValue={`$${(totalRevenue / 1000).toFixed(0)}k`}
-              centerLabel="Total Revenue"
-            />
+            {revenueByCategory.length > 0 ? (
+              <PieChart
+                data={revenueByCategory}
+                centerValue={
+                  totalRevenue >= 1000
+                    ? `$${(totalRevenue / 1000).toFixed(0)}k`
+                    : `$${totalRevenue}`
+                }
+                centerLabel="Total Revenue"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                No category data available
+              </div>
+            )}
           </div>
         </AdminCard>
       </div>
@@ -418,7 +553,7 @@ export default function AnalyticsPage() {
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-primary">87%</p>
+            <p className="text-2xl sm:text-3xl font-bold text-primary">{completionRate}%</p>
             <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">Completion Rate</p>
           </div>
         </AdminCard>
@@ -435,7 +570,7 @@ export default function AnalyticsPage() {
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-secondary">4.8</p>
+            <p className="text-2xl sm:text-3xl font-bold text-secondary">{averageRating}</p>
             <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">Average Rating</p>
           </div>
         </AdminCard>
@@ -455,7 +590,7 @@ export default function AnalyticsPage() {
                 <polyline points="12 6 12 12 16 14" />
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-blue-600">2.5h</p>
+            <p className="text-2xl sm:text-3xl font-bold text-blue-600">{avgSessionDuration}h</p>
             <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">Avg Session</p>
           </div>
         </AdminCard>
@@ -474,7 +609,7 @@ export default function AnalyticsPage() {
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-green-600">92%</p>
+            <p className="text-2xl sm:text-3xl font-bold text-green-600">{satisfactionRate}%</p>
             <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">Satisfaction</p>
           </div>
         </AdminCard>

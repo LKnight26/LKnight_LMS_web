@@ -5,8 +5,14 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { enrollmentApi, SessionEnrollment } from "@/lib/api";
 
-const MAX_POLLS = 10;
-const POLL_INTERVAL = 2000;
+const MAX_POLLS = 15;
+
+// Exponential backoff: 500ms, 1s, 2s, 3s, 4s, 5s, 5s, 5s...
+const getPollingDelay = (pollCount: number): number => {
+  if (pollCount === 0) return 500;
+  const delays = [500, 1000, 2000, 3000, 4000, 5000];
+  return delays[Math.min(pollCount, delays.length - 1)];
+};
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -36,7 +42,21 @@ function SuccessContent() {
           router.push(`/dashboard/courses/${enrollmentData.course.id}`);
         }, 3000);
       }
-    } catch {
+    } catch (err) {
+      // Check if auth token expired during Stripe checkout
+      if (
+        err instanceof Error &&
+        (err.message.includes("Token expired") ||
+          err.message.includes("Access denied") ||
+          err.message.includes("Unauthorized"))
+      ) {
+        setIsPolling(false);
+        setError(
+          "Your session has expired. Your payment was successful! " +
+            "Please sign in again to access your course."
+        );
+        return;
+      }
       // Enrollment not yet created (webhook still processing) — keep polling
       setPollCount((prev) => prev + 1);
     }
@@ -48,14 +68,14 @@ function SuccessContent() {
         setIsPolling(false);
         setError(
           "Payment was successful but enrollment is taking longer than expected. " +
-          "Please check your dashboard in a few minutes. " +
-          "If the course doesn't appear, contact support."
+            "Please check your dashboard in a few minutes. " +
+            "If the course doesn't appear, contact support."
         );
       }
       return;
     }
 
-    const timer = setTimeout(checkEnrollment, pollCount === 0 ? 500 : POLL_INTERVAL);
+    const timer = setTimeout(checkEnrollment, getPollingDelay(pollCount));
     return () => clearTimeout(timer);
   }, [isPolling, pollCount, checkEnrollment, enrollment]);
 
@@ -86,7 +106,7 @@ function SuccessContent() {
     );
   }
 
-  // Error state (polling timed out)
+  // Error state (polling timed out or auth expired)
   if (error) {
     return (
       <div className="max-w-lg mx-auto px-4 py-16 text-center">
@@ -177,6 +197,17 @@ function SuccessContent() {
             />
           ))}
         </div>
+        {pollCount >= 5 && (
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <p className="text-sm text-gray-400 mb-2">Taking longer than expected?</p>
+            <Link
+              href="/dashboard"
+              className="text-sm font-medium text-[#FF6F00] hover:text-[#E86400] transition-colors"
+            >
+              Check your Dashboard instead
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
