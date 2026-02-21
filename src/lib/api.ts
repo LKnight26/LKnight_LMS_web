@@ -152,6 +152,62 @@ export const contactApi = {
     api.post<void>('/contact', data),
 };
 
+// Contact Admin API
+export interface ContactMessage {
+  id: string;
+  firstName: string;
+  lastName: string | null;
+  email: string;
+  phone: string | null;
+  subject: string;
+  message: string;
+  status: string;
+  adminNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContactMessageStats {
+  total: number;
+  new: number;
+  read: number;
+  replied: number;
+  archived: number;
+}
+
+export const contactAdminApi = {
+  getMessages: (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) queryParams.append(key, String(value));
+      });
+    }
+    const queryString = queryParams.toString();
+    return api.get<ContactMessage[]>(`/contact/admin/messages${queryString ? `?${queryString}` : ''}`);
+  },
+
+  getStats: () =>
+    api.get<ContactMessageStats>('/contact/admin/stats'),
+
+  getById: (id: string) =>
+    api.get<ContactMessage>(`/contact/admin/${id}`),
+
+  updateStatus: (id: string, status: string) =>
+    api.patch<ContactMessage>(`/contact/admin/${id}/status`, { status }),
+
+  addNote: (id: string, note: string) =>
+    api.patch<ContactMessage>(`/contact/admin/${id}/note`, { note }),
+
+  delete: (id: string) =>
+    api.delete<void>(`/contact/admin/${id}`),
+};
+
 // Dashboard API
 export interface DashboardStats {
   totalRevenue: number;

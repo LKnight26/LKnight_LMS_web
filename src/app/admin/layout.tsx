@@ -57,6 +57,13 @@ const TestimonialsIcon = () => (
   </svg>
 );
 
+const MessagesIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+    <polyline points="22,6 12,13 2,6" />
+  </svg>
+);
+
 const AnalyticsIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="20" x2="18" y2="10" />
@@ -101,6 +108,7 @@ const navItems = [
   { name: "Categories", href: "/admin/categories", icon: CategoriesIcon },
   { name: "Team", href: "/admin/team", icon: TeamIcon },
   { name: "Testimonials", href: "/admin/testimonials", icon: TestimonialsIcon },
+  { name: "Messages", href: "/admin/messages", icon: MessagesIcon },
   { name: "Analytics", href: "/admin/analytics", icon: AnalyticsIcon },
   { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
 ];
