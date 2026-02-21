@@ -3,6 +3,7 @@ import { Outfit, Inter } from "next/font/google";
 import "./globals.css";
 import NavigationProgress from "@/components/NavigationProgress";
 import { Providers } from "@/components/Providers";
+import MaintenanceCheck from "@/components/MaintenanceCheck";
 import JsonLd from "@/components/JsonLd";
 import {
   defaultMetadata,
@@ -51,8 +52,10 @@ export default function RootLayout({
       </head>
       <body className={`${outfit.variable} ${inter.variable} antialiased`}>
         <Providers>
-          <NavigationProgress />
-          {children}
+          <MaintenanceCheck>
+            <NavigationProgress />
+            {children}
+          </MaintenanceCheck>
         </Providers>
       </body>
     </html>

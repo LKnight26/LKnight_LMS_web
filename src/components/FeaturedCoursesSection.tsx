@@ -16,9 +16,10 @@ const transformCourse = (course: Course): CourseCardProps => ({
   summary: course.summary,
   moduleCount: course.moduleCount,
   enrollments: course.enrollments,
-  instructor: course.instructor
-    ? `${course.instructor.firstName} ${course.instructor.lastName}`
-    : "Instructor",
+  instructor: course.instructorName
+    || (course.instructor
+      ? `${course.instructor.firstName} ${course.instructor.lastName}`
+      : "Instructor"),
   price: course.price,
 });
 

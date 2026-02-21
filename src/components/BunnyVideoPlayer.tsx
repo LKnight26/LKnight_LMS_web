@@ -1,13 +1,52 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { lessonApi, type Lesson } from "@/lib/api";
 
 interface BunnyVideoPlayerProps {
   lesson: Lesson;
+  onHalfWatched?: () => void;
 }
 
-export default function BunnyVideoPlayer({ lesson }: BunnyVideoPlayerProps) {
+export default function BunnyVideoPlayer({ lesson, onHalfWatched }: BunnyVideoPlayerProps) {
+  const halfWatchedRef = useRef(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const onHalfWatchedRef = useRef(onHalfWatched);
+  onHalfWatchedRef.current = onHalfWatched;
+
+  // Reset half-watched flag when lesson changes
+  useEffect(() => {
+    halfWatchedRef.current = false;
+  }, [lesson.id]);
+
+  // Listen for Bunny Stream player messages
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (halfWatchedRef.current) return;
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data?.event === 'timeupdate' && data?.data) {
+          const { currentTime, duration } = data.data;
+          if (duration > 0 && currentTime > duration / 2) {
+            halfWatchedRef.current = true;
+            onHalfWatchedRef.current?.();
+          }
+        }
+        if (data?.event === 'progress' && typeof data?.data?.percentage === 'number') {
+          if (data.data.percentage >= 50) {
+            halfWatchedRef.current = true;
+            onHalfWatchedRef.current?.();
+          }
+        }
+      } catch {
+        // ignore non-JSON messages
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -136,6 +175,7 @@ export default function BunnyVideoPlayer({ lesson }: BunnyVideoPlayerProps) {
   return (
     <div className="aspect-video rounded-2xl overflow-hidden bg-black">
       <iframe
+        ref={iframeRef}
         src={embedUrl}
         loading="lazy"
         className="w-full h-full border-0"

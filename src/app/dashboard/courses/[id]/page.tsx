@@ -42,6 +42,8 @@ export default function CourseLearningPage() {
   const [courseDocuments, setCourseDocuments] = useState<DocType[]>([]);
   const [lessonDocuments, setLessonDocuments] = useState<DocType[]>([]);
   const [downloadingDoc, setDownloadingDoc] = useState<string | null>(null);
+  const [enrollmentId, setEnrollmentId] = useState<string | null>(null);
+  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
 
   const fetchCourse = useCallback(async () => {
     try {
@@ -54,6 +56,20 @@ export default function CourseLearningPage() {
         // User doesn't have access, redirect to checkout
         router.push(`/dashboard/checkout/${courseId}`);
         return;
+      }
+
+      // Store enrollment ID and load completed lessons from localStorage
+      const eid = accessCheck.data?.enrollmentId || null;
+      if (eid) {
+        setEnrollmentId(eid);
+        try {
+          const saved = localStorage.getItem(`progress_${eid}`);
+          if (saved) {
+            setCompletedLessons(new Set(JSON.parse(saved)));
+          }
+        } catch {
+          // ignore localStorage errors
+        }
       }
 
       const [response, docsRes] = await Promise.all([
@@ -119,6 +135,39 @@ export default function CourseLearningPage() {
     });
   };
 
+  // Calculate total lessons, duration, and progress
+  const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0);
+  const totalDuration = modules.reduce(
+    (sum, m) => sum + (m.lessons?.reduce((lSum, l) => lSum + (l.duration || 0), 0) || 0),
+    0
+  );
+  const progressPercent = totalLessons > 0
+    ? Math.round((completedLessons.size / totalLessons) * 100)
+    : 0;
+
+  const markLessonCompleted = (lessonId: string) => {
+    if (!enrollmentId || completedLessons.has(lessonId)) return;
+
+    const updated = new Set(completedLessons);
+    updated.add(lessonId);
+    setCompletedLessons(updated);
+
+    // Persist to localStorage
+    try {
+      localStorage.setItem(`progress_${enrollmentId}`, JSON.stringify([...updated]));
+    } catch {
+      // ignore
+    }
+
+    // Calculate and send progress to backend
+    const newProgress = totalLessons > 0
+      ? Math.round((updated.size / totalLessons) * 100)
+      : 0;
+    enrollmentApi.updateProgress(enrollmentId, newProgress).catch(() => {
+      // silently fail
+    });
+  };
+
   const handleLessonClick = async (lesson: Lesson) => {
     // Set basic lesson info first for immediate UI feedback
     setSelectedLesson(lesson);
@@ -164,13 +213,6 @@ export default function CourseLearningPage() {
       setDownloadingDoc(null);
     }
   };
-
-  // Calculate total lessons and duration
-  const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0);
-  const totalDuration = modules.reduce(
-    (sum, m) => sum + (m.lessons?.reduce((lSum, l) => lSum + (l.duration || 0), 0) || 0),
-    0
-  );
 
   if (isLoading) {
     return (
@@ -252,7 +294,14 @@ export default function CourseLearningPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Video Player Section */}
           <div className="lg:col-span-2 space-y-4">
-            <VideoPlayer lesson={selectedLesson} />
+            <VideoPlayer
+              lesson={selectedLesson}
+              onHalfWatched={() => {
+                if (selectedLesson) {
+                  markLessonCompleted(selectedLesson.id);
+                }
+              }}
+            />
 
             {/* Lesson Info */}
             <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-100">
@@ -282,12 +331,13 @@ export default function CourseLearningPage() {
                     Category: <span className="font-medium text-[#000E51]">{course.category.name}</span>
                   </span>
                 )}
-                {course.instructor && (
+                {(course.instructorName || course.instructor) && (
                   <span className="text-sm text-gray-600">
                     Instructor: <span className="font-medium text-[#000E51]">
-                      {typeof course.instructor === 'object'
-                        ? `${course.instructor.firstName} ${course.instructor.lastName}`
-                        : course.instructor}
+                      {course.instructorName
+                        || (typeof course.instructor === 'object'
+                          ? `${course.instructor.firstName} ${course.instructor.lastName}`
+                          : course.instructor)}
                     </span>
                   </span>
                 )}
@@ -316,16 +366,22 @@ export default function CourseLearningPage() {
           <div className="space-y-4">
             {/* Course Progress Card */}
             <div className="bg-white rounded-xl p-4 border border-gray-100">
-              <h3 className="font-semibold text-[#000E51] mb-3">Course Content</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-[#000E51]">Course Content</h3>
+                <span className="text-sm font-semibold text-[#FF6F00]">{progressPercent}%</span>
+              </div>
               <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
                 <span>{modules.length} modules</span>
                 <span>•</span>
-                <span>{totalLessons} lessons</span>
+                <span>{completedLessons.size}/{totalLessons} lessons</span>
                 <span>•</span>
                 <span>{Math.round(totalDuration / 60)} min</span>
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[#FF6F00] to-[#ff8c33] rounded-full w-0 transition-all duration-500" />
+                <div
+                  className="h-full bg-gradient-to-r from-[#FF6F00] to-[#ff8c33] rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
               </div>
             </div>
 
@@ -404,13 +460,21 @@ export default function CourseLearningPage() {
                           }`}
                         >
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            selectedLesson?.id === lesson.id
-                              ? "bg-[#FF6F00] text-white"
-                              : "bg-gray-100 text-gray-500"
+                            completedLessons.has(lesson.id)
+                              ? "bg-green-500 text-white"
+                              : selectedLesson?.id === lesson.id
+                                ? "bg-[#FF6F00] text-white"
+                                : "bg-gray-100 text-gray-500"
                           }`}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                              <polygon points="5 3 19 12 5 21 5 3"/>
-                            </svg>
+                            {completedLessons.has(lesson.id) ? (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                              </svg>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className={`text-sm font-medium line-clamp-1 ${
@@ -515,23 +579,24 @@ function DocumentDownloadItem({
 }
 
 // Video Player Component
-function VideoPlayer({ lesson }: { lesson: Lesson | null }) {
+function VideoPlayer({ lesson, onHalfWatched }: { lesson: Lesson | null; onHalfWatched?: () => void }) {
   // Priority 1: Bunny Stream video (professional streaming)
   if (lesson?.bunnyVideoId) {
-    return <BunnyVideoPlayer lesson={lesson} />;
+    return <BunnyVideoPlayer lesson={lesson} onHalfWatched={onHalfWatched} />;
   }
 
   // Priority 2 & 3: External URL or Base64 content (legacy player below)
-  return <LegacyVideoPlayer lesson={lesson} />;
+  return <LegacyVideoPlayer lesson={lesson} onHalfWatched={onHalfWatched} />;
 }
 
 // Legacy HTML5 video player for external URLs and Base64 content
-function LegacyVideoPlayer({ lesson }: { lesson: Lesson | null }) {
+function LegacyVideoPlayer({ lesson, onHalfWatched }: { lesson: Lesson | null; onHalfWatched?: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const halfWatchedRef = useRef(false);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -549,6 +614,7 @@ function LegacyVideoPlayer({ lesson }: { lesson: Lesson | null }) {
       setCurrentTime(0);
       setIsPlaying(false);
     }
+    halfWatchedRef.current = false;
   }, [lesson?.id]);
 
   // Auto-hide controls
@@ -591,6 +657,15 @@ function LegacyVideoPlayer({ lesson }: { lesson: Lesson | null }) {
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       setCurrentTime(videoRef.current.currentTime);
+      // Mark as completed when user watches past 50%
+      if (
+        !halfWatchedRef.current &&
+        videoRef.current.duration > 0 &&
+        videoRef.current.currentTime > videoRef.current.duration / 2
+      ) {
+        halfWatchedRef.current = true;
+        onHalfWatched?.();
+      }
     }
   };
 

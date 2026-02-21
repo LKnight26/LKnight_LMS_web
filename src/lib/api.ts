@@ -1039,6 +1039,7 @@ export interface Settings {
 
 export interface PublicSettings {
   hiddenPages: string[];
+  maintenanceMode: boolean;
 }
 
 export const settingsApi = {
