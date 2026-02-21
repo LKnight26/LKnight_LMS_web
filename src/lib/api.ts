@@ -371,6 +371,22 @@ export interface VideoUploadResponse {
   thumbnailUrl: string;
 }
 
+export interface TusUploadCredentials {
+  endpoint: string;
+  videoId: string;
+  libraryId: string;
+  expirationTime: number;
+  authSignature: string;
+}
+
+export interface CreateVideoUploadResponse {
+  lessonId: string;
+  bunnyVideoId: string;
+  videoStatus: string;
+  thumbnailUrl: string;
+  tusUpload: TusUploadCredentials;
+}
+
 export interface VideoUrlResponse {
   embedUrl: string;
   expires: number;
@@ -561,6 +577,14 @@ export const lessonApi = {
 
   getVideoStatus: (lessonId: string) =>
     api.get<VideoStatusResponse>(`/lessons/${lessonId}/video-status`),
+
+  // TUS direct upload: create video entry in Bunny and get upload credentials
+  createVideoUpload: (lessonId: string) =>
+    api.post<CreateVideoUploadResponse>(`/lessons/${lessonId}/create-video-upload`, {}),
+
+  // Confirm TUS upload completed
+  confirmVideoUpload: (lessonId: string) =>
+    api.patch<VideoUploadResponse>(`/lessons/${lessonId}/confirm-video-upload`),
 };
 
 // Users API
