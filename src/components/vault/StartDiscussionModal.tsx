@@ -9,7 +9,7 @@ interface StartDiscussionModalProps {
     category: string;
     title: string;
     description: string;
-  }) => void;
+  }) => Promise<void>;
 }
 
 const categories = [
@@ -29,16 +29,25 @@ export default function StartDiscussionModal({
   const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (category && title && description) {
-      onSubmit({ category, title, description });
-      // Reset form
+    if (!category || !title || !description) return;
+
+    setSubmitting(true);
+    setError("");
+    try {
+      await onSubmit({ category, title, description });
       setCategory("");
       setTitle("");
       setDescription("");
       onClose();
+    } catch {
+      setError("Failed to post discussion. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -195,12 +204,18 @@ export default function StartDiscussionModal({
             </p>
           </div>
 
+          {/* Error */}
+          {error && (
+            <p className="text-red-400 text-xs">{error}</p>
+          )}
+
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-[#FF6F00] hover:bg-[#E56300] text-white font-semibold py-3 sm:py-3.5 rounded-lg transition-colors duration-200 text-sm sm:text-base"
+            disabled={submitting}
+            className="w-full bg-[#FF6F00] hover:bg-[#E56300] disabled:opacity-60 text-white font-semibold py-3 sm:py-3.5 rounded-lg transition-colors duration-200 text-sm sm:text-base"
           >
-            Post Discussion Anonymously
+            {submitting ? "Posting..." : "Post Discussion Anonymously"}
           </button>
         </form>
       </div>

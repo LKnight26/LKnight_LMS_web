@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import DiscussionCard from "@/components/vault/DiscussionCard";
 import VaultSidebar from "@/components/vault/VaultSidebar";
 import StartDiscussionModal from "@/components/vault/StartDiscussionModal";
+import { useAuth } from "@/context/AuthContext";
+import { vaultApi, type VaultDiscussion } from "@/lib/api";
 
 const categories = [
   { id: "all", label: "All" },
@@ -17,89 +20,123 @@ const categories = [
   { id: "other", label: "Other" },
 ];
 
-const discussions = [
-  {
-    id: 1,
-    category: "Team Wellness",
-    categoryColor: "#FF6F00",
-    timeAgo: "2 hours ago",
-    title: "How do you handle team burnout during high-pressure periods?",
-    description:
-      "I've been noticing signs of burnout in my team after our recent product launch. Looking for practical strategies that worked for others.",
-    author: "Anonymous Leader",
-    upvotes: 24,
-    comments: 12,
-  },
-  {
-    id: 2,
-    category: "Career Growth",
-    categoryColor: "#3B82F6",
-    timeAgo: "5 hours ago",
-    title: "Transitioning from peer to manager - any advice?",
-    description:
-      "Just got promoted to lead my former team. Finding it challenging to establish authority while maintaining friendships.",
-    author: "New Manager",
-    upvotes: 31,
-    comments: 18,
-  },
-  {
-    id: 3,
-    category: "Mental Health",
-    categoryColor: "#8B5CF6",
-    timeAgo: "1 day ago",
-    title: "Dealing with imposter syndrome as a senior leader",
-    description:
-      "Even after 10 years in leadership roles, I still sometimes feel like I'm not qualified. How do you overcome these feelings?",
-    author: "Seasoned Executive",
-    upvotes: 67,
-    comments: 25,
-  },
-  {
-    id: 4,
-    category: "Remote Work",
-    categoryColor: "#10B981",
-    timeAgo: "1 day ago",
-    title: "Remote team engagement strategies that actually work",
-    description:
-      "Our remote team feels disconnected. Virtual happy hours aren't cutting it. What creative solutions have you found?",
-    author: "Remote Leader",
-    upvotes: 45,
-    comments: 32,
-  },
-  {
-    id: 5,
-    category: "Performance",
-    categoryColor: "#F59E0B",
-    timeAgo: "2 days ago",
-    title: "Having difficult conversations about performance",
-    description:
-      "I need to address underperformance with a team member I really like personally. How do you separate the personal from professional?",
-    author: "Empathetic Manager",
-    upvotes: 38,
-    comments: 21,
-  },
-];
-
 export default function VaultPage() {
+  const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [discussions, setDiscussions] = useState<VaultDiscussion[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
+  const [statsKey, setStatsKey] = useState(0);
 
-  const handleStartDiscussion = (data: {
+  // Auth gate — redirect if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/signin?redirect=/vault");
+    }
+  }, [user, authLoading, router]);
+
+  // Fetch discussions
+  const fetchDiscussions = useCallback(
+    async (cursor?: string) => {
+      try {
+        if (cursor) {
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+        }
+
+        const res = await vaultApi.getDiscussions({
+          category: selectedCategory,
+          cursor,
+          limit: 10,
+        });
+
+        if (res.success && res.data) {
+          if (cursor) {
+            setDiscussions((prev) => [...prev, ...res.data!.discussions]);
+          } else {
+            setDiscussions(res.data.discussions);
+          }
+          setNextCursor(res.data.nextCursor);
+        }
+      } catch {
+        // silently fail — user sees empty state
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [selectedCategory]
+  );
+
+  // Reset and re-fetch when category changes
+  useEffect(() => {
+    if (user) {
+      setDiscussions([]);
+      setNextCursor(null);
+      fetchDiscussions();
+    }
+  }, [selectedCategory, user, fetchDiscussions]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!observerRef.current || !nextCursor) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && nextCursor && !loadingMore) {
+          fetchDiscussions(nextCursor);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(observerRef.current);
+
+    return () => observer.disconnect();
+  }, [nextCursor, loadingMore, fetchDiscussions]);
+
+  // Handle new discussion created — errors propagate to modal for display
+  const handleStartDiscussion = async (data: {
     category: string;
     title: string;
     description: string;
   }) => {
-    console.log("New discussion:", data);
-    // Here you would typically send this to your backend
+    const res = await vaultApi.createDiscussion(data);
+    if (res.success && res.data) {
+      setDiscussions((prev) => [res.data!, ...prev]);
+      setStatsKey((k) => k + 1);
+    }
   };
 
-  const filteredDiscussions =
-    selectedCategory === "all"
-      ? discussions
-      : discussions.filter(
-          (d) =>
-            d.category.toLowerCase().replace(" ", "-") === selectedCategory
-        );
+  // Handle like toggle from a discussion card
+  const handleLikeToggle = (discussionId: string, isLiked: boolean, likesCount: number) => {
+    setDiscussions((prev) =>
+      prev.map((d) =>
+        d.id === discussionId ? { ...d, isLiked, likesCount } : d
+      )
+    );
+  };
+
+  // Handle discussion deleted
+  const handleDelete = (discussionId: string) => {
+    setDiscussions((prev) => prev.filter((d) => d.id !== discussionId));
+    setStatsKey((k) => k + 1);
+  };
+
+  // Show nothing until auth check completes
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#FF6F00] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -295,25 +332,79 @@ export default function VaultPage() {
 
               {/* Discussion Cards */}
               <div className="space-y-4">
-                {filteredDiscussions.map((discussion) => (
-                  <DiscussionCard
-                    key={discussion.id}
-                    category={discussion.category}
-                    categoryColor={discussion.categoryColor}
-                    timeAgo={discussion.timeAgo}
-                    title={discussion.title}
-                    description={discussion.description}
-                    author={discussion.author}
-                    upvotes={discussion.upvotes}
-                    comments={discussion.comments}
-                  />
-                ))}
+                {loading ? (
+                  // Skeleton loaders
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-[#000E51] rounded-xl p-5 lg:p-6 animate-pulse"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="h-6 w-24 bg-white/10 rounded-md" />
+                        <div className="h-4 w-16 bg-white/5 rounded" />
+                      </div>
+                      <div className="h-5 w-3/4 bg-white/10 rounded mb-2" />
+                      <div className="h-4 w-full bg-white/5 rounded mb-4" />
+                      <div className="flex justify-between">
+                        <div className="h-4 w-20 bg-white/5 rounded" />
+                        <div className="h-4 w-24 bg-white/5 rounded" />
+                      </div>
+                    </div>
+                  ))
+                ) : discussions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-[#FF6F00]/10 flex items-center justify-center mx-auto mb-4">
+                      <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z"
+                          stroke="#FF6F00"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-white/60 text-sm mb-2">
+                      No discussions yet
+                    </p>
+                    <p className="text-white/40 text-xs">
+                      Be the first to start a conversation!
+                    </p>
+                  </div>
+                ) : (
+                  discussions.map((discussion) => (
+                    <DiscussionCard
+                      key={discussion.id}
+                      discussion={discussion}
+                      onLikeToggle={handleLikeToggle}
+                      onDelete={handleDelete}
+                    />
+                  ))
+                )}
               </div>
+
+              {/* Infinite scroll trigger & loading indicator */}
+              {nextCursor && (
+                <div
+                  ref={observerRef}
+                  className="flex items-center justify-center py-6"
+                >
+                  {loadingMore && (
+                    <div className="w-6 h-6 border-2 border-[#FF6F00] border-t-transparent rounded-full animate-spin" />
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right - Sidebar */}
             <div className="w-full lg:w-[320px] flex-shrink-0">
-              <VaultSidebar />
+              <VaultSidebar key={statsKey} />
             </div>
           </div>
         </div>

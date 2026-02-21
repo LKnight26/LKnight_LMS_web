@@ -863,4 +863,108 @@ export const documentApi = {
   delete: (id: string) => api.delete<void>(`/documents/${id}`),
 };
 
+// Vault API (Anonymous Discussion Forum)
+export interface VaultDiscussion {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  createdAt: string;
+  author: string; // "Anonymous" | "Admin" | "You"
+  isAdmin: boolean;
+  isOwn: boolean;
+  likesCount: number;
+  commentsCount: number;
+  isLiked: boolean;
+}
+
+export interface VaultComment {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: string;
+  isAdmin: boolean;
+  isOwn: boolean;
+  likesCount: number;
+  repliesCount: number;
+  isLiked: boolean;
+  replies: VaultComment[];
+}
+
+export interface VaultStats {
+  activeMembers: number;
+  discussions: number;
+  replies: number;
+}
+
+export interface VaultDiscussionsResponse {
+  discussions: VaultDiscussion[];
+  nextCursor: string | null;
+}
+
+export interface VaultCommentsResponse {
+  comments: VaultComment[];
+  nextCursor: string | null;
+}
+
+export interface VaultRepliesResponse {
+  replies: VaultComment[];
+  nextCursor: string | null;
+}
+
+export const vaultApi = {
+  // Discussions
+  getDiscussions: (params?: { category?: string; cursor?: string; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.category && params.category !== 'all') queryParams.append('category', params.category);
+    if (params?.cursor) queryParams.append('cursor', params.cursor);
+    if (params?.limit) queryParams.append('limit', String(params.limit));
+    const qs = queryParams.toString();
+    return api.get<VaultDiscussionsResponse>(`/vault/discussions${qs ? `?${qs}` : ''}`);
+  },
+
+  getDiscussionById: (id: string) =>
+    api.get<VaultDiscussion>(`/vault/discussions/${id}`),
+
+  createDiscussion: (data: { title: string; description: string; category: string }) =>
+    api.post<VaultDiscussion>('/vault/discussions', data),
+
+  deleteDiscussion: (id: string) =>
+    api.delete<void>(`/vault/discussions/${id}`),
+
+  // Likes
+  toggleDiscussionLike: (id: string) =>
+    api.post<{ isLiked: boolean; likesCount: number }>(`/vault/discussions/${id}/like`, {}),
+
+  toggleCommentLike: (commentId: string) =>
+    api.post<{ isLiked: boolean; likesCount: number }>(`/vault/comments/${commentId}/like`, {}),
+
+  // Comments
+  getComments: (discussionId: string, params?: { cursor?: string; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.cursor) queryParams.append('cursor', params.cursor);
+    if (params?.limit) queryParams.append('limit', String(params.limit));
+    const qs = queryParams.toString();
+    return api.get<VaultCommentsResponse>(`/vault/discussions/${discussionId}/comments${qs ? `?${qs}` : ''}`);
+  },
+
+  createComment: (discussionId: string, data: { content: string; parentId?: string }) =>
+    api.post<VaultComment>(`/vault/discussions/${discussionId}/comments`, data),
+
+  deleteComment: (commentId: string) =>
+    api.delete<void>(`/vault/comments/${commentId}`),
+
+  // Replies
+  getReplies: (commentId: string, params?: { cursor?: string; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.cursor) queryParams.append('cursor', params.cursor);
+    if (params?.limit) queryParams.append('limit', String(params.limit));
+    const qs = queryParams.toString();
+    return api.get<VaultRepliesResponse>(`/vault/comments/${commentId}/replies${qs ? `?${qs}` : ''}`);
+  },
+
+  // Stats
+  getStats: () => api.get<VaultStats>('/vault/stats'),
+};
+
 export default api;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -14,17 +14,19 @@ export default function DashboardLayout({
 }) {
   const [isChecking, setIsChecking] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated || !user) {
-        router.push('/signin?redirect=/dashboard');
+        const redirectTo = encodeURIComponent(pathname || '/dashboard');
+        router.push(`/signin?redirect=${redirectTo}`);
       } else {
         setIsChecking(false);
       }
     }
-  }, [user, isLoading, isAuthenticated, router]);
+  }, [user, isLoading, isAuthenticated, router, pathname]);
 
   // Show loading while checking auth
   if (isLoading || isChecking) {

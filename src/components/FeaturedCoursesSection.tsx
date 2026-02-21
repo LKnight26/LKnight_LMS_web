@@ -1,74 +1,109 @@
-import Link from "next/link";
-import CourseCard, { CourseCardProps } from "./CourseCard";
+"use client";
 
-// Featured courses data - This will be fetched from admin panel/API later
-// When backend is ready, replace this with API call: const courses = await fetchFeaturedCourses()
-const featuredCoursesData: CourseCardProps[] = [
-  {
-    id: "course-1",
-    slug: "complete-web-development-bootcamp-2024",
-    image: "/icon/webCourse.png",
-    level: "Beginner",
-    category: "Web Development",
-    categoryColor: "text-secondary",
-    title: "Complete Web Development Bootcamp 2024",
-    description:
-      "Learn HTML, CSS, JavaScript, React, Node.js, and more to become a full-stack developer.",
-    hours: 42,
-    modules: 28,
-    rating: 4.9,
-    studentsCount: 15420,
-    instructor: "Dr. Sarah Chen",
-  },
-  {
-    id: "course-2",
-    slug: "ai-deep-learning-masterclass-bootcamp-2024",
-    image: "/icon/aiCourse.png",
-    level: "Advanced",
-    category: "AI & ML",
-    categoryColor: "text-secondary",
-    title: "AI & Deep Learning Masterclass Bootcamp 2024",
-    description:
-      "Dive deep into neural networks, TensorFlow, and cutting-edge AI technologies.",
-    hours: 35,
-    modules: 22,
-    rating: 4.9,
-    studentsCount: 8920,
-    instructor: "Dr. Emily Zhang",
-  },
-  {
-    id: "course-3",
-    slug: "ui-ux-design-beginner-to-professional",
-    image: "/icon/uiCourse.jpg",
-    level: "Beginner",
-    category: "Design",
-    categoryColor: "text-secondary",
-    title: "UI/UX Design: From Beginner to Professional",
-    description:
-      "Learn design principles, Figma, prototyping and create stunning user interfaces.",
-    hours: 28,
-    modules: 18,
-    rating: 4.7,
-    studentsCount: 9870,
-    instructor: "Alex Thompson",
-  },
-];
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import CourseCard, { type CourseCardProps } from "./CourseCard";
+import { courseApi, type Course } from "@/lib/api";
+
+// Transform API course to CourseCard props
+const transformCourse = (course: Course): CourseCardProps => ({
+  id: course.id,
+  slug: course.slug,
+  thumbnail: course.thumbnail,
+  level: course.level || "Beginner",
+  category: course.category?.name || "General",
+  title: course.title,
+  summary: course.summary,
+  moduleCount: course.moduleCount,
+  enrollments: course.enrollments,
+  instructor: course.instructor
+    ? `${course.instructor.firstName} ${course.instructor.lastName}`
+    : "Instructor",
+  price: course.price,
+});
 
 interface FeaturedCoursesSectionProps {
-  courses?: CourseCardProps[];
   title?: string;
   subtitle?: string;
   showViewAll?: boolean;
   viewAllHref?: string;
+  limit?: number;
 }
 
 export default function FeaturedCoursesSection({
-  courses = featuredCoursesData,
   title = "Featured Courses",
   subtitle = "Our most popular courses loved by thousands of learners",
   showViewAll = true,
   viewAllHref = "/courses",
+  limit = 3,
 }: FeaturedCoursesSectionProps) {
+  const [courses, setCourses] = useState<CourseCardProps[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await courseApi.getAll({
+          limit,
+          status: "PUBLISHED",
+          sortBy: "createdAt",
+          order: "desc",
+        });
+        if (res.success && res.data?.courses) {
+          const transformed = res.data.courses.map(transformCourse);
+          setCourses(transformed);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
+  }, [limit]);
+
+  if (loading) {
+    return (
+      <section className="py-16 sm:py-20 lg:py-24 bg-white">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-12 lg:mb-14">
+            <div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mb-2 sm:mb-3">
+                {title}
+              </h2>
+              <p className="text-sm sm:text-base lg:text-lg text-gray-500">
+                {subtitle}
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
+            {Array.from({ length: limit }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 animate-pulse">
+                <div className="aspect-[16/10] bg-gray-200" />
+                <div className="p-4 sm:p-5 lg:p-6">
+                  <div className="h-3 w-20 bg-gray-200 rounded mb-3" />
+                  <div className="h-5 w-3/4 bg-gray-200 rounded mb-2" />
+                  <div className="h-4 w-full bg-gray-100 rounded mb-4" />
+                  <div className="flex gap-4 mb-3">
+                    <div className="h-4 w-16 bg-gray-100 rounded" />
+                    <div className="h-4 w-20 bg-gray-100 rounded" />
+                  </div>
+                  <div className="h-4 w-24 bg-gray-100 rounded mb-4" />
+                  <div className="flex justify-between pt-4 border-t border-gray-100">
+                    <div className="h-4 w-24 bg-gray-100 rounded" />
+                    <div className="h-8 w-24 bg-gray-200 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (courses.length === 0) return null;
+
   return (
     <section className="py-16 sm:py-20 lg:py-24 bg-white">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">

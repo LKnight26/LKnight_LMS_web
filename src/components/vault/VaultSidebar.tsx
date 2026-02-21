@@ -1,4 +1,30 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { vaultApi, type VaultStats } from "@/lib/api";
+
+function formatCount(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return String(n);
+}
+
 export default function VaultSidebar() {
+  const [stats, setStats] = useState<VaultStats | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await vaultApi.getStats();
+        if (res.success && res.data) {
+          setStats(res.data);
+        }
+      } catch {
+        // fail silently
+      }
+    };
+    fetchStats();
+  }, []);
+
   const guidelines = [
     "Respect anonymity and privacy",
     "Be supportive and constructive",
@@ -13,11 +39,10 @@ export default function VaultSidebar() {
     "#DifficultConversations",
   ];
 
-  const stats = [
-    { value: "1.2K", label: "Active Members" },
-    { value: "5.8K", label: "Discussions" },
-    { value: "24K", label: "Replies" },
-    { value: "98%", label: "Positive" },
+  const statsDisplay = [
+    { value: stats ? formatCount(stats.activeMembers) : "-", label: "Active Members" },
+    { value: stats ? formatCount(stats.discussions) : "-", label: "Discussions" },
+    { value: stats ? formatCount(stats.replies) : "-", label: "Replies" },
   ];
 
   return (
@@ -142,7 +167,7 @@ export default function VaultSidebar() {
           Community Stats
         </h3>
         <div className="grid grid-cols-2 gap-4">
-          {stats.map((stat, index) => (
+          {statsDisplay.map((stat, index) => (
             <div key={index}>
               <div className="text-white text-xl lg:text-2xl font-bold">
                 {stat.value}
