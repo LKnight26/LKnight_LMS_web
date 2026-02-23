@@ -14,7 +14,7 @@ export default function ContactPage() {
     lastName: "",
     email: "",
     phone: "",
-    subject: "general",
+    subject: "",
     message: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -36,14 +36,10 @@ export default function ContactPage() {
   }, [user]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubjectChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, subject: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,7 +58,7 @@ export default function ContactPage() {
         lastName: user?.lastName || "",
         email: user?.email || "",
         phone: "",
-        subject: "general",
+        subject: "",
         message: "",
       });
     } catch (err) {
@@ -76,9 +72,16 @@ export default function ContactPage() {
   };
 
   const subjects = [
+    { value: "lms-access", label: "LMS Access & Membership Questions" },
+    { value: "corporate-licensing", label: "Corporate LMS Licensing" },
+    { value: "leadership-workshops", label: "Leadership Workshops & Training" },
+    { value: "executive-coaching", label: "Executive Coaching & Elevation Series" },
+    { value: "speaking-keynote", label: "Speaking & Keynote Engagements" },
+    { value: "insight-survey", label: "Insight Survey & Organizational Assessment" },
+    { value: "partnership", label: "Partnership Opportunities" },
+    { value: "media-podcast", label: "Media & Podcast Inquiries" },
+    { value: "technical-support", label: "Technical Support" },
     { value: "general", label: "General Inquiry" },
-    { value: "support", label: "Technical Support" },
-    { value: "sales", label: "Course Enrollment" },
     { value: "other", label: "Other" },
   ];
 
@@ -311,43 +314,32 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                {/* Subject Selection */}
+                {/* Subject Selection - Dropdown */}
                 <div>
-                  <label className="block text-xs text-gray-500 mb-4">
-                    Select Subject?
+                  <label className="block text-xs text-gray-500 mb-2">
+                    Inquiry Subject <span className="text-red-400">*</span>
                   </label>
-                  <div className="flex flex-wrap gap-4 md:gap-6">
-                    {subjects.map((subject, index) => (
-                      <label
-                        key={subject.value}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <div className="relative">
-                          <input
-                            type="radio"
-                            name="subject"
-                            value={subject.value}
-                            checked={formData.subject === subject.value}
-                            onChange={() => handleSubjectChange(subject.value)}
-                            className="sr-only"
-                          />
-                          <div
-                            className={`w-4 h-4 rounded-full border-2 ${
-                              formData.subject === subject.value
-                                ? "border-[#1a1f4e]"
-                                : "border-gray-300"
-                            }`}
-                          >
-                            {formData.subject === subject.value && (
-                              <div className="w-2 h-2 bg-[#1a1f4e] rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-xs text-gray-700">
+                  <div className="relative">
+                    <select
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleInputChange}
+                      className="w-full appearance-none border-b border-gray-300 pb-2 pt-1 text-sm text-gray-900 focus:outline-none focus:border-[#1a1f4e] transition-colors bg-transparent cursor-pointer pr-8"
+                    >
+                      <option value="" disabled>
+                        Select an inquiry subject...
+                      </option>
+                      {subjects.map((subject) => (
+                        <option key={subject.value} value={subject.value}>
                           {subject.label}
-                        </span>
-                      </label>
-                    ))}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 9L12 15L18 9" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
 
@@ -403,14 +395,14 @@ export default function ContactPage() {
               </form>
 
               {/* Plane SVG Decoration */}
-              <div className="absolute bottom-0 right-0 w-[200px] h-[160px] pointer-events-none hidden lg:block">
+              {/* <div className="absolute bottom-0 right-0 w-[200px] h-[160px] pointer-events-none hidden lg:block">
                 <Image
                   src="/icon/plane.svg"
                   alt=""
                   fill
                   className="object-contain"
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

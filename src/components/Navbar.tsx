@@ -85,7 +85,8 @@ export default function Navbar() {
         </svg>
       ),
       title: "Secure Content Vault",
-      description: "Enterprise-grade DRM protection, watermarking, and access controls for confidential learning materials."
+      description: "Enterprise-grade DRM protection, watermarking, and access controls for confidential learning materials.",
+      comingSoon: true,
     },
     {
       icon: (
@@ -97,7 +98,8 @@ export default function Navbar() {
         </svg>
       ),
       title: "Executive Learning Programs",
-      description: "Curated courses and certifications designed for C-suite leaders, directors, and senior management."
+      description: "Curated courses and certifications designed for C-suite leaders, directors, and senior management.",
+      comingSoon: true,
     },
     {
       icon: (
@@ -108,7 +110,8 @@ export default function Navbar() {
         </svg>
       ),
       title: "Role-Based Access",
-      description: "Granular permissions, SSO integration, and multi-factor authentication for enterprise security."
+      description: "Granular permissions, SSO integration, and multi-factor authentication for enterprise security.",
+      comingSoon: true,
     },
     {
       icon: (
@@ -125,7 +128,8 @@ export default function Navbar() {
         </svg>
       ),
       title: "Multi-Tenant Architecture",
-      description: "White-label solutions, organization isolation, and scalable infrastructure for global enterprises."
+      description: "White-label solutions, organization isolation, and scalable infrastructure for global enterprises.",
+      comingSoon: true,
     }
   ];
 
@@ -181,7 +185,8 @@ export default function Navbar() {
       ),
       title: "Team Collaboration",
       description: "Foster teamwork with discussion forums, group projects, and peer learning.",
-      href: dashboardOrSignin,
+      href: "#",
+      comingSoon: true,
     }
   ];
 
@@ -263,26 +268,49 @@ export default function Navbar() {
                 <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-3 z-50 transition-all duration-300 origin-top ${platformOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-2 pointer-events-none"}`}>
                   <div className="w-[580px] bg-white rounded-xl shadow-2xl border border-gray-100 p-6">
                     <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                      {platformItems.map((item, index) => (
-                        <TransitionLink
-                          key={index}
-                          href={item.href}
-                          className="group flex flex-col gap-2 transition-all duration-200"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#FFF4E5] group-hover:bg-[#FF6F00] group-hover:scale-110 transition-all duration-200">
-                            <div className="group-hover:[&_svg_*]:stroke-white transition-colors duration-200">
-                              {item.icon}
+                      {platformItems.map((item, index) =>
+                        item.comingSoon ? (
+                          <div
+                            key={index}
+                            className="group flex flex-col gap-2 opacity-75 cursor-default"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100">
+                              <div className="[&_svg_*]:stroke-[#94A3B8]">
+                                {item.icon}
+                              </div>
                             </div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-[15px] font-semibold text-[#000E51]">
+                                {item.title}
+                              </h4>
+                              <span className="text-[10px] font-semibold text-white bg-[#FF6F00] px-2 py-0.5 rounded-full leading-none">Coming Soon</span>
+                            </div>
+                            <p className="text-[13px] text-[#64748B] leading-relaxed">
+                              {item.description}
+                            </p>
                           </div>
-                          <h4 className="text-[15px] font-semibold text-[#000E51] group-hover:text-[#FF6F00] transition-colors duration-200">
-                            {item.title}
-                          </h4>
-                          <p className="text-[13px] text-[#64748B] leading-relaxed">
-                            {item.description}
-                          </p>
-                        </TransitionLink>
-                      ))}
+                        ) : (
+                          <TransitionLink
+                            key={index}
+                            href={item.href}
+                            className="group flex flex-col gap-2 transition-all duration-200"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#FFF4E5] group-hover:bg-[#FF6F00] group-hover:scale-110 transition-all duration-200">
+                              <div className="group-hover:[&_svg_*]:stroke-white transition-colors duration-200">
+                                {item.icon}
+                              </div>
+                            </div>
+                            <h4 className="text-[15px] font-semibold text-[#000E51] group-hover:text-[#FF6F00] transition-colors duration-200">
+                              {item.title}
+                            </h4>
+                            <p className="text-[13px] text-[#64748B] leading-relaxed">
+                              {item.description}
+                            </p>
+                          </TransitionLink>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -310,24 +338,26 @@ export default function Navbar() {
                   <div className="w-[580px] bg-white rounded-xl shadow-2xl border border-gray-100 p-6">
                     <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                       {enterpriseItems.map((item, index) => (
-                        <a
+                        <div
                           key={index}
-                          href="#"
-                          className="group flex flex-col gap-2 transition-all duration-200"
+                          className="group flex flex-col gap-2 opacity-75 cursor-default"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#FFF4E5] group-hover:bg-[#FF6F00] group-hover:scale-110 transition-all duration-200">
-                            <div className="group-hover:[&_svg_*]:stroke-white transition-colors duration-200">
+                          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100">
+                            <div className="[&_svg_*]:stroke-[#94A3B8]">
                               {item.icon}
                             </div>
                           </div>
-                          <h4 className="text-[15px] font-semibold text-[#000E51] group-hover:text-[#FF6F00] transition-colors duration-200">
-                            {item.title}
-                          </h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-[15px] font-semibold text-[#000E51]">
+                              {item.title}
+                            </h4>
+                            <span className="text-[10px] font-semibold text-white bg-[#FF6F00] px-2 py-0.5 rounded-full leading-none">Coming Soon</span>
+                          </div>
                           <p className="text-[13px] text-[#64748B] leading-relaxed">
                             {item.description}
                           </p>
-                        </a>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -597,17 +627,32 @@ export default function Navbar() {
                   </button>
                   <div className={`overflow-hidden transition-all duration-300 ${mobileAccordion === "platform" ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
                     <div className="pb-3 space-y-3">
-                      {platformItems.map((item, index) => (
-                        <TransitionLink key={index} href={item.href} onClick={() => setMobileMenuOpen(false)} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                          <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#FFF4E5] flex-shrink-0">
-                            {item.icon}
+                      {platformItems.map((item, index) =>
+                        item.comingSoon ? (
+                          <div key={index} className="flex items-start gap-3 p-3 rounded-lg opacity-75">
+                            <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 flex-shrink-0">
+                              <div className="[&_svg_*]:stroke-[#94A3B8]">{item.icon}</div>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-semibold text-[#000E51]">{item.title}</h4>
+                                <span className="text-[9px] font-semibold text-white bg-[#FF6F00] px-1.5 py-0.5 rounded-full leading-none">Soon</span>
+                              </div>
+                              <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{item.description}</p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="text-sm font-semibold text-[#000E51]">{item.title}</h4>
-                            <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{item.description}</p>
-                          </div>
-                        </TransitionLink>
-                      ))}
+                        ) : (
+                          <TransitionLink key={index} href={item.href} onClick={() => setMobileMenuOpen(false)} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#FFF4E5] flex-shrink-0">
+                              {item.icon}
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-semibold text-[#000E51]">{item.title}</h4>
+                              <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{item.description}</p>
+                            </div>
+                          </TransitionLink>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -626,15 +671,18 @@ export default function Navbar() {
                   <div className={`overflow-hidden transition-all duration-300 ${mobileAccordion === "enterprise" ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
                     <div className="pb-3 space-y-3">
                       {enterpriseItems.map((item, index) => (
-                        <a key={index} href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                          <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#FFF4E5] flex-shrink-0">
-                            {item.icon}
+                        <div key={index} className="flex items-start gap-3 p-3 rounded-lg opacity-75">
+                          <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 flex-shrink-0">
+                            <div className="[&_svg_*]:stroke-[#94A3B8]">{item.icon}</div>
                           </div>
                           <div>
-                            <h4 className="text-sm font-semibold text-[#000E51]">{item.title}</h4>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-semibold text-[#000E51]">{item.title}</h4>
+                              <span className="text-[9px] font-semibold text-white bg-[#FF6F00] px-1.5 py-0.5 rounded-full leading-none">Soon</span>
+                            </div>
                             <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{item.description}</p>
                           </div>
-                        </a>
+                        </div>
                       ))}
                     </div>
                   </div>
