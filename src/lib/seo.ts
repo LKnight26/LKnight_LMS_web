@@ -55,6 +55,11 @@ export const defaultMetadata: Metadata = {
   authors: siteConfig.authors,
   creator: siteConfig.creator,
   publisher: siteConfig.creator,
+  icons: {
+    icon: "/favicon.jpg",
+    shortcut: "/favicon.jpg",
+    apple: "/favicon.jpg",
+  },
   robots: {
     index: true,
     follow: true,
@@ -156,10 +161,10 @@ export const organizationSchema = {
   url: siteConfig.url,
   logo: `${siteConfig.url}/icon/main-logo.svg`,
   sameAs: [
-    "https://www.facebook.com/lknightlms",
-    "https://twitter.com/lknightlms",
-    "https://www.linkedin.com/company/lknightlms",
-    "https://www.instagram.com/lknightlms",
+    "https://www.linkedin.com/company/lknight-productions",
+    "https://www.facebook.com/LKnightProductions",
+    "https://www.instagram.com/lknightproductions",
+    "https://www.tiktok.com/@lknightproductions",
   ],
   contactPoint: {
     "@type": "ContactPoint",
@@ -235,10 +240,10 @@ export const localBusinessSchema = {
   },
   priceRange: "$$",
   sameAs: [
-    "https://www.facebook.com/lknightlms",
-    "https://twitter.com/lknightlms",
-    "https://www.linkedin.com/company/lknightlms",
-    "https://www.instagram.com/lknightlms",
+    "https://www.linkedin.com/company/lknight-productions",
+    "https://www.facebook.com/LKnightProductions",
+    "https://www.instagram.com/lknightproductions",
+    "https://www.tiktok.com/@lknightproductions",
   ],
 };
 

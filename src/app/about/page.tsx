@@ -57,9 +57,9 @@ export default function AboutPage() {
       {/* Our Story Section */}
       <section className="w-full bg-white py-16 lg:py-20">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
-          <div className="flex flex-col lg:flex-row items-start gap-10 lg:gap-16">
+          <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-12">
             {/* Left Content */}
-            <div className="flex-1 lg:max-w-[550px]">
+            <div className="flex-1 lg:max-w-[500px]">
               <h2 className="text-[#000E51] text-xl sm:text-2xl lg:text-[28px] font-bold mb-5">
                 Our Story
               </h2>
@@ -87,19 +87,15 @@ export default function AboutPage() {
             </div>
 
             {/* Right Image with Stats Badge */}
-            <div className="flex-1 w-full lg:max-w-[580px] relative">
+            <div className="flex-1 w-full lg:max-w-[650px] relative">
               {/* Main Image */}
-              <div
-                className="relative w-full h-[300px] sm:h-[350px] lg:h-[380px] rounded-xl overflow-hidden"
-                style={{
-                  borderRadius: "16px",
-                }}
-              >
+              <div className="relative w-full h-[280px] sm:h-[350px] lg:h-[400px] rounded-2xl overflow-hidden">
                 <Image
-                  src="/icon/abouthero.jpg"
-                  alt="Team working together"
+                  src="/our-story-banner.jpg"
+                  alt="LKnight Productions - Our Story"
                   fill
                   className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 650px"
                   priority
                 />
               </div>

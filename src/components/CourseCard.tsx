@@ -53,8 +53,7 @@ export default function CourseCard({
   price,
   href,
 }: CourseCardProps) {
-  const courseLink = href || `/courses/${slug}`;
-  const enrollLink = `/dashboard/checkout/${id}`;
+  const enrollLink = href || `/dashboard/checkout/${id}`;
   const displayImage = image || thumbnail || "/icon/webCourse.png";
   const displayDescription = description || summary || "";
   const displayHours = hours ?? (totalDuration ? Math.round(totalDuration / 3600) : 0);
@@ -64,9 +63,12 @@ export default function CourseCard({
   const formatStudentCount = (count: number) => count.toLocaleString();
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group border border-gray-100">
+    <Link
+      href={enrollLink}
+      className="block bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group border border-gray-100"
+    >
       {/* Image Container */}
-      <Link href={courseLink} className="block relative aspect-[16/10] overflow-hidden bg-gray-100">
+      <div className="block relative aspect-[16/10] overflow-hidden bg-gray-100">
         <Image
           src={displayImage}
           alt={title}
@@ -79,7 +81,7 @@ export default function CourseCard({
         >
           {level}
         </span>
-      </Link>
+      </div>
 
       {/* Content */}
       <div className="p-4 sm:p-5 lg:p-6">
@@ -89,11 +91,9 @@ export default function CourseCard({
         </span>
 
         {/* Title */}
-        <Link href={courseLink}>
-          <h3 className="text-base sm:text-lg font-bold text-primary mt-2 mb-2 line-clamp-2 group-hover:text-secondary transition-colors duration-200">
-            {title}
-          </h3>
-        </Link>
+        <h3 className="text-base sm:text-lg font-bold text-primary mt-2 mb-2 line-clamp-2 group-hover:text-secondary transition-colors duration-200">
+          {title}
+        </h3>
 
         {/* Description */}
         <p className="text-sm text-gray-500 mb-4 line-clamp-2">{displayDescription}</p>
@@ -155,10 +155,7 @@ export default function CourseCard({
               <span className="text-sm font-bold text-green-600">Free</span>
             )}
           </div>
-          <Link
-            href={enrollLink}
-            className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-secondary text-white text-xs sm:text-sm font-semibold rounded-lg hover:opacity-90 transition-all duration-200"
-          >
+          <span className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-secondary text-white text-xs sm:text-sm font-semibold rounded-lg group-hover:opacity-90 transition-all duration-200">
             Enroll Now
             <svg
               width="14"
@@ -175,9 +172,9 @@ export default function CourseCard({
                 strokeLinejoin="round"
               />
             </svg>
-          </Link>
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

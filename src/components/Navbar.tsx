@@ -12,11 +12,13 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileAccordion, setMobileAccordion] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const [hiddenPages, setHiddenPages] = useState<string[]>([]);
 
   const platformRef = useRef<HTMLDivElement>(null);
   const enterpriseRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const langRef = useRef<HTMLDivElement>(null);
 
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
@@ -46,6 +48,9 @@ export default function Navbar() {
       }
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setProfileOpen(false);
+      }
+      if (langRef.current && !langRef.current.contains(event.target as Node)) {
+        setLangOpen(false);
       }
     };
 
@@ -125,6 +130,7 @@ export default function Navbar() {
   ];
 
   // Platform dropdown items
+  const dashboardOrSignin = isAuthenticated ? (isAdmin ? "/admin" : "/dashboard") : "/signin";
   const platformItems = [
     {
       icon: (
@@ -135,7 +141,8 @@ export default function Navbar() {
         </svg>
       ),
       title: "Learning Management",
-      description: "Comprehensive LMS with course creation, tracking, and analytics capabilities."
+      description: "Comprehensive LMS with course creation, tracking, and analytics capabilities.",
+      href: dashboardOrSignin,
     },
     {
       icon: (
@@ -148,7 +155,8 @@ export default function Navbar() {
         </svg>
       ),
       title: "Content Library",
-      description: "Access thousands of curated courses, videos, and learning resources."
+      description: "Access thousands of curated courses, videos, and learning resources.",
+      href: dashboardOrSignin,
     },
     {
       icon: (
@@ -159,7 +167,8 @@ export default function Navbar() {
         </svg>
       ),
       title: "Analytics Dashboard",
-      description: "Real-time insights into learning progress, engagement, and performance metrics."
+      description: "Real-time insights into learning progress, engagement, and performance metrics.",
+      href: dashboardOrSignin,
     },
     {
       icon: (
@@ -171,7 +180,8 @@ export default function Navbar() {
         </svg>
       ),
       title: "Team Collaboration",
-      description: "Foster teamwork with discussion forums, group projects, and peer learning."
+      description: "Foster teamwork with discussion forums, group projects, and peer learning.",
+      href: dashboardOrSignin,
     }
   ];
 
@@ -254,9 +264,9 @@ export default function Navbar() {
                   <div className="w-[580px] bg-white rounded-xl shadow-2xl border border-gray-100 p-6">
                     <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                       {platformItems.map((item, index) => (
-                        <a
+                        <TransitionLink
                           key={index}
-                          href="#"
+                          href={item.href}
                           className="group flex flex-col gap-2 transition-all duration-200"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
@@ -271,7 +281,7 @@ export default function Navbar() {
                           <p className="text-[13px] text-[#64748B] leading-relaxed">
                             {item.description}
                           </p>
-                        </a>
+                        </TransitionLink>
                       ))}
                     </div>
                   </div>
@@ -349,16 +359,53 @@ export default function Navbar() {
 
             {/* Right Section - Desktop */}
             <div className="hidden lg:flex items-center gap-3">
-              {/* Globe Icon - Navigate to Vault */}
-              {!hiddenPages.includes("vault") && (
-                <TransitionLink href="/vault" className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 hover:border-[#FF6F00] hover:bg-[#FFF4E5] transition-all duration-200 cursor-pointer">
+              {/* Language Selector */}
+              <div className="relative" ref={langRef}>
+                <button
+                  onClick={() => setLangOpen(!langOpen)}
+                  className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 hover:border-[#FF6F00] hover:bg-[#FFF4E5] transition-all duration-200 cursor-pointer"
+                  aria-label="Language"
+                >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="12" cy="12" r="10" stroke="#1E293B" strokeWidth="1.5"/>
                     <path d="M2 12H22" stroke="#1E293B" strokeWidth="1.5" strokeLinecap="round"/>
                     <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="#1E293B" strokeWidth="1.5"/>
                   </svg>
-                </TransitionLink>
-              )}
+                </button>
+
+                {/* Language Dropdown */}
+                <div className={`absolute top-full right-0 mt-2 w-[280px] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top-right ${langOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}>
+                  <div className="px-5 py-4 bg-gradient-to-r from-[#000E51] to-[#001a7a]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="1.5"/>
+                          <path d="M2 12H22" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                          <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="white" strokeWidth="1.5"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold text-sm">Language Support</p>
+                        <p className="text-white/60 text-xs">Multi-language experience</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center gap-3 px-3 py-2.5 bg-[#F8F9FC] rounded-lg mb-3">
+                      <span className="text-base">🇺🇸</span>
+                      <span className="text-sm font-medium text-[#000E51]">English</span>
+                      <span className="ml-auto text-[10px] font-semibold text-white bg-[#FF6F00] px-2 py-0.5 rounded-full">Active</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[#64748B] mt-3">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6V12L16 14"/>
+                      </svg>
+                      <p className="text-xs">More languages coming soon</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {isAuthenticated && user ? (
                 <>
@@ -432,18 +479,6 @@ export default function Navbar() {
                             <circle cx="12" cy="7" r="4"/>
                           </svg>
                           <span className="text-sm font-medium">My Profile</span>
-                        </TransitionLink>
-
-                        <TransitionLink
-                          href="/settings"
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 text-[#1E293B] hover:bg-[#FFF4E5] hover:text-[#FF6F00] transition-colors"
-                        >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="3"/>
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                          </svg>
-                          <span className="text-sm font-medium">Settings</span>
                         </TransitionLink>
 
                         <div className="border-t border-gray-100 my-2"></div>
@@ -563,7 +598,7 @@ export default function Navbar() {
                   <div className={`overflow-hidden transition-all duration-300 ${mobileAccordion === "platform" ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
                     <div className="pb-3 space-y-3">
                       {platformItems.map((item, index) => (
-                        <a key={index} href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                        <TransitionLink key={index} href={item.href} onClick={() => setMobileMenuOpen(false)} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                           <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#FFF4E5] flex-shrink-0">
                             {item.icon}
                           </div>
@@ -571,7 +606,7 @@ export default function Navbar() {
                             <h4 className="text-sm font-semibold text-[#000E51]">{item.title}</h4>
                             <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">{item.description}</p>
                           </div>
-                        </a>
+                        </TransitionLink>
                       ))}
                     </div>
                   </div>
@@ -632,17 +667,16 @@ export default function Navbar() {
 
           {/* Mobile Menu Footer */}
           <div className="p-4 border-t border-gray-100 space-y-3">
-            {/* Globe - Navigate to Vault */}
-            {!hiddenPages.includes("vault") && (
-              <TransitionLink href="/vault" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-2 text-[#1E293B] text-sm font-medium hover:text-[#FF6F00] transition-colors cursor-pointer">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-                  <path d="M2 12H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="currentColor" strokeWidth="1.5"/>
-                </svg>
-                The Vault
-              </TransitionLink>
-            )}
+            {/* Language Info */}
+            <div className="flex items-center gap-3 w-full py-2 text-[#64748B] text-sm">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M2 12H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="currentColor" strokeWidth="1.5"/>
+              </svg>
+              <span>English</span>
+              <span className="text-[10px] font-semibold text-[#64748B] bg-gray-100 px-2 py-0.5 rounded-full ml-auto">More languages soon</span>
+            </div>
 
             {isAuthenticated && user ? (
               <>

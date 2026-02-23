@@ -27,7 +27,7 @@ export default function HeroSection() {
         <div className="absolute inset-0 z-0">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/icon/bg.jpg')" }}
+            style={{ backgroundImage: "url('/hero.jpg')" }}
           />
           {/* Gradient Overlay */}
           <div
@@ -129,7 +129,7 @@ export default function HeroSection() {
         <div className="absolute inset-0 z-0">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/icon/bg.jpg')" }}
+            style={{ backgroundImage: "url('/hero.jpg')" }}
           />
           <div
             className="absolute inset-0"
