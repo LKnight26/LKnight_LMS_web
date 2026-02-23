@@ -5,6 +5,7 @@ import NavigationProgress from "@/components/NavigationProgress";
 import { Providers } from "@/components/Providers";
 import MaintenanceCheck from "@/components/MaintenanceCheck";
 import JsonLd from "@/components/JsonLd";
+import ChatBotButton from "@/components/ChatBotButton";
 import {
   defaultMetadata,
   organizationSchema,
@@ -55,6 +56,7 @@ export default function RootLayout({
           <MaintenanceCheck>
             <NavigationProgress />
             {children}
+            <ChatBotButton />
           </MaintenanceCheck>
         </Providers>
       </body>
