@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -18,10 +18,23 @@ export default function ContactPage() {
     message: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Pre-fill form with logged-in user data
   useEffect(() => {
@@ -36,10 +49,15 @@ export default function ContactPage() {
   }, [user]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubjectSelect = (value: string) => {
+    setFormData((prev) => ({ ...prev, subject: value }));
+    setIsDropdownOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -314,31 +332,70 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                {/* Subject Selection - Dropdown */}
-                <div>
+                {/* Subject Selection - Custom Dropdown */}
+                <div ref={dropdownRef} className="relative">
                   <label className="block text-xs text-gray-500 mb-2">
                     Inquiry Subject <span className="text-red-400">*</span>
                   </label>
-                  <div className="relative">
-                    <select
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleInputChange}
-                      className="w-full appearance-none border-b border-gray-300 pb-2 pt-1 text-sm text-gray-900 focus:outline-none focus:border-[#1a1f4e] transition-colors bg-transparent cursor-pointer pr-8"
+                  <button
+                    type="button"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className={`w-full flex items-center justify-between border-b pb-2 pt-1 text-sm text-left transition-colors bg-transparent cursor-pointer ${
+                      isDropdownOpen ? "border-[#1a1f4e]" : "border-gray-300"
+                    }`}
+                  >
+                    <span className={formData.subject ? "text-gray-900" : "text-gray-400"}>
+                      {formData.subject
+                        ? subjects.find((s) => s.value === formData.subject)?.label
+                        : "Select an inquiry subject..."}
+                    </span>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={`text-gray-400 transition-transform duration-200 flex-shrink-0 ${
+                        isDropdownOpen ? "rotate-180" : ""
+                      }`}
                     >
-                      <option value="" disabled>
-                        Select an inquiry subject...
-                      </option>
+                      <path d="M6 9L12 15L18 9" />
+                    </svg>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  <div
+                    className={`absolute left-0 right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 z-50 overflow-hidden transition-all duration-200 origin-top ${
+                      isDropdownOpen
+                        ? "opacity-100 scale-y-100 translate-y-0"
+                        : "opacity-0 scale-y-95 -translate-y-1 pointer-events-none"
+                    }`}
+                  >
+                    <div className="max-h-[280px] overflow-y-auto py-1 scrollbar-thin">
                       {subjects.map((subject) => (
-                        <option key={subject.value} value={subject.value}>
+                        <button
+                          key={subject.value}
+                          type="button"
+                          onClick={() => handleSubjectSelect(subject.value)}
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 flex items-center gap-3 cursor-pointer ${
+                            formData.subject === subject.value
+                              ? "bg-[#FFF4E5] text-[#FF6F00] font-medium"
+                              : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                              formData.subject === subject.value
+                                ? "bg-[#FF6F00]"
+                                : "bg-gray-300"
+                            }`}
+                          />
                           {subject.label}
-                        </option>
+                        </button>
                       ))}
-                    </select>
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M6 9L12 15L18 9" />
-                      </svg>
                     </div>
                   </div>
                 </div>

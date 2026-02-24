@@ -295,7 +295,6 @@ export default function Navbar() {
                             key={index}
                             href={item.href}
                             className="group flex flex-col gap-2 transition-all duration-200"
-                            style={{ animationDelay: `${index * 50}ms` }}
                           >
                             <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#FFF4E5] group-hover:bg-[#FF6F00] group-hover:scale-110 transition-all duration-200">
                               <div className="group-hover:[&_svg_*]:stroke-white transition-colors duration-200">
