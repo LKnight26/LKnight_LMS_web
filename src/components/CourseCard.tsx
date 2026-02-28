@@ -53,7 +53,7 @@ export default function CourseCard({
   price,
   href,
 }: CourseCardProps) {
-  const enrollLink = href || `/courses/${slug || id}`;
+  const enrollLink = href || `/dashboard/courses/${id}`;
   const displayImage = image || thumbnail || "/icon/webCourse.png";
   const displayDescription = description || summary || "";
   const displayHours = hours ?? (totalDuration ? Math.round(totalDuration / 3600) : 0);

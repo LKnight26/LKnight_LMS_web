@@ -16,43 +16,35 @@ const FeatureItem = ({
   text: string;
   included: boolean;
 }) => (
-  <div className="flex items-start gap-2.5 py-[6px]">
+  <div className="flex items-start gap-3 py-1.5">
     {included ? (
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        fill="none"
-        className="flex-shrink-0 mt-0.5"
-      >
-        <path
-          d="M11.6669 3.5L5.25023 9.91667L2.33356 7"
-          stroke="#1a1f4e"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <div className="w-5 h-5 rounded-full bg-[#000E51]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+          <path
+            d="M11.6669 3.5L5.25023 9.91667L2.33356 7"
+            stroke="#000E51"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
     ) : (
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        fill="none"
-        className="flex-shrink-0 mt-0.5"
-      >
-        <path
-          d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5"
-          stroke="#d1d5db"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+          <path
+            d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5"
+            stroke="#d1d5db"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
     )}
     <span
-      className={`text-[13px] leading-tight ${
-        included ? "text-gray-600" : "text-gray-400"
+      className={`text-sm leading-snug ${
+        included ? "text-gray-700" : "text-gray-400"
       }`}
     >
       {text}
@@ -61,42 +53,44 @@ const FeatureItem = ({
 );
 
 // Plan icon component - maps by slug
-const PlanIcon = ({ slug }: { slug: string }) => {
+const PlanIcon = ({ slug, isHighlighted }: { slug: string; isHighlighted: boolean }) => {
+  const bgColor = isHighlighted ? "rgba(255,255,255,0.2)" : "rgba(26,31,78,0.08)";
+  const fillColor = isHighlighted ? "#ffffff" : "#000E51";
+
   return (
-    <div className="w-7 h-7 flex-shrink-0">
+    <div className="w-10 h-10 flex-shrink-0">
       {slug === "individual" && (
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="28" height="28" rx="6" fill="#1a1f4e" fillOpacity="0.1" />
-          <path d="M14 13C15.6569 13 17 11.6569 17 10C17 8.34315 15.6569 7 14 7C12.3431 7 11 8.34315 11 10C11 11.6569 12.3431 13 14 13Z" fill="#1a1f4e" />
-          <path d="M14 15C10.69 15 8 16.79 8 19V20H20V19C20 16.79 17.31 15 14 15Z" fill="#1a1f4e" />
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill={bgColor} />
+          <path d="M20 18C21.6569 18 23 16.6569 23 15C23 13.3431 21.6569 12 20 12C18.3431 12 17 13.3431 17 15C17 16.6569 18.3431 18 20 18Z" fill={fillColor} />
+          <path d="M20 20C16.69 20 14 21.79 14 24V26H26V24C26 21.79 23.31 20 20 20Z" fill={fillColor} />
         </svg>
       )}
       {slug === "small-team" && (
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="28" height="28" rx="6" fill="#1a1f4e" fillOpacity="0.1" />
-          <path d="M11 13C12.1046 13 13 12.1046 13 11C13 9.89543 12.1046 9 11 9C9.89543 9 9 9.89543 9 11C9 12.1046 9.89543 13 11 13Z" fill="#1a1f4e" />
-          <path d="M17 13C18.1046 13 19 12.1046 19 11C19 9.89543 18.1046 9 17 9C15.8954 9 15 9.89543 15 11C15 12.1046 15.8954 13 17 13Z" fill="#1a1f4e" />
-          <path d="M11 15C8.79 15 7 16.79 7 19H15C15 16.79 13.21 15 11 15Z" fill="#1a1f4e" />
-          <path d="M17 15C16.53 15 16.09 15.1 15.67 15.24C16.5 16.27 17 17.58 17 19H21C21 16.79 19.21 15 17 15Z" fill="#1a1f4e" />
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill={bgColor} />
+          <path d="M16 18C17.1046 18 18 17.1046 18 16C18 14.8954 17.1046 14 16 14C14.8954 14 14 14.8954 14 16C14 17.1046 14.8954 18 16 18Z" fill={fillColor} />
+          <path d="M24 18C25.1046 18 26 17.1046 26 16C26 14.8954 25.1046 14 24 14C22.8954 14 22 14.8954 22 16C22 17.1046 22.8954 18 24 18Z" fill={fillColor} />
+          <path d="M16 20C13.79 20 12 21.79 12 24H20C20 21.79 18.21 20 16 20Z" fill={fillColor} />
+          <path d="M24 20C23.53 20 23.09 20.1 22.67 20.24C23.5 21.27 24 22.58 24 24H28C28 21.79 26.21 20 24 20Z" fill={fillColor} />
         </svg>
       )}
       {slug === "organization" && (
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="28" height="28" rx="6" fill="#FF6F00" fillOpacity="0.15" />
-          <path d="M8 20H20V10L14 7L8 10V20ZM10 12H12V14H10V12ZM10 16H12V18H10V16ZM14 12H16V14H14V12ZM14 16H16V18H14V16Z" fill="#FF6F00" />
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill={isHighlighted ? "rgba(255,111,0,0.3)" : "rgba(255,111,0,0.12)"} />
+          <path d="M12 28H28V16L20 12L12 16V28ZM15 18H17V20H15V18ZM15 22H17V24H15V22ZM19 18H21V20H19V18ZM19 22H21V24H19V22ZM23 18H25V20H23V18ZM23 22H25V24H23V22Z" fill={isHighlighted ? "#ffffff" : "#FF6F00"} />
         </svg>
       )}
       {slug === "enterprise" && (
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="28" height="28" rx="6" fill="#1a1f4e" fillOpacity="0.1" />
-          <path d="M14 7L15.545 11.91L20.5 12.18L16.59 15.36L17.82 20.18L14 17.27L10.18 20.18L11.41 15.36L7.5 12.18L12.455 11.91L14 7Z" fill="#1a1f4e" />
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill={bgColor} />
+          <path d="M20 11L21.8 16.44L27.5 16.76L23 20.28L24.28 25.82L20 22.72L15.72 25.82L17 20.28L12.5 16.76L18.2 16.44L20 11Z" fill={fillColor} />
         </svg>
       )}
-      {/* Fallback for custom plan slugs */}
       {!["individual", "small-team", "organization", "enterprise"].includes(slug) && (
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="28" height="28" rx="6" fill="#1a1f4e" fillOpacity="0.1" />
-          <path d="M9 11H11V19H9V11ZM13 8H15V19H13V8ZM17 14H19V19H17V14Z" fill="#1a1f4e" />
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill={bgColor} />
+          <path d="M14 16H16V26H14V16ZM19 12H21V26H19V12ZM24 20H26V26H24V20Z" fill={fillColor} />
         </svg>
       )}
     </div>
@@ -122,126 +116,166 @@ const PricingCard = ({
       ? plan.monthlyPrice
       : plan.yearlyPrice;
   const period =
-    billingCycle === "monthly" && plan.monthlyPrice ? "/month" : "/year";
+    billingCycle === "monthly" && plan.monthlyPrice ? "/mo" : "/yr";
   const showPrice = price != null;
+  const isHighlighted = plan.isPopular || plan.slug === "organization";
 
   return (
-    <div className={`relative ${plan.isPopular ? "lg:-mt-4 lg:mb-4" : ""}`}>
+    <div className={`relative flex flex-col ${isHighlighted ? "lg:-mt-4" : ""}`}>
+      {/* Top badge */}
       {plan.isPopular && (
-        <div className="flex justify-center mb-0">
-          <span className="bg-[#FF6F00] text-white text-[11px] font-medium px-4 py-1.5 rounded-t-lg">
+        <div className="flex justify-center">
+          <span className="bg-[#FF6F00] text-white text-xs font-semibold px-5 py-1.5 rounded-t-xl">
             Most Popular
           </span>
         </div>
       )}
-
       {isCurrentPlan && !plan.isPopular && (
-        <div className="flex justify-center mb-0">
-          <span className="bg-green-600 text-white text-[11px] font-medium px-4 py-1.5 rounded-t-lg">
+        <div className="flex justify-center">
+          <span className="bg-green-500 text-white text-xs font-semibold px-5 py-1.5 rounded-t-xl">
             Current Plan
           </span>
         </div>
       )}
 
       <div
-        className={`bg-white rounded-[10px] p-5 lg:p-6 h-full ${
-          plan.isPopular
-            ? "shadow-[0_4px_30px_rgba(0,0,0,0.1)] border-l-[3px] border-l-[#FF6F00] border-t border-r border-b border-t-gray-100 border-r-gray-100 border-b-gray-100"
+        className={`flex flex-col h-full rounded-2xl overflow-hidden transition-all duration-300 ${
+          isHighlighted
+            ? "bg-[#000E51] text-white shadow-2xl shadow-[#000E51]/20 ring-1 ring-[#000E51]"
             : isCurrentPlan
-            ? "shadow-[0_4px_30px_rgba(0,0,0,0.1)] border-l-[3px] border-l-green-500 border-t border-r border-b border-t-gray-100 border-r-gray-100 border-b-gray-100"
-            : "shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] transition-shadow"
+            ? "bg-white shadow-xl ring-2 ring-green-400"
+            : "bg-white shadow-lg shadow-gray-200/60 ring-1 ring-gray-100 hover:shadow-xl hover:ring-gray-200"
         }`}
       >
-        {/* Header */}
-        <div className="mb-5">
-          <div className="flex items-center gap-2.5 mb-1.5">
-            <PlanIcon slug={plan.slug} />
-            <h3 className="text-[15px] font-semibold text-gray-900">
-              {plan.name}
-            </h3>
+        {/* Card Body */}
+        <div className="p-6 lg:p-7 flex-1 flex flex-col">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <PlanIcon slug={plan.slug} isHighlighted={isHighlighted} />
+              <div>
+                <h3 className={`text-lg font-bold ${isHighlighted ? "text-white" : "text-gray-900"}`}>
+                  {plan.name}
+                </h3>
+                {plan.tagline && (
+                  <p className={`text-xs font-medium ${isHighlighted ? "text-[#FF6F00]" : "text-[#FF6F00]"}`}>
+                    {plan.tagline}
+                  </p>
+                )}
+              </div>
+            </div>
+            {plan.description && (
+              <p className={`text-sm leading-relaxed mt-2 ${isHighlighted ? "text-white/70" : "text-gray-500"}`}>
+                {plan.description}
+              </p>
+            )}
           </div>
-          {plan.tagline && (
-            <p className="text-[11px] text-[#FF6F00] font-medium pl-[38px] mb-1">
-              {plan.tagline}
+
+          {/* Price */}
+          <div className="mb-6">
+            {showPrice ? (
+              <>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-4xl font-extrabold tracking-tight ${isHighlighted ? "text-white" : "text-gray-900"}`}>
+                    ${price.toLocaleString()}
+                  </span>
+                  <span className={`text-sm font-medium ${isHighlighted ? "text-white/50" : "text-gray-400"}`}>
+                    {period}
+                  </span>
+                </div>
+                {plan.maxUsers > 1 && (
+                  <p className={`text-xs mt-1.5 ${isHighlighted ? "text-white/50" : "text-gray-400"}`}>
+                    up to {plan.maxUsers.toLocaleString()} users included
+                  </p>
+                )}
+                {plan.additionalUserPrice && (
+                  <p className={`text-xs mt-0.5 font-medium ${isHighlighted ? "text-[#FF6F00]" : "text-[#FF6F00]"}`}>
+                    +${plan.additionalUserPrice}/additional user
+                  </p>
+                )}
+              </>
+            ) : (
+              <div>
+                <span className={`text-4xl font-extrabold tracking-tight ${isHighlighted ? "text-white" : "text-gray-900"}`}>
+                  Custom
+                </span>
+                <p className={`text-xs mt-1.5 ${isHighlighted ? "text-white/50" : "text-gray-400"}`}>
+                  Tailored to your organization
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* CTA Button */}
+          <button
+            onClick={() => onSelect(plan)}
+            disabled={isCurrentPlan || isLoading}
+            className={`w-full py-3 px-5 rounded-xl text-sm font-semibold transition-all duration-200 mb-6 ${
+              isCurrentPlan
+                ? "bg-green-100 text-green-700 cursor-default"
+                : isHighlighted
+                ? "bg-[#FF6F00] hover:bg-[#E86400] text-white shadow-lg shadow-[#FF6F00]/25"
+                : "bg-[#000E51] hover:bg-[#001a7a] text-white"
+            } ${isLoading ? "opacity-50 cursor-wait" : ""}`}
+          >
+            {isCurrentPlan ? "Current Plan" : plan.ctaText}
+          </button>
+
+          {/* Close Line */}
+          {plan.closeLine && (
+            <p className={`text-xs leading-relaxed mb-5 italic ${isHighlighted ? "text-white/40" : "text-gray-400"}`}>
+              {plan.closeLine}
             </p>
           )}
-          <p className="text-[12px] text-gray-500 leading-relaxed pl-[38px]">
-            {plan.description}
-          </p>
-        </div>
 
-        {/* Price */}
-        <div className="mb-5">
-          {showPrice ? (
-            <>
-              <div className="flex items-baseline">
-                <span className="text-[32px] font-bold text-gray-900 leading-none">
-                  ${price.toLocaleString()}
-                </span>
-                <span className="text-gray-400 text-[13px] ml-0.5">
-                  {period}
-                </span>
-              </div>
-              {plan.maxUsers > 1 && (
-                <p className="text-gray-400 text-[12px] mt-1">
-                  up to {plan.maxUsers.toLocaleString()} employees
-                </p>
+          {/* Divider + Features */}
+          <div className={`border-t pt-5 flex-1 ${isHighlighted ? "border-white/10" : "border-gray-100"}`}>
+            <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isHighlighted ? "text-white/40" : "text-gray-400"}`}>
+              What&apos;s included
+            </p>
+            <div className="space-y-0.5">
+              {(plan.features as PlanFeature[]).map(
+                (feature: PlanFeature, index: number) => (
+                  <div key={index} className="flex items-start gap-3 py-1.5">
+                    {feature.included ? (
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${isHighlighted ? "bg-white/15" : "bg-[#000E51]/8"}`}>
+                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                          <path
+                            d="M11.6669 3.5L5.25023 9.91667L2.33356 7"
+                            stroke={isHighlighted ? "#ffffff" : "#000E51"}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                    ) : (
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${isHighlighted ? "bg-white/10" : "bg-gray-100"}`}>
+                        <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+                          <path
+                            d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5"
+                            stroke={isHighlighted ? "rgba(255,255,255,0.3)" : "#d1d5db"}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                    <span
+                      className={`text-sm leading-snug ${
+                        feature.included
+                          ? isHighlighted ? "text-white/80" : "text-gray-700"
+                          : isHighlighted ? "text-white/30" : "text-gray-400"
+                      }`}
+                    >
+                      {feature.text}
+                    </span>
+                  </div>
+                )
               )}
-              {plan.additionalUserPrice && (
-                <p className="text-[#FF6F00] text-[12px] mt-0.5">
-                  ${plan.additionalUserPrice} per additional user
-                </p>
-              )}
-            </>
-          ) : (
-            <div className="flex items-baseline">
-              <span className="text-[32px] font-bold text-gray-900 leading-none">
-                Custom
-              </span>
             </div>
-          )}
-        </div>
-
-        {/* CTA Button */}
-        <button
-          onClick={() => onSelect(plan)}
-          disabled={isCurrentPlan || isLoading}
-          className={`w-full py-2.5 px-4 rounded-[6px] text-[13px] font-medium transition-all mb-5 ${
-            isCurrentPlan
-              ? "bg-green-100 text-green-700 cursor-default"
-              : plan.isPopular || plan.slug === "organization"
-              ? "bg-[#000E51] hover:bg-[#FF6F00] text-white shadow-sm"
-              : "border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-          } ${isLoading ? "opacity-50 cursor-wait" : ""}`}
-        >
-          {isCurrentPlan ? "Current Plan" : plan.ctaText}
-        </button>
-
-        {/* Close Line */}
-        {plan.closeLine && (
-          <p className="text-[11px] text-gray-400 leading-relaxed mb-4 italic">
-            {plan.closeLine}
-          </p>
-        )}
-
-        {/* Divider */}
-        <div className="border-t border-gray-100 pt-4 mb-1">
-          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
-            Includes:
-          </p>
-        </div>
-
-        {/* Features */}
-        <div className="space-y-0">
-          {(plan.features as PlanFeature[]).map(
-            (feature: PlanFeature, index: number) => (
-              <FeatureItem
-                key={index}
-                text={feature.text}
-                included={feature.included}
-              />
-            )
-          )}
+          </div>
         </div>
       </div>
     </div>
@@ -250,21 +284,25 @@ const PricingCard = ({
 
 // Loading skeleton
 const PricingCardSkeleton = () => (
-  <div className="bg-white rounded-[10px] p-5 lg:p-6 shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-gray-100 animate-pulse">
-    <div className="mb-5">
-      <div className="flex items-center gap-2.5 mb-3">
-        <div className="w-7 h-7 bg-gray-200 rounded-md" />
-        <div className="h-4 bg-gray-200 rounded w-24" />
+  <div className="bg-white rounded-2xl p-6 lg:p-7 shadow-lg shadow-gray-200/60 ring-1 ring-gray-100 animate-pulse">
+    <div className="mb-6">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 bg-gray-200 rounded-xl" />
+        <div className="h-5 bg-gray-200 rounded w-28" />
       </div>
-      <div className="h-3 bg-gray-100 rounded w-full ml-[38px]" />
+      <div className="h-3 bg-gray-100 rounded w-full mt-2" />
+      <div className="h-3 bg-gray-100 rounded w-3/4 mt-1.5" />
     </div>
-    <div className="mb-5">
-      <div className="h-8 bg-gray-200 rounded w-28" />
+    <div className="mb-6">
+      <div className="h-10 bg-gray-200 rounded w-32" />
     </div>
-    <div className="h-10 bg-gray-100 rounded-[6px] mb-5" />
-    <div className="space-y-2">
+    <div className="h-12 bg-gray-100 rounded-xl mb-6" />
+    <div className="border-t border-gray-100 pt-5 space-y-3">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="h-3 bg-gray-100 rounded w-full" />
+        <div key={i} className="flex items-center gap-3">
+          <div className="w-5 h-5 bg-gray-100 rounded-full" />
+          <div className="h-3 bg-gray-100 rounded flex-1" />
+        </div>
       ))}
     </div>
   </div>
@@ -357,58 +395,61 @@ export default function PricingPage() {
       <Navbar />
 
       {/* Header Section */}
-      <div className="bg-[#1a1f4e] pt-20 pb-36 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-[28px] md:text-[36px] lg:text-[42px] font-bold text-white mb-3 leading-tight">
-            Pricing
-          </h1>
-          <p className="text-gray-300 text-[15px] md:text-[17px] max-w-2xl mx-auto mb-2">
-            Invest in better leadership.
+      <div className="bg-gradient-to-b from-[#000E51] to-[#0a1a6e] pt-24 pb-40 px-4 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 opacity-[0.04]">
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
+                <path d="M 8 0 L 0 0 0 8" fill="none" stroke="white" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#grid)" />
+          </svg>
+        </div>
+
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <p className="text-[#FF6F00] text-sm font-semibold tracking-wide uppercase mb-3">
+            Pricing Plans
           </p>
-          <p className="text-gray-400 text-[13px] md:text-[14px] max-w-xl mx-auto">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+            Invest in better leadership.
+          </h1>
+          <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto mb-2">
             Start learning today and build a culture that lasts — one leader,
             one conversation, one lesson at a time.
           </p>
 
-          {/* Billing Toggle */}
+          {/* Billing Toggle - Industry Standard Pill */}
           {hasMonthlyOption && (
-            <div className="flex items-center justify-center gap-3 mt-6">
-              <span
-                className={`text-[13px] cursor-pointer ${
-                  billingCycle === "monthly"
-                    ? "text-white font-medium"
-                    : "text-gray-400"
-                }`}
+            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full p-1 mt-8">
+              <button
                 onClick={() => setBillingCycle("monthly")}
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                  billingCycle === "monthly"
+                    ? "bg-white text-[#000E51] shadow-md"
+                    : "text-white/70 hover:text-white"
+                }`}
               >
                 Monthly
-              </span>
-              <button
-                onClick={() =>
-                  setBillingCycle((c) =>
-                    c === "monthly" ? "yearly" : "monthly"
-                  )
-                }
-                className="relative w-11 h-6 bg-[#FF6F00] rounded-full transition-colors"
-              >
-                <span
-                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                    billingCycle === "yearly"
-                      ? "translate-x-5.5"
-                      : "translate-x-0.5"
-                  }`}
-                />
               </button>
-              <span
-                className={`text-[13px] cursor-pointer ${
-                  billingCycle === "yearly"
-                    ? "text-white font-medium"
-                    : "text-gray-400"
-                }`}
+              <button
                 onClick={() => setBillingCycle("yearly")}
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+                  billingCycle === "yearly"
+                    ? "bg-white text-[#000E51] shadow-md"
+                    : "text-white/70 hover:text-white"
+                }`}
               >
                 Yearly
-              </span>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                  billingCycle === "yearly"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-white/20 text-white"
+                }`}>
+                  Save 17%
+                </span>
+              </button>
             </div>
           )}
         </div>
@@ -416,24 +457,27 @@ export default function PricingPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="max-w-[1200px] mx-auto px-6 md:px-10 lg:px-16 -mt-28 mb-4">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-            {error}
+        <div className="max-w-[1200px] mx-auto px-6 md:px-10 lg:px-16 -mt-32 mb-4 relative z-10">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 ml-4 font-medium">
+              Dismiss
+            </button>
           </div>
         </div>
       )}
 
       {/* Pricing Cards Section */}
-      <div className="relative">
-        <div className="max-w-[1200px] mx-auto px-6 md:px-10 lg:px-16 -mt-24">
+      <div className="relative z-10">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16 -mt-28">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-5 items-start">
               {[1, 2, 3, 4].map((i) => (
                 <PricingCardSkeleton key={i} />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-5 items-start">
               {plans.map((plan) => (
                 <PricingCard
                   key={plan.id}
@@ -450,17 +494,17 @@ export default function PricingPage() {
       </div>
 
       {/* Closing Section */}
-      <div className="max-w-4xl mx-auto text-center py-16 px-4">
-        <h2 className="text-[24px] md:text-[30px] font-bold text-gray-900 mb-3">
+      <div className="max-w-4xl mx-auto text-center py-20 px-4">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
           Ready to lead differently?
         </h2>
-        <p className="text-gray-500 text-[14px] md:text-[15px] max-w-lg mx-auto mb-6">
+        <p className="text-gray-500 text-sm md:text-base max-w-lg mx-auto mb-8">
           Join thousands of professionals and organizations transforming
           leadership from the inside out.
         </p>
         <button
           onClick={() => router.push("/courses")}
-          className="bg-[#000E51] hover:bg-[#FF6F00] text-white px-8 py-3 rounded-lg text-[14px] font-medium transition-colors"
+          className="bg-[#000E51] hover:bg-[#FF6F00] text-white px-8 py-3.5 rounded-xl text-sm font-semibold transition-colors shadow-lg"
         >
           Explore The LKnight Learning Hub
         </button>
