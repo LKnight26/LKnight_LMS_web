@@ -53,7 +53,7 @@ export default function CourseCard({
   price,
   href,
 }: CourseCardProps) {
-  const enrollLink = href || `/dashboard/checkout/${id}`;
+  const enrollLink = href || `/courses/${slug || id}`;
   const displayImage = image || thumbnail || "/icon/webCourse.png";
   const displayDescription = description || summary || "";
   const displayHours = hours ?? (totalDuration ? Math.round(totalDuration / 3600) : 0);
@@ -148,15 +148,10 @@ export default function CourseCard({
             <span className="text-sm text-gray-600">
               By <span className="font-medium text-primary">{instructor}</span>
             </span>
-            {price != null && price > 0 && (
-              <span className="text-sm font-bold text-primary">${price}</span>
-            )}
-            {price != null && price === 0 && (
-              <span className="text-sm font-bold text-green-600">Free</span>
-            )}
+            {/* Price field removed — pricing is now managed via subscription plans */}
           </div>
           <span className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-secondary text-white text-xs sm:text-sm font-semibold rounded-lg group-hover:opacity-90 transition-all duration-200">
-            Enroll Now
+            Learn More
             <svg
               width="14"
               height="14"

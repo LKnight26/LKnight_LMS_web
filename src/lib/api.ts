@@ -1131,4 +1131,114 @@ export const settingsApi = {
     api.put<Settings>('/settings', data),
 };
 
+// ============================================
+// PLAN API
+// ============================================
+
+export interface PlanFeature {
+  text: string;
+  included: boolean;
+}
+
+export interface Plan {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  tagline?: string;
+  closeLine?: string;
+  monthlyPrice?: number | null;
+  yearlyPrice?: number | null;
+  maxUsers: number;
+  additionalUserPrice?: number | null;
+  features: PlanFeature[];
+  ctaText: string;
+  ctaType: 'CHECKOUT' | 'CONTACT_SALES';
+  isPopular: boolean;
+  order: number;
+  isActive: boolean;
+  stripeMonthlyPriceId?: string | null;
+  stripeYearlyPriceId?: string | null;
+  stripeProductId?: string | null;
+  subscriptionCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const planApi = {
+  // Public
+  getAll: () => api.get<Plan[]>('/plans'),
+
+  // Admin
+  getAllAdmin: () => api.get<Plan[]>('/plans/admin'),
+  getById: (id: string) => api.get<Plan>(`/plans/admin/${id}`),
+  create: (data: Partial<Plan>) => api.post<Plan>('/plans', data),
+  update: (id: string, data: Partial<Plan>) => api.put<Plan>(`/plans/${id}`, data),
+  delete: (id: string) => api.delete<void>(`/plans/${id}`),
+  reorder: (plans: { id: string }[]) => api.patch<void>('/plans/reorder', { plans }),
+};
+
+// ============================================
+// SUBSCRIPTION API
+// ============================================
+
+export interface SubscriptionInfo {
+  id: string;
+  status: string;
+  billingCycle: string;
+  stripeSubscriptionId?: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd: boolean;
+  maxUsers: number;
+  organizationName?: string;
+  plan: {
+    id: string;
+    name: string;
+    slug: string;
+    monthlyPrice?: number | null;
+    yearlyPrice?: number | null;
+    maxUsers?: number;
+  };
+  memberCount?: number;
+  isTeamMember?: boolean;
+  memberRole?: string;
+  createdAt?: string;
+}
+
+export interface AccessCheckResponse {
+  hasAccess: boolean;
+  accessAll: boolean;
+  subscription?: {
+    id: string;
+    planName: string;
+    expiresAt: string;
+    isTeamMember?: boolean;
+  };
+}
+
+export const subscriptionApi = {
+  createCheckoutSession: (data: { planId: string; billingCycle: string; organizationName?: string }) =>
+    api.post<{ sessionId: string; sessionUrl: string }>('/subscriptions/create-checkout-session', data),
+
+  getMySubscription: () => api.get<SubscriptionInfo | null>('/subscriptions/my-subscription'),
+
+  cancel: () => api.post<{ cancelAtPeriodEnd: boolean; currentPeriodEnd: string }>('/subscriptions/cancel', {}),
+
+  checkAccess: () => api.get<AccessCheckResponse>('/subscriptions/check-access'),
+
+  getSessionSubscription: (sessionId: string) =>
+    api.get<SubscriptionInfo>(`/subscriptions/session/${sessionId}`),
+
+  // Team management
+  getTeamMembers: (subscriptionId: string) =>
+    api.get<{ id: string; user: User; role: string; joinedAt: string }[]>(`/subscriptions/${subscriptionId}/members`),
+
+  addTeamMember: (subscriptionId: string, email: string) =>
+    api.post<void>(`/subscriptions/${subscriptionId}/members`, { email }),
+
+  removeTeamMember: (subscriptionId: string, memberId: string) =>
+    api.delete<void>(`/subscriptions/${subscriptionId}/members/${memberId}`),
+};
+
 export default api;

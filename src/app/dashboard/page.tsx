@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { enrollmentApi, CourseWithStatus, UserDashboardStats } from "@/lib/api";
+import { enrollmentApi, subscriptionApi, SubscriptionInfo, CourseWithStatus, UserDashboardStats } from "@/lib/api";
 
 // Level badge colors
 const levelColors: Record<string, string> = {
@@ -28,13 +28,15 @@ export default function DashboardPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [accessAll, setAccessAll] = useState(false);
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [coursesRes, statsRes] = await Promise.all([
+      const [coursesRes, statsRes, subRes] = await Promise.all([
         enrollmentApi.getAllCoursesWithStatus(),
         enrollmentApi.getMyStats(),
+        subscriptionApi.getMySubscription().catch(() => ({ success: false, data: null })),
       ]);
 
       if (coursesRes.data) {
@@ -46,6 +48,9 @@ export default function DashboardPage() {
       }
       if (statsRes.data) {
         setStats(statsRes.data);
+      }
+      if (subRes.success && subRes.data) {
+        setSubscription(subRes.data);
       }
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
@@ -122,6 +127,53 @@ export default function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Subscription Status */}
+      {subscription && (
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-100 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#000E51]">
+                {subscription.plan.name}
+                {subscription.cancelAtPeriodEnd && (
+                  <span className="text-xs font-normal text-yellow-600 ml-2">(Cancels {new Date(subscription.currentPeriodEnd || "").toLocaleDateString()})</span>
+                )}
+              </p>
+              <p className="text-xs text-gray-500">
+                Active subscription · Renews {new Date(subscription.currentPeriodEnd || "").toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/subscription"
+            className="text-sm font-medium text-[#FF6F00] hover:text-[#E86400] transition-colors whitespace-nowrap"
+          >
+            Manage Subscription
+          </Link>
+        </div>
+      )}
+
+      {/* No Subscription CTA */}
+      {!subscription && !accessAll && !isLoading && (
+        <div className="bg-gradient-to-r from-[#FF6F00]/10 to-[#FF6F00]/5 rounded-xl p-4 sm:p-5 border border-[#FF6F00]/20 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-[#000E51]">Unlock All Courses</p>
+            <p className="text-xs text-gray-500">Get a subscription plan for full access to all learning materials.</p>
+          </div>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#FF6F00] hover:bg-[#E86400] text-white text-sm font-semibold rounded-xl transition-colors whitespace-nowrap"
+          >
+            View Plans
+          </Link>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -262,7 +314,7 @@ function CourseCard({ course }: { course: CourseWithStatus }) {
     <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group border border-gray-100 ${isLocked ? "relative" : ""}`}>
       {/* Image Container */}
       <Link
-        href={isLocked ? `/dashboard/checkout/${course.id}` : `/dashboard/courses/${course.id}`}
+        href={isLocked ? `/pricing` : `/dashboard/courses/${course.id}`}
         className="block relative aspect-[16/10] overflow-hidden"
       >
         {course.thumbnail ? (
@@ -306,10 +358,10 @@ function CourseCard({ course }: { course: CourseWithStatus }) {
           </span>
         )}
 
-        {/* Price Badge (for locked) */}
+        {/* Subscription Badge (for locked) */}
         {isLocked && (
           <span className="absolute top-4 right-4 px-3 py-1.5 rounded-md bg-[#FF6F00] text-white text-xs font-bold">
-            ${course.price.toFixed(2)}
+            Get a Plan
           </span>
         )}
       </Link>
@@ -324,7 +376,7 @@ function CourseCard({ course }: { course: CourseWithStatus }) {
         )}
 
         {/* Title */}
-        <Link href={isLocked ? `/dashboard/checkout/${course.id}` : `/dashboard/courses/${course.id}`}>
+        <Link href={isLocked ? `/pricing` : `/dashboard/courses/${course.id}`}>
           <h3 className="text-base sm:text-lg font-bold text-[#000E51] mt-1 mb-2 line-clamp-2 group-hover:text-[#FF6F00] transition-colors duration-200">
             {course.title}
           </h3>
@@ -378,7 +430,7 @@ function CourseCard({ course }: { course: CourseWithStatus }) {
             </span>
           )}
           <Link
-            href={isLocked ? `/dashboard/checkout/${course.id}` : `/dashboard/courses/${course.id}`}
+            href={isLocked ? `/pricing` : `/dashboard/courses/${course.id}`}
             className={`inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 ${
               isLocked
                 ? "bg-[#000E51] text-white hover:bg-[#001a7a]"
@@ -391,7 +443,7 @@ function CourseCard({ course }: { course: CourseWithStatus }) {
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                Enroll Now
+                Get Access
               </>
             ) : (
               <>

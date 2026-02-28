@@ -53,8 +53,8 @@ export default function CourseLearningPage() {
       // First check if user has access to this course
       const accessCheck = await enrollmentApi.getCheckoutDetails(courseId);
       if (accessCheck.data && !accessCheck.data.hasAccess) {
-        // User doesn't have access, redirect to checkout
-        router.push(`/dashboard/checkout/${courseId}`);
+        // User doesn't have access, redirect to pricing page (subscription model)
+        router.push(`/pricing`);
         return;
       }
 

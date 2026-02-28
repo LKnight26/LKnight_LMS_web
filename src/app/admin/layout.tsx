@@ -72,6 +72,13 @@ const AnalyticsIcon = () => (
   </svg>
 );
 
+const PlansIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <line x1="2" y1="10" x2="22" y2="10" />
+  </svg>
+);
+
 const SettingsIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3" />
@@ -104,6 +111,7 @@ const BackIcon = () => (
 const navItems = [
   { name: "Dashboard", href: "/admin", icon: DashboardIcon },
   { name: "Courses", href: "/admin/courses", icon: CoursesIcon },
+  { name: "Plans", href: "/admin/plans", icon: PlansIcon },
   { name: "Users", href: "/admin/users", icon: UsersIcon },
   { name: "Categories", href: "/admin/categories", icon: CategoriesIcon },
   { name: "Team", href: "/admin/team", icon: TeamIcon },

@@ -61,48 +61,9 @@ function CheckoutContent() {
     }
   }, [wasCanceled]);
 
+  // === Per-course purchase disabled — redirect to subscription pricing page ===
   const handlePurchase = async () => {
-    try {
-      setIsPurchasing(true);
-      setError(null);
-
-      const response = await enrollmentApi.createCheckoutSession(courseId);
-
-      if (response.success && response.data) {
-        // FREE COURSE: enrolled directly, no Stripe needed
-        if ("free" in response.data && response.data.free) {
-          setSuccess(true);
-          setTimeout(() => {
-            router.push(`/dashboard/courses/${courseId}`);
-          }, 2000);
-          return;
-        }
-
-        // PAID COURSE: redirect to Stripe Checkout
-        if ("sessionUrl" in response.data && response.data.sessionUrl) {
-          const sessionUrl = response.data.sessionUrl;
-
-          // Validate the URL is a legitimate Stripe checkout URL
-          if (!sessionUrl.startsWith("https://checkout.stripe.com")) {
-            setError("Invalid checkout URL received. Please try again or contact support.");
-            setIsPurchasing(false);
-            return;
-          }
-
-          window.location.href = sessionUrl;
-          // Re-enable button after 10s if redirect stalls (slow connection)
-          setTimeout(() => setIsPurchasing(false), 10000);
-          return;
-        }
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to start checkout. Please try again."
-      );
-      setIsPurchasing(false);
-    }
+    router.push('/pricing');
   };
 
   if (isLoading) {

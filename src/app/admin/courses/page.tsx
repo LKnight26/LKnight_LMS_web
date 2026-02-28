@@ -237,14 +237,7 @@ export default function CoursesPage() {
         </Badge>
       ),
     },
-    {
-      key: "price",
-      header: "Price",
-      sortable: true,
-      render: (course: Course) => (
-        <span className="font-semibold text-gray-900 text-xs sm:text-sm">${course.price}</span>
-      ),
-    },
+    /* Price column removed — pricing is now managed via subscription plans */
     {
       key: "status",
       header: "Status",

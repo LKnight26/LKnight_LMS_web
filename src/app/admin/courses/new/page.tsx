@@ -283,18 +283,7 @@ export default function NewCoursePage() {
                 required
               />
 
-              <AdminInput
-                label="Price"
-                name="price"
-                type="number"
-                value={formData.price}
-                onChange={handleChange}
-                placeholder="99"
-                helperText="Set to 0 for free courses"
-                icon={
-                  <span className="text-gray-400 font-medium">$</span>
-                }
-              />
+              {/* Price field removed — pricing is now managed via subscription plans */}
 
               <AdminInput
                 label="Teacher Name"
