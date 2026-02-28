@@ -151,7 +151,7 @@ export default function CourseCard({
             {/* Price field removed — pricing is now managed via subscription plans */}
           </div>
           <span className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-secondary text-white text-xs sm:text-sm font-semibold rounded-lg group-hover:opacity-90 transition-all duration-200">
-            Learn More
+            Enroll Now
             <svg
               width="14"
               height="14"

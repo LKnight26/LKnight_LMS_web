@@ -8,17 +8,17 @@ import FAQSection from "@/components/FAQSection";
 import { planApi, subscriptionApi, Plan, PlanFeature } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
-// Plan icon component
+// Plan icon component — white stroke for orange header
 const PlanIcon = ({ slug }: { slug: string }) => {
   const icons: Record<string, React.ReactNode> = {
     individual: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000E51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
         <circle cx="12" cy="7" r="4" />
       </svg>
     ),
     "small-team": (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000E51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -26,22 +26,21 @@ const PlanIcon = ({ slug }: { slug: string }) => {
       </svg>
     ),
     organization: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000E51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="7" width="20" height="14" rx="2" />
         <path d="M16 7V5a4 4 0 0 0-8 0v2" />
-        <path d="M12 14v0" />
-        <circle cx="12" cy="14" r="1" fill="#000E51" />
+        <circle cx="12" cy="14" r="1" fill="white" />
       </svg>
     ),
     enterprise: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000E51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
       </svg>
     ),
   };
 
   return (
-    <div className="w-11 h-11 rounded-xl bg-[#000E51]/[0.06] flex items-center justify-center flex-shrink-0">
+    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
       {icons[slug] || icons.individual}
     </div>
   );
@@ -74,47 +73,43 @@ const PricingCard = ({
 
   return (
     <div className="relative flex flex-col h-full group">
-      {/* Badge */}
-      {(isRecommended || isCurrentPlan) && (
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
-          <span
-            className={`text-xs font-bold px-4 py-1.5 rounded-full shadow-sm whitespace-nowrap ${
-              isCurrentPlan
-                ? "bg-green-500 text-white"
-                : "bg-[#FF6F00] text-white"
-            }`}
-          >
-            {isCurrentPlan ? "Current Plan" : "Recommended"}
-          </span>
-        </div>
-      )}
-
       <div
         className={`flex flex-col h-full bg-white rounded-2xl transition-all duration-300 overflow-hidden ${
-          isRecommended
-            ? "ring-2 ring-[#FF6F00] shadow-xl shadow-[#FF6F00]/10"
-            : isCurrentPlan
-            ? "ring-2 ring-green-400 shadow-lg"
+          isCurrentPlan
+            ? "ring-2 ring-[#FF6F00] shadow-lg shadow-[#FF6F00]/10"
+            : isRecommended
+            ? "ring-2 ring-[#FF6F00]/40 shadow-xl shadow-[#FF6F00]/10"
             : "ring-1 ring-gray-200 shadow-sm hover:shadow-lg hover:ring-gray-300"
         }`}
       >
-        {/* Top accent bar */}
-        {isRecommended && (
-          <div className="h-1 bg-gradient-to-r from-[#FF6F00] to-[#ff9a44]" />
-        )}
-
-        <div className="p-6 lg:p-7 flex flex-col flex-1">
-          {/* Plan header */}
-          <div className="flex items-center gap-3 mb-4">
-            <PlanIcon slug={plan.slug} />
-            <div>
-              <h3 className="text-lg font-bold text-[#000E51]">{plan.name}</h3>
-              {plan.tagline && (
-                <p className="text-xs text-[#FF6F00] font-medium">{plan.tagline}</p>
-              )}
-            </div>
+        {/* Orange Header */}
+        <div className="bg-[#FF6F00] px-6 lg:px-7 pt-5 pb-4 relative overflow-hidden">
+          {/* Subtle pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute -right-6 -top-6 w-24 h-24 border-2 border-white rounded-full" />
+            <div className="absolute -right-2 -bottom-4 w-16 h-16 border-2 border-white rounded-full" />
           </div>
 
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-1.5">
+              <PlanIcon slug={plan.slug} />
+              <div>
+                <h3 className="text-lg font-bold text-white">{plan.name}</h3>
+                {plan.tagline && (
+                  <p className="text-xs text-white/70 font-medium">{plan.tagline}</p>
+                )}
+              </div>
+            </div>
+            {isCurrentPlan && (
+              <span className="inline-block mt-2 text-[10px] font-bold bg-white text-[#FF6F00] px-3 py-1 rounded-full uppercase tracking-wide">
+                Current Plan
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Card Body */}
+        <div className="p-6 lg:p-7 flex flex-col flex-1">
           {/* Description */}
           {plan.description && (
             <p className="text-sm text-gray-500 leading-relaxed mb-5">
@@ -153,16 +148,14 @@ const PricingCard = ({
             )}
           </div>
 
-          {/* CTA */}
+          {/* CTA Button — always orange */}
           <button
             onClick={() => onSelect(plan)}
             disabled={isCurrentPlan || isLoading}
             className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
               isCurrentPlan
-                ? "bg-green-50 text-green-600 border border-green-200 cursor-default"
-                : isRecommended
-                ? "bg-[#FF6F00] hover:bg-[#e56300] text-white shadow-md shadow-[#FF6F00]/20 hover:shadow-lg hover:shadow-[#FF6F00]/30"
-                : "bg-[#000E51] hover:bg-[#0a1a6e] text-white"
+                ? "bg-[#FF6F00]/10 text-[#FF6F00] border border-[#FF6F00]/30 cursor-default"
+                : "bg-[#FF6F00] hover:bg-[#e56300] text-white shadow-md shadow-[#FF6F00]/20 hover:shadow-lg hover:shadow-[#FF6F00]/30"
             } ${isLoading ? "opacity-50 cursor-wait" : ""}`}
           >
             {isCurrentPlan ? "Current Plan" : plan.ctaText}
@@ -175,7 +168,7 @@ const PricingCard = ({
             </p>
           )}
 
-          {/* Divider */}
+          {/* Features */}
           <div className="border-t border-gray-100 mt-6 pt-5 flex-1">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
               What&apos;s included
@@ -185,8 +178,8 @@ const PricingCard = ({
                 <div key={i} className="flex items-start gap-2.5">
                   {feature.included ? (
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="flex-shrink-0 mt-0.5">
-                      <circle cx="9" cy="9" r="9" fill="#000E51" fillOpacity="0.06" />
-                      <path d="M12.5 6.5L7.5 11.5L5.5 9.5" stroke="#000E51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="9" cy="9" r="9" fill="#FF6F00" fillOpacity="0.08" />
+                      <path d="M12.5 6.5L7.5 11.5L5.5 9.5" stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ) : (
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="flex-shrink-0 mt-0.5">
@@ -213,37 +206,34 @@ const PricingCard = ({
 
 // Loading skeleton
 const PricingCardSkeleton = () => (
-  <div className="bg-white rounded-2xl p-6 lg:p-7 ring-1 ring-gray-200 animate-pulse">
-    <div className="flex items-center gap-3 mb-4">
-      <div className="w-11 h-11 bg-gray-100 rounded-xl" />
-      <div>
-        <div className="h-5 bg-gray-200 rounded w-24 mb-1" />
-        <div className="h-3 bg-gray-100 rounded w-16" />
+  <div className="bg-white rounded-2xl ring-1 ring-gray-200 animate-pulse overflow-hidden">
+    <div className="h-24 bg-[#FF6F00]/20" />
+    <div className="p-6 lg:p-7">
+      <div className="h-3 bg-gray-100 rounded w-full mb-1.5" />
+      <div className="h-3 bg-gray-100 rounded w-3/4 mb-5" />
+      <div className="h-12 bg-gray-200 rounded w-36 mb-6" />
+      <div className="h-12 bg-gray-100 rounded-xl mb-6" />
+      <div className="border-t border-gray-100 pt-5 space-y-3">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="flex items-center gap-2.5">
+            <div className="w-[18px] h-[18px] bg-gray-100 rounded-full" />
+            <div className="h-3 bg-gray-100 rounded flex-1" />
+          </div>
+        ))}
       </div>
-    </div>
-    <div className="h-3 bg-gray-100 rounded w-full mb-1.5" />
-    <div className="h-3 bg-gray-100 rounded w-3/4 mb-5" />
-    <div className="h-12 bg-gray-200 rounded w-36 mb-6" />
-    <div className="h-12 bg-gray-100 rounded-xl mb-6" />
-    <div className="border-t border-gray-100 pt-5 space-y-3">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="flex items-center gap-2.5">
-          <div className="w-[18px] h-[18px] bg-gray-100 rounded-full" />
-          <div className="h-3 bg-gray-100 rounded flex-1" />
-        </div>
-      ))}
     </div>
   </div>
 );
 
 export default function PricingPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [currentPlanSlug, setCurrentPlanSlug] = useState<string | null>(null);
+  const [currentBillingCycle, setCurrentBillingCycle] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -260,6 +250,7 @@ export default function PricingPage() {
             const subResponse = await subscriptionApi.getMySubscription();
             if (subResponse.success && subResponse.data) {
               setCurrentPlanSlug(subResponse.data.plan.slug);
+              setCurrentBillingCycle(subResponse.data.billingCycle);
             }
           } catch {
             // No subscription
@@ -275,6 +266,14 @@ export default function PricingPage() {
   }, [isAuthenticated]);
 
   const hasMonthlyOption = plans.some((p) => p.monthlyPrice != null);
+
+  // Only show "Current Plan" when both slug AND billing cycle match
+  const isCurrentPlan = (plan: Plan) => {
+    if (currentPlanSlug !== plan.slug) return false;
+    // Match billing cycle: MONTHLY maps to "monthly", YEARLY maps to "yearly"
+    const currentCycleNorm = currentBillingCycle?.toLowerCase();
+    return currentCycleNorm === billingCycle;
+  };
 
   const handlePlanSelect = async (plan: Plan) => {
     setError(null);
@@ -315,7 +314,6 @@ export default function PricingPage() {
 
       {/* Hero */}
       <div className="bg-gradient-to-b from-[#000E51] via-[#091966] to-[#0a1a6e] pt-28 sm:pt-32 pb-44 sm:pb-52 px-4 relative overflow-hidden">
-        {/* Subtle background pattern */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-1/4 w-96 h-96 bg-[#FF6F00]/5 rounded-full blur-3xl" />
           <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-white/[0.03] rounded-full blur-3xl" />
@@ -376,10 +374,7 @@ export default function PricingPage() {
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16 -mt-40 mb-4 relative z-10">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center justify-between">
             <span>{error}</span>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-500 hover:text-red-700 ml-4 font-medium"
-            >
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 ml-4 font-medium">
               Dismiss
             </button>
           </div>
@@ -402,7 +397,7 @@ export default function PricingPage() {
                   key={plan.id}
                   plan={plan}
                   billingCycle={billingCycle}
-                  isCurrentPlan={currentPlanSlug === plan.slug}
+                  isCurrentPlan={isCurrentPlan(plan)}
                   onSelect={handlePlanSelect}
                   isLoading={actionLoading}
                   isRecommended={plan.isPopular || plan.slug === "organization"}
@@ -424,7 +419,7 @@ export default function PricingPage() {
         </p>
         <button
           onClick={() => router.push("/courses")}
-          className="bg-[#000E51] hover:bg-[#0a1a6e] text-white px-8 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg shadow-[#000E51]/20 hover:shadow-xl"
+          className="bg-[#FF6F00] hover:bg-[#e56300] text-white px-8 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg shadow-[#FF6F00]/20 hover:shadow-xl"
         >
           Explore The LKnight Learning Hub
         </button>
