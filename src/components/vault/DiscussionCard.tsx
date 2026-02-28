@@ -123,26 +123,20 @@ function CommentItem({
         {/* Avatar */}
         <div
           className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-            comment.isAdmin ? "bg-[#FF6F00]/30" : "bg-white/10"
+            comment.isAdmin ? "bg-[#FF6F00]/15" : "bg-gray-100"
           }`}
         >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path
               d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"
-              stroke={comment.isAdmin ? "#FF6F00" : "#ffffff80"}
+              stroke={comment.isAdmin ? "#FF6F00" : "#9ca3af"}
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
             <path
               d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"
-              stroke={comment.isAdmin ? "#FF6F00" : "#ffffff80"}
+              stroke={comment.isAdmin ? "#FF6F00" : "#9ca3af"}
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -155,25 +149,23 @@ function CommentItem({
           <div className="flex items-center gap-2 mb-1">
             <span
               className={`text-xs font-medium ${
-                comment.isAdmin
-                  ? "text-[#FF6F00]"
-                  : "text-white/70"
+                comment.isAdmin ? "text-[#FF6F00]" : "text-gray-700"
               }`}
             >
               {comment.author}
             </span>
             {comment.isAdmin && (
-              <span className="text-[9px] bg-[#FF6F00]/20 text-[#FF6F00] px-1.5 py-0.5 rounded font-medium">
+              <span className="text-[9px] bg-[#FF6F00]/10 text-[#FF6F00] px-1.5 py-0.5 rounded font-medium">
                 ADMIN
               </span>
             )}
-            <span className="text-white/30 text-[10px]">
+            <span className="text-gray-400 text-[10px]">
               {timeAgo(comment.createdAt)}
             </span>
           </div>
 
           {/* Content */}
-          <p className="text-white/80 text-sm leading-relaxed mb-2">
+          <p className="text-gray-700 text-sm leading-relaxed mb-2">
             {comment.content}
           </p>
 
@@ -184,7 +176,7 @@ function CommentItem({
               className={`flex items-center gap-1 text-xs transition-colors ${
                 isLiked
                   ? "text-[#FF6F00]"
-                  : "text-white/40 hover:text-white/70"
+                  : "text-gray-400 hover:text-gray-600"
               }`}
             >
               <svg
@@ -192,7 +184,6 @@ function CommentItem({
                 height="12"
                 viewBox="0 0 24 24"
                 fill={isLiked ? "#FF6F00" : "none"}
-                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   d="M14 9V5C14 4.46957 13.7893 3.96086 13.4142 3.58579C13.0391 3.21071 12.5304 3 12 3L7 10V21H17.28C17.7623 21.0055 18.2304 20.8364 18.5979 20.524C18.9654 20.2116 19.2077 19.7769 19.28 19.3L20.66 10.3C20.7035 10.0134 20.6842 9.72068 20.6033 9.44225C20.5225 9.16382 20.3821 8.90629 20.1919 8.68751C20.0016 8.46873 19.7661 8.29393 19.5016 8.17522C19.2371 8.0565 18.9499 7.99672 18.66 8H14Z"
@@ -206,7 +197,7 @@ function CommentItem({
             </button>
             <button
               onClick={() => setShowReplyInput(!showReplyInput)}
-              className="text-white/40 hover:text-white/70 text-xs transition-colors"
+              className="text-gray-400 hover:text-gray-600 text-xs transition-colors"
             >
               Reply
             </button>
@@ -221,7 +212,7 @@ function CommentItem({
                 onChange={(e) => setReplyContent(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmitReply()}
                 placeholder="Write a reply..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder:text-white/30 focus:outline-none focus:border-[#FF6F00]/50"
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-800 text-xs placeholder:text-gray-400 focus:outline-none focus:border-[#FF6F00]/50 focus:ring-1 focus:ring-[#FF6F00]/20"
                 autoFocus
               />
               <button
@@ -236,7 +227,7 @@ function CommentItem({
 
           {/* Replies */}
           {showReplies && replies.length > 0 && (
-            <div className="mt-3 space-y-3 pl-1 border-l border-white/5">
+            <div className="mt-3 space-y-3 pl-1 border-l-2 border-gray-100">
               {replies.map((reply) => (
                 <div key={reply.id} className="pl-3">
                   <CommentItem
@@ -405,7 +396,7 @@ export default function DiscussionCard({
   };
 
   return (
-    <div className="bg-[#000E51] rounded-xl p-5 lg:p-6 hover:bg-[#001166] transition-colors duration-200">
+    <div className="bg-white rounded-xl p-5 lg:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
       {/* Header - Category & Time */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
@@ -415,27 +406,10 @@ export default function DiscussionCard({
           >
             {catLabel}
           </span>
-          <div className="flex items-center gap-1.5 text-white/50 text-xs">
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-              <path
-                d="M12 6V12L16 14"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
+          <div className="flex items-center gap-1.5 text-gray-400 text-xs">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <span>{timeAgo(discussion.createdAt)}</span>
           </div>
@@ -445,42 +419,24 @@ export default function DiscussionCard({
         {(discussion.isOwn || currentUserIsAdmin) && (
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="text-white/20 hover:text-red-400 transition-colors p-1 cursor-pointer"
+            className="text-gray-300 hover:text-red-400 transition-colors p-1 cursor-pointer"
             title="Delete discussion"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M3 6H5H21"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M3 6H5H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         )}
       </div>
 
       {/* Title */}
-      <h3 className="text-white text-base lg:text-[17px] font-semibold mb-2 leading-snug">
+      <h3 className="text-[#000E51] text-base lg:text-[17px] font-semibold mb-2 leading-snug">
         {discussion.title}
       </h3>
 
       {/* Description */}
-      <p className="text-white/60 text-sm leading-relaxed mb-4 line-clamp-2">
+      <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-2">
         {discussion.description}
       </p>
 
@@ -490,43 +446,29 @@ export default function DiscussionCard({
         <div className="flex items-center gap-2">
           <div
             className={`w-6 h-6 rounded-full flex items-center justify-center ${
-              discussion.isAdmin ? "bg-[#FF6F00]/30" : "bg-[#FF6F00]/20"
+              discussion.isAdmin ? "bg-[#FF6F00]/15" : "bg-[#FF6F00]/10"
             }`}
           >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
               <path
                 d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"
-                stroke="#FF6F00"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
               />
               <path
                 d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"
-                stroke="#FF6F00"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
               />
             </svg>
           </div>
           <span
             className={`text-sm ${
-              discussion.isAdmin
-                ? "text-[#FF6F00] font-medium"
-                : "text-white/70"
+              discussion.isAdmin ? "text-[#FF6F00] font-medium" : "text-gray-600"
             }`}
           >
             {discussion.author}
           </span>
           {discussion.isAdmin && (
-            <span className="text-[9px] bg-[#FF6F00]/20 text-[#FF6F00] px-1.5 py-0.5 rounded font-medium">
+            <span className="text-[9px] bg-[#FF6F00]/10 text-[#FF6F00] px-1.5 py-0.5 rounded font-medium">
               ADMIN
             </span>
           )}
@@ -538,31 +480,17 @@ export default function DiscussionCard({
           <button
             onClick={handleLike}
             className={`flex items-center gap-1.5 text-sm transition-colors ${
-              isLiked
-                ? "text-[#FF6F00]"
-                : "text-white/50 hover:text-white/80"
+              isLiked ? "text-[#FF6F00]" : "text-gray-400 hover:text-gray-600"
             }`}
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill={isLiked ? "#FF6F00" : "none"}
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill={isLiked ? "#FF6F00" : "none"}>
               <path
                 d="M14 9V5C14 4.46957 13.7893 3.96086 13.4142 3.58579C13.0391 3.21071 12.5304 3 12 3L7 10V21H17.28C17.7623 21.0055 18.2304 20.8364 18.5979 20.524C18.9654 20.2116 19.2077 19.7769 19.28 19.3L20.66 10.3C20.7035 10.0134 20.6842 9.72068 20.6033 9.44225C20.5225 9.16382 20.3821 8.90629 20.1919 8.68751C20.0016 8.46873 19.7661 8.29393 19.5016 8.17522C19.2371 8.0565 18.9499 7.99672 18.66 8H14Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
               />
               <path
                 d="M7 21H4C3.46957 21 2.96086 20.7893 2.58579 20.4142C2.21071 20.0391 2 19.5304 2 19V12C2 11.4696 2.21071 10.9609 2.58579 10.5858C2.96086 10.2107 3.46957 10 4 10H7"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
               />
             </svg>
             <span>{likesCount}</span>
@@ -572,24 +500,13 @@ export default function DiscussionCard({
           <button
             onClick={handleExpand}
             className={`flex items-center gap-1.5 text-sm transition-colors ${
-              expanded
-                ? "text-[#FF6F00]"
-                : "text-white/50 hover:text-white/80"
+              expanded ? "text-[#FF6F00]" : "text-gray-400 hover:text-gray-600"
             }`}
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
               <path
                 d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
               />
             </svg>
             <span>{commentsCount}</span>
@@ -601,28 +518,28 @@ export default function DiscussionCard({
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => !deleting && setShowDeleteModal(false)}
           />
-          <div className="relative w-full max-w-[400px] bg-[#0A1628] rounded-xl overflow-hidden shadow-2xl">
+          <div className="relative w-full max-w-[400px] bg-white rounded-xl overflow-hidden shadow-2xl">
             <div className="p-5 sm:p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path d="M3 6H5H21" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <h3 className="text-white text-base font-semibold">Delete Discussion</h3>
+                <h3 className="text-gray-900 text-base font-semibold">Delete Discussion</h3>
               </div>
-              <p className="text-white/60 text-sm mb-6">
+              <p className="text-gray-500 text-sm mb-6">
                 Are you sure you want to delete this discussion? This action cannot be undone and all comments will be removed.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteModal(false)}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -641,7 +558,7 @@ export default function DiscussionCard({
 
       {/* Expanded Comments Section */}
       {expanded && (
-        <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="mt-4 pt-4 border-t border-gray-100">
           {/* Add comment input */}
           <div className="flex gap-3 mb-4">
             <input
@@ -650,7 +567,7 @@ export default function DiscussionCard({
               onChange={(e) => setCommentText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmitComment()}
               placeholder="Write a comment anonymously..."
-              className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#FF6F00]/50 transition-colors"
+              className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-800 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#FF6F00]/50 focus:ring-1 focus:ring-[#FF6F00]/20 transition-colors"
             />
             <button
               onClick={handleSubmitComment}
@@ -668,7 +585,7 @@ export default function DiscussionCard({
                 <div className="w-5 h-5 border-2 border-[#FF6F00] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : comments.length === 0 ? (
-              <p className="text-white/30 text-sm text-center py-3">
+              <p className="text-gray-400 text-sm text-center py-3">
                 No comments yet. Be the first!
               </p>
             ) : (

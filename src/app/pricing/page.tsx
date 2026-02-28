@@ -8,108 +8,60 @@ import FAQSection from "@/components/FAQSection";
 import { planApi, subscriptionApi, Plan, PlanFeature } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
-// Feature item component
-const FeatureItem = ({
-  text,
-  included,
-}: {
-  text: string;
-  included: boolean;
-}) => (
-  <div className="flex items-start gap-3 py-1.5">
-    {included ? (
-      <div className="w-5 h-5 rounded-full bg-[#000E51]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-          <path
-            d="M11.6669 3.5L5.25023 9.91667L2.33356 7"
-            stroke="#000E51"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
-    ) : (
-      <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-          <path
-            d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5"
-            stroke="#d1d5db"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
-    )}
-    <span
-      className={`text-sm leading-snug ${
-        included ? "text-gray-700" : "text-gray-400"
-      }`}
-    >
-      {text}
-    </span>
-  </div>
-);
-
-// Plan icon component - maps by slug
-const PlanIcon = ({ slug, isHighlighted }: { slug: string; isHighlighted: boolean }) => {
-  const bgColor = isHighlighted ? "rgba(255,255,255,0.2)" : "rgba(26,31,78,0.08)";
-  const fillColor = isHighlighted ? "#ffffff" : "#000E51";
+// Plan icon component
+const PlanIcon = ({ slug }: { slug: string }) => {
+  const icons: Record<string, React.ReactNode> = {
+    individual: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000E51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    ),
+    "small-team": (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000E51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+    organization: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000E51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2" />
+        <path d="M16 7V5a4 4 0 0 0-8 0v2" />
+        <path d="M12 14v0" />
+        <circle cx="12" cy="14" r="1" fill="#000E51" />
+      </svg>
+    ),
+    enterprise: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000E51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    ),
+  };
 
   return (
-    <div className="w-10 h-10 flex-shrink-0">
-      {slug === "individual" && (
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <rect width="40" height="40" rx="10" fill={bgColor} />
-          <path d="M20 18C21.6569 18 23 16.6569 23 15C23 13.3431 21.6569 12 20 12C18.3431 12 17 13.3431 17 15C17 16.6569 18.3431 18 20 18Z" fill={fillColor} />
-          <path d="M20 20C16.69 20 14 21.79 14 24V26H26V24C26 21.79 23.31 20 20 20Z" fill={fillColor} />
-        </svg>
-      )}
-      {slug === "small-team" && (
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <rect width="40" height="40" rx="10" fill={bgColor} />
-          <path d="M16 18C17.1046 18 18 17.1046 18 16C18 14.8954 17.1046 14 16 14C14.8954 14 14 14.8954 14 16C14 17.1046 14.8954 18 16 18Z" fill={fillColor} />
-          <path d="M24 18C25.1046 18 26 17.1046 26 16C26 14.8954 25.1046 14 24 14C22.8954 14 22 14.8954 22 16C22 17.1046 22.8954 18 24 18Z" fill={fillColor} />
-          <path d="M16 20C13.79 20 12 21.79 12 24H20C20 21.79 18.21 20 16 20Z" fill={fillColor} />
-          <path d="M24 20C23.53 20 23.09 20.1 22.67 20.24C23.5 21.27 24 22.58 24 24H28C28 21.79 26.21 20 24 20Z" fill={fillColor} />
-        </svg>
-      )}
-      {slug === "organization" && (
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <rect width="40" height="40" rx="10" fill={isHighlighted ? "rgba(255,111,0,0.3)" : "rgba(255,111,0,0.12)"} />
-          <path d="M12 28H28V16L20 12L12 16V28ZM15 18H17V20H15V18ZM15 22H17V24H15V22ZM19 18H21V20H19V18ZM19 22H21V24H19V22ZM23 18H25V20H23V18ZM23 22H25V24H23V22Z" fill={isHighlighted ? "#ffffff" : "#FF6F00"} />
-        </svg>
-      )}
-      {slug === "enterprise" && (
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <rect width="40" height="40" rx="10" fill={bgColor} />
-          <path d="M20 11L21.8 16.44L27.5 16.76L23 20.28L24.28 25.82L20 22.72L15.72 25.82L17 20.28L12.5 16.76L18.2 16.44L20 11Z" fill={fillColor} />
-        </svg>
-      )}
-      {!["individual", "small-team", "organization", "enterprise"].includes(slug) && (
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <rect width="40" height="40" rx="10" fill={bgColor} />
-          <path d="M14 16H16V26H14V16ZM19 12H21V26H19V12ZM24 20H26V26H24V20Z" fill={fillColor} />
-        </svg>
-      )}
+    <div className="w-11 h-11 rounded-xl bg-[#000E51]/[0.06] flex items-center justify-center flex-shrink-0">
+      {icons[slug] || icons.individual}
     </div>
   );
 };
 
-// Pricing card component
+// Pricing card
 const PricingCard = ({
   plan,
   billingCycle,
   isCurrentPlan,
   onSelect,
   isLoading,
+  isRecommended,
 }: {
   plan: Plan;
   billingCycle: "monthly" | "yearly";
   isCurrentPlan: boolean;
   onSelect: (plan: Plan) => void;
   isLoading: boolean;
+  isRecommended: boolean;
 }) => {
   const price =
     billingCycle === "monthly" && plan.monthlyPrice
@@ -118,162 +70,139 @@ const PricingCard = ({
   const period =
     billingCycle === "monthly" && plan.monthlyPrice ? "/mo" : "/yr";
   const showPrice = price != null;
-  const isHighlighted = plan.isPopular || plan.slug === "organization";
+  const features = plan.features as PlanFeature[];
 
   return (
-    <div className={`relative flex flex-col ${isHighlighted ? "lg:-mt-4" : ""}`}>
-      {/* Top badge */}
-      {plan.isPopular && (
-        <div className="flex justify-center">
-          <span className="bg-[#FF6F00] text-white text-xs font-semibold px-5 py-1.5 rounded-t-xl">
-            Most Popular
-          </span>
-        </div>
-      )}
-      {isCurrentPlan && !plan.isPopular && (
-        <div className="flex justify-center">
-          <span className="bg-green-500 text-white text-xs font-semibold px-5 py-1.5 rounded-t-xl">
-            Current Plan
+    <div className="relative flex flex-col h-full group">
+      {/* Badge */}
+      {(isRecommended || isCurrentPlan) && (
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
+          <span
+            className={`text-xs font-bold px-4 py-1.5 rounded-full shadow-sm whitespace-nowrap ${
+              isCurrentPlan
+                ? "bg-green-500 text-white"
+                : "bg-[#FF6F00] text-white"
+            }`}
+          >
+            {isCurrentPlan ? "Current Plan" : "Recommended"}
           </span>
         </div>
       )}
 
       <div
-        className={`flex flex-col h-full rounded-2xl overflow-hidden transition-all duration-300 ${
-          isHighlighted
-            ? "bg-[#000E51] text-white shadow-2xl shadow-[#000E51]/20 ring-1 ring-[#000E51]"
+        className={`flex flex-col h-full bg-white rounded-2xl transition-all duration-300 overflow-hidden ${
+          isRecommended
+            ? "ring-2 ring-[#FF6F00] shadow-xl shadow-[#FF6F00]/10"
             : isCurrentPlan
-            ? "bg-white shadow-xl ring-2 ring-green-400"
-            : "bg-white shadow-lg shadow-gray-200/60 ring-1 ring-gray-100 hover:shadow-xl hover:ring-gray-200"
+            ? "ring-2 ring-green-400 shadow-lg"
+            : "ring-1 ring-gray-200 shadow-sm hover:shadow-lg hover:ring-gray-300"
         }`}
       >
-        {/* Card Body */}
-        <div className="p-6 lg:p-7 flex-1 flex flex-col">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <PlanIcon slug={plan.slug} isHighlighted={isHighlighted} />
-              <div>
-                <h3 className={`text-lg font-bold ${isHighlighted ? "text-white" : "text-gray-900"}`}>
-                  {plan.name}
-                </h3>
-                {plan.tagline && (
-                  <p className={`text-xs font-medium ${isHighlighted ? "text-[#FF6F00]" : "text-[#FF6F00]"}`}>
-                    {plan.tagline}
-                  </p>
-                )}
-              </div>
+        {/* Top accent bar */}
+        {isRecommended && (
+          <div className="h-1 bg-gradient-to-r from-[#FF6F00] to-[#ff9a44]" />
+        )}
+
+        <div className="p-6 lg:p-7 flex flex-col flex-1">
+          {/* Plan header */}
+          <div className="flex items-center gap-3 mb-4">
+            <PlanIcon slug={plan.slug} />
+            <div>
+              <h3 className="text-lg font-bold text-[#000E51]">{plan.name}</h3>
+              {plan.tagline && (
+                <p className="text-xs text-[#FF6F00] font-medium">{plan.tagline}</p>
+              )}
             </div>
-            {plan.description && (
-              <p className={`text-sm leading-relaxed mt-2 ${isHighlighted ? "text-white/70" : "text-gray-500"}`}>
-                {plan.description}
-              </p>
-            )}
           </div>
+
+          {/* Description */}
+          {plan.description && (
+            <p className="text-sm text-gray-500 leading-relaxed mb-5">
+              {plan.description}
+            </p>
+          )}
 
           {/* Price */}
           <div className="mb-6">
             {showPrice ? (
-              <>
-                <div className="flex items-baseline gap-1">
-                  <span className={`text-4xl font-extrabold tracking-tight ${isHighlighted ? "text-white" : "text-gray-900"}`}>
+              <div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[40px] font-extrabold text-[#000E51] leading-none tracking-tight">
                     ${price.toLocaleString()}
                   </span>
-                  <span className={`text-sm font-medium ${isHighlighted ? "text-white/50" : "text-gray-400"}`}>
-                    {period}
-                  </span>
+                  <span className="text-sm text-gray-400 font-medium">{period}</span>
                 </div>
                 {plan.maxUsers > 1 && (
-                  <p className={`text-xs mt-1.5 ${isHighlighted ? "text-white/50" : "text-gray-400"}`}>
-                    up to {plan.maxUsers.toLocaleString()} users included
+                  <p className="text-xs text-gray-400 mt-2">
+                    Up to {plan.maxUsers.toLocaleString()} users
                   </p>
                 )}
-                {plan.additionalUserPrice && (
-                  <p className={`text-xs mt-0.5 font-medium ${isHighlighted ? "text-[#FF6F00]" : "text-[#FF6F00]"}`}>
+                {plan.additionalUserPrice != null && (
+                  <p className="text-xs text-[#FF6F00] font-medium mt-0.5">
                     +${plan.additionalUserPrice}/additional user
                   </p>
                 )}
-              </>
+              </div>
             ) : (
               <div>
-                <span className={`text-4xl font-extrabold tracking-tight ${isHighlighted ? "text-white" : "text-gray-900"}`}>
+                <span className="text-[40px] font-extrabold text-[#000E51] leading-none tracking-tight">
                   Custom
                 </span>
-                <p className={`text-xs mt-1.5 ${isHighlighted ? "text-white/50" : "text-gray-400"}`}>
-                  Tailored to your organization
-                </p>
+                <p className="text-xs text-gray-400 mt-2">Tailored for your organization</p>
               </div>
             )}
           </div>
 
-          {/* CTA Button */}
+          {/* CTA */}
           <button
             onClick={() => onSelect(plan)}
             disabled={isCurrentPlan || isLoading}
-            className={`w-full py-3 px-5 rounded-xl text-sm font-semibold transition-all duration-200 mb-6 ${
+            className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
               isCurrentPlan
-                ? "bg-green-100 text-green-700 cursor-default"
-                : isHighlighted
-                ? "bg-[#FF6F00] hover:bg-[#E86400] text-white shadow-lg shadow-[#FF6F00]/25"
-                : "bg-[#000E51] hover:bg-[#001a7a] text-white"
+                ? "bg-green-50 text-green-600 border border-green-200 cursor-default"
+                : isRecommended
+                ? "bg-[#FF6F00] hover:bg-[#e56300] text-white shadow-md shadow-[#FF6F00]/20 hover:shadow-lg hover:shadow-[#FF6F00]/30"
+                : "bg-[#000E51] hover:bg-[#0a1a6e] text-white"
             } ${isLoading ? "opacity-50 cursor-wait" : ""}`}
           >
             {isCurrentPlan ? "Current Plan" : plan.ctaText}
           </button>
 
-          {/* Close Line */}
+          {/* Close line */}
           {plan.closeLine && (
-            <p className={`text-xs leading-relaxed mb-5 italic ${isHighlighted ? "text-white/40" : "text-gray-400"}`}>
+            <p className="text-[11px] text-gray-400 text-center mt-3 italic leading-snug">
               {plan.closeLine}
             </p>
           )}
 
-          {/* Divider + Features */}
-          <div className={`border-t pt-5 flex-1 ${isHighlighted ? "border-white/10" : "border-gray-100"}`}>
-            <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isHighlighted ? "text-white/40" : "text-gray-400"}`}>
+          {/* Divider */}
+          <div className="border-t border-gray-100 mt-6 pt-5 flex-1">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
               What&apos;s included
             </p>
-            <div className="space-y-0.5">
-              {(plan.features as PlanFeature[]).map(
-                (feature: PlanFeature, index: number) => (
-                  <div key={index} className="flex items-start gap-3 py-1.5">
-                    {feature.included ? (
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${isHighlighted ? "bg-white/15" : "bg-[#000E51]/8"}`}>
-                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                          <path
-                            d="M11.6669 3.5L5.25023 9.91667L2.33356 7"
-                            stroke={isHighlighted ? "#ffffff" : "#000E51"}
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    ) : (
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${isHighlighted ? "bg-white/10" : "bg-gray-100"}`}>
-                        <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-                          <path
-                            d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5"
-                            stroke={isHighlighted ? "rgba(255,255,255,0.3)" : "#d1d5db"}
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    )}
-                    <span
-                      className={`text-sm leading-snug ${
-                        feature.included
-                          ? isHighlighted ? "text-white/80" : "text-gray-700"
-                          : isHighlighted ? "text-white/30" : "text-gray-400"
-                      }`}
-                    >
-                      {feature.text}
-                    </span>
-                  </div>
-                )
-              )}
+            <div className="space-y-3">
+              {features.map((feature, i) => (
+                <div key={i} className="flex items-start gap-2.5">
+                  {feature.included ? (
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="flex-shrink-0 mt-0.5">
+                      <circle cx="9" cy="9" r="9" fill="#000E51" fillOpacity="0.06" />
+                      <path d="M12.5 6.5L7.5 11.5L5.5 9.5" stroke="#000E51" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="flex-shrink-0 mt-0.5">
+                      <circle cx="9" cy="9" r="9" fill="#f3f4f6" />
+                      <path d="M6.5 9H11.5" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  )}
+                  <span
+                    className={`text-sm leading-snug ${
+                      feature.included ? "text-gray-700" : "text-gray-400"
+                    }`}
+                  >
+                    {feature.text}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -284,23 +213,22 @@ const PricingCard = ({
 
 // Loading skeleton
 const PricingCardSkeleton = () => (
-  <div className="bg-white rounded-2xl p-6 lg:p-7 shadow-lg shadow-gray-200/60 ring-1 ring-gray-100 animate-pulse">
-    <div className="mb-6">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 bg-gray-200 rounded-xl" />
-        <div className="h-5 bg-gray-200 rounded w-28" />
+  <div className="bg-white rounded-2xl p-6 lg:p-7 ring-1 ring-gray-200 animate-pulse">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-11 h-11 bg-gray-100 rounded-xl" />
+      <div>
+        <div className="h-5 bg-gray-200 rounded w-24 mb-1" />
+        <div className="h-3 bg-gray-100 rounded w-16" />
       </div>
-      <div className="h-3 bg-gray-100 rounded w-full mt-2" />
-      <div className="h-3 bg-gray-100 rounded w-3/4 mt-1.5" />
     </div>
-    <div className="mb-6">
-      <div className="h-10 bg-gray-200 rounded w-32" />
-    </div>
+    <div className="h-3 bg-gray-100 rounded w-full mb-1.5" />
+    <div className="h-3 bg-gray-100 rounded w-3/4 mb-5" />
+    <div className="h-12 bg-gray-200 rounded w-36 mb-6" />
     <div className="h-12 bg-gray-100 rounded-xl mb-6" />
     <div className="border-t border-gray-100 pt-5 space-y-3">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="flex items-center gap-3">
-          <div className="w-5 h-5 bg-gray-100 rounded-full" />
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="flex items-center gap-2.5">
+          <div className="w-[18px] h-[18px] bg-gray-100 rounded-full" />
           <div className="h-3 bg-gray-100 rounded flex-1" />
         </div>
       ))}
@@ -314,13 +242,10 @@ export default function PricingPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
-    "yearly"
-  );
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [currentPlanSlug, setCurrentPlanSlug] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch plans and current subscription
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -330,7 +255,6 @@ export default function PricingPage() {
           setPlans(plansResponse.data);
         }
 
-        // Check current subscription if authenticated
         if (isAuthenticated) {
           try {
             const subResponse = await subscriptionApi.getMySubscription();
@@ -338,7 +262,7 @@ export default function PricingPage() {
               setCurrentPlanSlug(subResponse.data.plan.slug);
             }
           } catch {
-            // No subscription - that's fine
+            // No subscription
           }
         }
       } catch (err) {
@@ -347,29 +271,24 @@ export default function PricingPage() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [isAuthenticated]);
 
-  // Check if any plan has monthly pricing
   const hasMonthlyOption = plans.some((p) => p.monthlyPrice != null);
 
   const handlePlanSelect = async (plan: Plan) => {
     setError(null);
 
-    // Enterprise / Contact Sales
     if (plan.ctaType === "CONTACT_SALES") {
       router.push("/contact");
       return;
     }
 
-    // Require authentication
     if (!isAuthenticated) {
       router.push("/signin?redirect=/pricing");
       return;
     }
 
-    // Create checkout session
     try {
       setActionLoading(true);
       const response = await subscriptionApi.createCheckoutSession({
@@ -394,41 +313,36 @@ export default function PricingPage() {
     <div className="min-h-screen bg-[#f8f9fc]">
       <Navbar />
 
-      {/* Header Section */}
-      <div className="bg-gradient-to-b from-[#000E51] to-[#0a1a6e] pt-24 pb-40 px-4 relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 opacity-[0.04]">
-          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <defs>
-              <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
-                <path d="M 8 0 L 0 0 0 8" fill="none" stroke="white" strokeWidth="0.5"/>
-              </pattern>
-            </defs>
-            <rect width="100" height="100" fill="url(#grid)" />
-          </svg>
+      {/* Hero */}
+      <div className="bg-gradient-to-b from-[#000E51] via-[#091966] to-[#0a1a6e] pt-28 sm:pt-32 pb-44 sm:pb-52 px-4 relative overflow-hidden">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-1/4 w-96 h-96 bg-[#FF6F00]/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-white/[0.03] rounded-full blur-3xl" />
         </div>
 
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-[#FF6F00] text-sm font-semibold tracking-wide uppercase mb-3">
-            Pricing Plans
-          </p>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#FF6F00]" />
+            <span className="text-xs font-medium text-white/80 tracking-wide">Pricing Plans</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-[1.15]">
             Invest in better leadership.
           </h1>
-          <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto mb-2">
-            Start learning today and build a culture that lasts — one leader,
-            one conversation, one lesson at a time.
+          <p className="text-white/60 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+            Choose a plan that fits your needs. Start learning today and build a culture that lasts.
           </p>
 
-          {/* Billing Toggle - Industry Standard Pill */}
+          {/* Billing Toggle */}
           {hasMonthlyOption && (
-            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full p-1 mt-8">
+            <div className="inline-flex items-center bg-white/[0.08] backdrop-blur-sm rounded-full p-1 mt-10 ring-1 ring-white/10">
               <button
                 onClick={() => setBillingCycle("monthly")}
                 className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
                   billingCycle === "monthly"
-                    ? "bg-white text-[#000E51] shadow-md"
-                    : "text-white/70 hover:text-white"
+                    ? "bg-white text-[#000E51] shadow-lg"
+                    : "text-white/60 hover:text-white"
                 }`}
               >
                 Monthly
@@ -437,16 +351,18 @@ export default function PricingPage() {
                 onClick={() => setBillingCycle("yearly")}
                 className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
                   billingCycle === "yearly"
-                    ? "bg-white text-[#000E51] shadow-md"
-                    : "text-white/70 hover:text-white"
+                    ? "bg-white text-[#000E51] shadow-lg"
+                    : "text-white/60 hover:text-white"
                 }`}
               >
                 Yearly
-                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                  billingCycle === "yearly"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-white/20 text-white"
-                }`}>
+                <span
+                  className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                    billingCycle === "yearly"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-white/15 text-white/80"
+                  }`}
+                >
                   Save 17%
                 </span>
               </button>
@@ -455,29 +371,32 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Error Message */}
+      {/* Error */}
       {error && (
-        <div className="max-w-[1200px] mx-auto px-6 md:px-10 lg:px-16 -mt-32 mb-4 relative z-10">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16 -mt-40 mb-4 relative z-10">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center justify-between">
             <span>{error}</span>
-            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 ml-4 font-medium">
+            <button
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700 ml-4 font-medium"
+            >
               Dismiss
             </button>
           </div>
         </div>
       )}
 
-      {/* Pricing Cards Section */}
-      <div className="relative z-10">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16 -mt-28">
+      {/* Cards */}
+      <div className="relative z-10 -mt-36 sm:-mt-40 pb-12">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-5 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-5 items-stretch">
               {[1, 2, 3, 4].map((i) => (
                 <PricingCardSkeleton key={i} />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-5 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-5 items-stretch">
               {plans.map((plan) => (
                 <PricingCard
                   key={plan.id}
@@ -486,6 +405,7 @@ export default function PricingPage() {
                   isCurrentPlan={currentPlanSlug === plan.slug}
                   onSelect={handlePlanSelect}
                   isLoading={actionLoading}
+                  isRecommended={plan.isPopular || plan.slug === "organization"}
                 />
               ))}
             </div>
@@ -493,26 +413,24 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Closing Section */}
-      <div className="max-w-4xl mx-auto text-center py-20 px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+      {/* Closing CTA */}
+      <div className="max-w-3xl mx-auto text-center py-20 px-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#000E51] mb-3">
           Ready to lead differently?
         </h2>
-        <p className="text-gray-500 text-sm md:text-base max-w-lg mx-auto mb-8">
+        <p className="text-gray-500 text-sm sm:text-base max-w-lg mx-auto mb-8 leading-relaxed">
           Join thousands of professionals and organizations transforming
           leadership from the inside out.
         </p>
         <button
           onClick={() => router.push("/courses")}
-          className="bg-[#000E51] hover:bg-[#FF6F00] text-white px-8 py-3.5 rounded-xl text-sm font-semibold transition-colors shadow-lg"
+          className="bg-[#000E51] hover:bg-[#0a1a6e] text-white px-8 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg shadow-[#000E51]/20 hover:shadow-xl"
         >
           Explore The LKnight Learning Hub
         </button>
       </div>
 
-      {/* FAQ Section */}
       <FAQSection />
-
       <Footer />
     </div>
   );

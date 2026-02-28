@@ -132,7 +132,7 @@ export default function VaultPage() {
   // Show nothing until auth check completes
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#FF6F00] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -281,7 +281,7 @@ export default function VaultPage() {
       </section>
 
       {/* Main Content */}
-      <section className="w-full bg-[#0F172A] py-8 lg:py-12">
+      <section className="w-full bg-[#f8f9fc] py-8 lg:py-12">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Left - Discussion Feed */}
@@ -289,9 +289,9 @@ export default function VaultPage() {
               {/* Start Discussion Button */}
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="w-full bg-[#1E293B] hover:bg-[#2D3B4F] border border-white/10 rounded-xl p-4 lg:p-5 flex items-center gap-3 transition-colors duration-200 mb-6"
+                className="w-full bg-white hover:bg-gray-50 border border-gray-200 rounded-xl p-4 lg:p-5 flex items-center gap-3 transition-colors duration-200 mb-6 shadow-sm"
               >
-                <div className="w-10 h-10 rounded-full bg-[#FF6F00]/20 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#FF6F00]/10 flex items-center justify-center">
                   <svg
                     width="20"
                     height="20"
@@ -308,7 +308,7 @@ export default function VaultPage() {
                     />
                   </svg>
                 </div>
-                <span className="text-white/50 text-sm lg:text-base">
+                <span className="text-gray-400 text-sm lg:text-base">
                   Start a new discussion...
                 </span>
               </button>
@@ -321,8 +321,8 @@ export default function VaultPage() {
                     onClick={() => setSelectedCategory(cat.id)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                       selectedCategory === cat.id
-                        ? "bg-[#000E51] text-white"
-                        : "bg-[#1E293B] text-white/60 hover:bg-[#2D3B4F] hover:text-white/80"
+                        ? "bg-[#000E51] text-white shadow-sm"
+                        : "bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 border border-gray-200"
                     }`}
                   >
                     {cat.label}
@@ -337,17 +337,17 @@ export default function VaultPage() {
                   Array.from({ length: 3 }).map((_, i) => (
                     <div
                       key={i}
-                      className="bg-[#000E51] rounded-xl p-5 lg:p-6 animate-pulse"
+                      className="bg-white rounded-xl p-5 lg:p-6 animate-pulse border border-gray-100 shadow-sm"
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="h-6 w-24 bg-white/10 rounded-md" />
-                        <div className="h-4 w-16 bg-white/5 rounded" />
+                        <div className="h-6 w-24 bg-gray-100 rounded-md" />
+                        <div className="h-4 w-16 bg-gray-50 rounded" />
                       </div>
-                      <div className="h-5 w-3/4 bg-white/10 rounded mb-2" />
-                      <div className="h-4 w-full bg-white/5 rounded mb-4" />
+                      <div className="h-5 w-3/4 bg-gray-100 rounded mb-2" />
+                      <div className="h-4 w-full bg-gray-50 rounded mb-4" />
                       <div className="flex justify-between">
-                        <div className="h-4 w-20 bg-white/5 rounded" />
-                        <div className="h-4 w-24 bg-white/5 rounded" />
+                        <div className="h-4 w-20 bg-gray-50 rounded" />
+                        <div className="h-4 w-24 bg-gray-50 rounded" />
                       </div>
                     </div>
                   ))
@@ -370,10 +370,10 @@ export default function VaultPage() {
                         />
                       </svg>
                     </div>
-                    <p className="text-white/60 text-sm mb-2">
+                    <p className="text-gray-500 text-sm mb-2">
                       No discussions yet
                     </p>
-                    <p className="text-white/40 text-xs">
+                    <p className="text-gray-400 text-xs">
                       Be the first to start a conversation!
                     </p>
                   </div>
