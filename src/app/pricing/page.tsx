@@ -8,17 +8,17 @@ import FAQSection from "@/components/FAQSection";
 import { planApi, subscriptionApi, Plan, PlanFeature } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
-// Plan icon component — white stroke for orange header
+// Plan icon component
 const PlanIcon = ({ slug }: { slug: string }) => {
   const icons: Record<string, React.ReactNode> = {
     individual: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
         <circle cx="12" cy="7" r="4" />
       </svg>
     ),
     "small-team": (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -26,21 +26,21 @@ const PlanIcon = ({ slug }: { slug: string }) => {
       </svg>
     ),
     organization: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="7" width="20" height="14" rx="2" />
         <path d="M16 7V5a4 4 0 0 0-8 0v2" />
-        <circle cx="12" cy="14" r="1" fill="white" />
+        <circle cx="12" cy="14" r="1" fill="#FF6F00" />
       </svg>
     ),
     enterprise: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
       </svg>
     ),
   };
 
   return (
-    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+    <div className="w-10 h-10 rounded-xl bg-[#FF6F00]/10 flex items-center justify-center flex-shrink-0">
       {icons[slug] || icons.individual}
     </div>
   );
@@ -74,7 +74,7 @@ const PricingCard = ({
   return (
     <div className="relative flex flex-col h-full group">
       <div
-        className={`flex flex-col h-full bg-white rounded-2xl transition-all duration-300 overflow-hidden ${
+        className={`flex flex-col h-full bg-white rounded-2xl p-6 lg:p-7 transition-all duration-300 ${
           isCurrentPlan
             ? "ring-2 ring-[#FF6F00] shadow-lg shadow-[#FF6F00]/10"
             : isRecommended
@@ -82,121 +82,109 @@ const PricingCard = ({
             : "ring-1 ring-gray-200 shadow-sm hover:shadow-lg hover:ring-gray-300"
         }`}
       >
-        {/* Orange Header */}
-        <div className="bg-[#FF6F00] px-6 lg:px-7 pt-5 pb-4 relative overflow-hidden">
-          {/* Subtle pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute -right-6 -top-6 w-24 h-24 border-2 border-white rounded-full" />
-            <div className="absolute -right-2 -bottom-4 w-16 h-16 border-2 border-white rounded-full" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-1.5">
-              <PlanIcon slug={plan.slug} />
-              <div>
-                <h3 className="text-lg font-bold text-white">{plan.name}</h3>
-                {plan.tagline && (
-                  <p className="text-xs text-white/70 font-medium">{plan.tagline}</p>
-                )}
-              </div>
-            </div>
-            {isCurrentPlan && (
-              <span className="inline-block mt-2 text-[10px] font-bold bg-white text-[#FF6F00] px-3 py-1 rounded-full uppercase tracking-wide">
-                Current Plan
-              </span>
+        {/* Plan Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <PlanIcon slug={plan.slug} />
+          <div>
+            <h3 className="text-lg font-bold text-[#000E51]">{plan.name}</h3>
+            {plan.tagline && (
+              <p className="text-xs text-gray-400 font-medium">{plan.tagline}</p>
             )}
           </div>
         </div>
 
-        {/* Card Body */}
-        <div className="p-6 lg:p-7 flex flex-col flex-1">
-          {/* Description */}
-          {plan.description && (
-            <p className="text-sm text-gray-500 leading-relaxed mb-5">
-              {plan.description}
-            </p>
-          )}
+        {isCurrentPlan && (
+          <span className="inline-block w-fit mb-4 text-[10px] font-bold bg-[#FF6F00]/10 text-[#FF6F00] px-3 py-1 rounded-full uppercase tracking-wide">
+            Current Plan
+          </span>
+        )}
 
-          {/* Price */}
-          <div className="mb-6">
-            {showPrice ? (
-              <div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-[40px] font-extrabold text-[#000E51] leading-none tracking-tight">
-                    ${price.toLocaleString()}
-                  </span>
-                  <span className="text-sm text-gray-400 font-medium">{period}</span>
-                </div>
-                {plan.maxUsers > 1 && (
-                  <p className="text-xs text-gray-400 mt-2">
-                    Up to {plan.maxUsers.toLocaleString()} users
-                  </p>
-                )}
-                {plan.additionalUserPrice != null && (
-                  <p className="text-xs text-[#FF6F00] font-medium mt-0.5">
-                    +${plan.additionalUserPrice}/additional user
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div>
+        {/* Description */}
+        {plan.description && (
+          <p className="text-sm text-gray-500 leading-relaxed mb-5">
+            {plan.description}
+          </p>
+        )}
+
+        {/* Price */}
+        <div className="mb-6">
+          {showPrice ? (
+            <div>
+              <div className="flex items-baseline gap-1.5">
                 <span className="text-[40px] font-extrabold text-[#000E51] leading-none tracking-tight">
-                  Custom
+                  ${price.toLocaleString()}
                 </span>
-                <p className="text-xs text-gray-400 mt-2">Tailored for your organization</p>
+                <span className="text-sm text-gray-400 font-medium">{period}</span>
               </div>
-            )}
-          </div>
-
-          {/* CTA Button — always orange */}
-          <button
-            onClick={() => onSelect(plan)}
-            disabled={isCurrentPlan || isLoading}
-            className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-              isCurrentPlan
-                ? "bg-[#FF6F00]/10 text-[#FF6F00] border border-[#FF6F00]/30 cursor-default"
-                : "bg-[#FF6F00] hover:bg-[#e56300] text-white shadow-md shadow-[#FF6F00]/20 hover:shadow-lg hover:shadow-[#FF6F00]/30"
-            } ${isLoading ? "opacity-50 cursor-wait" : ""}`}
-          >
-            {isCurrentPlan ? "Current Plan" : plan.ctaText}
-          </button>
-
-          {/* Close line */}
-          {plan.closeLine && (
-            <p className="text-[11px] text-gray-400 text-center mt-3 italic leading-snug">
-              {plan.closeLine}
-            </p>
-          )}
-
-          {/* Features */}
-          <div className="border-t border-gray-100 mt-6 pt-5 flex-1">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
-              What&apos;s included
-            </p>
-            <div className="space-y-3">
-              {features.map((feature, i) => (
-                <div key={i} className="flex items-start gap-2.5">
-                  {feature.included ? (
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="flex-shrink-0 mt-0.5">
-                      <circle cx="9" cy="9" r="9" fill="#FF6F00" fillOpacity="0.08" />
-                      <path d="M12.5 6.5L7.5 11.5L5.5 9.5" stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="flex-shrink-0 mt-0.5">
-                      <circle cx="9" cy="9" r="9" fill="#f3f4f6" />
-                      <path d="M6.5 9H11.5" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                  )}
-                  <span
-                    className={`text-sm leading-snug ${
-                      feature.included ? "text-gray-700" : "text-gray-400"
-                    }`}
-                  >
-                    {feature.text}
-                  </span>
-                </div>
-              ))}
+              {plan.maxUsers > 1 && (
+                <p className="text-xs text-gray-400 mt-2">
+                  Up to {plan.maxUsers.toLocaleString()} users
+                </p>
+              )}
+              {plan.additionalUserPrice != null && (
+                <p className="text-xs text-[#FF6F00] font-medium mt-0.5">
+                  +${plan.additionalUserPrice}/additional user
+                </p>
+              )}
             </div>
+          ) : (
+            <div>
+              <span className="text-[40px] font-extrabold text-[#000E51] leading-none tracking-tight">
+                Custom
+              </span>
+              <p className="text-xs text-gray-400 mt-2">Tailored for your organization</p>
+            </div>
+          )}
+        </div>
+
+        {/* CTA Button */}
+        <button
+          onClick={() => onSelect(plan)}
+          disabled={isCurrentPlan || isLoading}
+          className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+            isCurrentPlan
+              ? "bg-[#FF6F00]/10 text-[#FF6F00] border border-[#FF6F00]/30 cursor-default"
+              : "bg-[#000E51] hover:bg-[#000c45] text-white shadow-md shadow-[#000E51]/20 hover:shadow-lg"
+          } ${isLoading ? "opacity-50 cursor-wait" : ""}`}
+        >
+          {isCurrentPlan ? "Current Plan" : plan.ctaText}
+        </button>
+
+        {/* Close line */}
+        {plan.closeLine && (
+          <p className="text-[11px] text-gray-400 text-center mt-3 italic leading-snug">
+            {plan.closeLine}
+          </p>
+        )}
+
+        {/* Features */}
+        <div className="border-t border-gray-100 mt-6 pt-5 flex-1">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+            What&apos;s included
+          </p>
+          <div className="space-y-3">
+            {features.map((feature, i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                {feature.included ? (
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="flex-shrink-0 mt-0.5">
+                    <circle cx="9" cy="9" r="9" fill="#FF6F00" fillOpacity="0.08" />
+                    <path d="M12.5 6.5L7.5 11.5L5.5 9.5" stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="flex-shrink-0 mt-0.5">
+                    <circle cx="9" cy="9" r="9" fill="#f3f4f6" />
+                    <path d="M6.5 9H11.5" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                )}
+                <span
+                  className={`text-sm leading-snug ${
+                    feature.included ? "text-gray-700" : "text-gray-400"
+                  }`}
+                >
+                  {feature.text}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -206,21 +194,25 @@ const PricingCard = ({
 
 // Loading skeleton
 const PricingCardSkeleton = () => (
-  <div className="bg-white rounded-2xl ring-1 ring-gray-200 animate-pulse overflow-hidden">
-    <div className="h-24 bg-[#FF6F00]/20" />
-    <div className="p-6 lg:p-7">
-      <div className="h-3 bg-gray-100 rounded w-full mb-1.5" />
-      <div className="h-3 bg-gray-100 rounded w-3/4 mb-5" />
-      <div className="h-12 bg-gray-200 rounded w-36 mb-6" />
-      <div className="h-12 bg-gray-100 rounded-xl mb-6" />
-      <div className="border-t border-gray-100 pt-5 space-y-3">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex items-center gap-2.5">
-            <div className="w-[18px] h-[18px] bg-gray-100 rounded-full" />
-            <div className="h-3 bg-gray-100 rounded flex-1" />
-          </div>
-        ))}
+  <div className="bg-white rounded-2xl ring-1 ring-gray-200 p-6 lg:p-7 animate-pulse">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-10 h-10 bg-gray-100 rounded-xl" />
+      <div>
+        <div className="h-5 bg-gray-100 rounded w-24 mb-1" />
+        <div className="h-3 bg-gray-50 rounded w-32" />
       </div>
+    </div>
+    <div className="h-3 bg-gray-100 rounded w-full mb-1.5" />
+    <div className="h-3 bg-gray-100 rounded w-3/4 mb-5" />
+    <div className="h-12 bg-gray-200 rounded w-36 mb-6" />
+    <div className="h-12 bg-gray-100 rounded-xl mb-6" />
+    <div className="border-t border-gray-100 pt-5 space-y-3">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="flex items-center gap-2.5">
+          <div className="w-[18px] h-[18px] bg-gray-100 rounded-full" />
+          <div className="h-3 bg-gray-100 rounded flex-1" />
+        </div>
+      ))}
     </div>
   </div>
 );
