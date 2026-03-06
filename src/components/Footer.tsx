@@ -19,8 +19,8 @@ export default function Footer() {
   const supportLinks = [
     { label: "Help Center", href: "/help" },
     { label: "Community", href: "/community" },
-    { label: "Terms of Service", href: "/terms" },
-    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Terms of Service", href: "/terms", newTab: true },
+    { label: "Privacy Policy", href: "/privacy", newTab: true },
   ];
 
   const socialLinks = [
@@ -146,12 +146,23 @@ export default function Footer() {
             <ul className="space-y-3">
               {supportLinks.map((link) => (
                 <li key={link.label}>
-                  <TransitionLink
-                    href={link.href}
-                    className="text-[#64748B] text-sm hover:text-[#FF6F00] transition-colors duration-200"
-                  >
-                    {link.label}
-                  </TransitionLink>
+                  {link.newTab ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#64748B] text-sm hover:text-[#FF6F00] transition-colors duration-200"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <TransitionLink
+                      href={link.href}
+                      className="text-[#64748B] text-sm hover:text-[#FF6F00] transition-colors duration-200"
+                    >
+                      {link.label}
+                    </TransitionLink>
+                  )}
                 </li>
               ))}
             </ul>

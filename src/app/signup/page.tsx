@@ -539,11 +539,11 @@ export default function SignUpPage() {
               />
               <label htmlFor="terms" className="text-sm text-gray-600">
                 I agree to the{" "}
-                <Link href="/terms" className="text-[#FF6F00] hover:underline">
+                <Link href="/terms" target="_blank" rel="noopener noreferrer" className="text-[#FF6F00] hover:underline">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="text-[#FF6F00] hover:underline">
+                <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[#FF6F00] hover:underline">
                   Privacy Policy
                 </Link>
               </label>
