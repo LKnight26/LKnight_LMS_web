@@ -32,6 +32,7 @@ export default function VaultPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const observerRef = useRef<HTMLDivElement | null>(null);
   const [statsKey, setStatsKey] = useState(0);
+  const lastPollTimeRef = useRef<string>(new Date().toISOString());
 
   // Auth gate — redirect if not logged in
   useEffect(() => {
@@ -61,6 +62,8 @@ export default function VaultPage() {
             setDiscussions((prev) => [...prev, ...res.data!.discussions]);
           } else {
             setDiscussions(res.data.discussions);
+            // Reset poll time to now when fresh data is loaded
+            lastPollTimeRef.current = new Date().toISOString();
           }
           setNextCursor(res.data.nextCursor);
         }
@@ -101,6 +104,32 @@ export default function VaultPage() {
     return () => observer.disconnect();
   }, [nextCursor, loadingMore, fetchDiscussions]);
 
+  // Poll for new discussions every 5 seconds (only updates message section)
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await vaultApi.pollDiscussions({
+          since: lastPollTimeRef.current,
+          category: selectedCategory,
+        });
+        if (res.success && res.data && res.data.discussions.length > 0) {
+          setDiscussions((prev) => {
+            const existingIds = new Set(prev.map((d) => d.id));
+            const newOnes = res.data!.discussions.filter((d) => !existingIds.has(d.id));
+            return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
+          });
+          lastPollTimeRef.current = new Date().toISOString();
+        }
+      } catch {
+        // silently fail — polling is non-critical
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [user, selectedCategory]);
+
   // Handle new discussion created — errors propagate to modal for display
   const handleStartDiscussion = async (data: {
     category: string;
@@ -111,6 +140,7 @@ export default function VaultPage() {
     if (res.success && res.data) {
       setDiscussions((prev) => [res.data!, ...prev]);
       setStatsKey((k) => k + 1);
+      lastPollTimeRef.current = new Date().toISOString();
     }
   };
 

@@ -1094,6 +1094,14 @@ export const vaultApi = {
     return api.get<VaultRepliesResponse>(`/vault/comments/${commentId}/replies${qs ? `?${qs}` : ''}`);
   },
 
+  // Polling — lightweight endpoint to fetch new discussions since a timestamp
+  pollDiscussions: (params: { since: string; category?: string }) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('since', params.since);
+    if (params.category && params.category !== 'all') queryParams.append('category', params.category);
+    return api.get<{ discussions: VaultDiscussion[] }>(`/vault/discussions/poll?${queryParams.toString()}`);
+  },
+
   // Stats
   getStats: () => api.get<VaultStats>('/vault/stats'),
 };
