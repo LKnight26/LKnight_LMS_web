@@ -71,6 +71,12 @@ const PricingCard = ({
   const showPrice = price != null;
   const features = plan.features as PlanFeature[];
 
+  // Calculate yearly savings percentage
+  const yearlySavings =
+    billingCycle === "yearly" && plan.monthlyPrice && plan.yearlyPrice
+      ? Math.round((1 - plan.yearlyPrice / (plan.monthlyPrice * 12)) * 100)
+      : 0;
+
   return (
     <div className="relative flex flex-col h-full group">
       <div
@@ -116,6 +122,11 @@ const PricingCard = ({
                 </span>
                 <span className="text-sm text-gray-400 font-medium">{period}</span>
               </div>
+              {yearlySavings > 0 && (
+                <span className="inline-block mt-2 text-[11px] font-bold bg-green-50 text-green-600 px-2.5 py-0.5 rounded-full">
+                  Save {yearlySavings}% vs monthly
+                </span>
+              )}
               {plan.maxUsers > 1 && (
                 <p className="text-xs text-gray-400 mt-2">
                   Up to {plan.maxUsers.toLocaleString()} users
@@ -321,7 +332,7 @@ export default function PricingPage() {
             Invest in better leadership.
           </h1>
           <p className="text-white/60 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Choose a plan that fits your needs. Start learning today and build a culture that lasts.
+            Start learning today and build a culture that lasts — one leader, one conversation, one lesson at a time.
           </p>
 
           {/* Billing Toggle */}
@@ -353,7 +364,7 @@ export default function PricingPage() {
                       : "bg-white/15 text-white/80"
                   }`}
                 >
-                  Save 17%
+                  Save more
                 </span>
               </button>
             </div>
