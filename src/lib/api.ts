@@ -1168,14 +1168,6 @@ export interface Plan {
 export const planApi = {
   // Public
   getAll: () => api.get<Plan[]>('/plans'),
-
-  // Admin
-  getAllAdmin: () => api.get<Plan[]>('/plans/admin'),
-  getById: (id: string) => api.get<Plan>(`/plans/admin/${id}`),
-  create: (data: Partial<Plan>) => api.post<Plan>('/plans', data),
-  update: (id: string, data: Partial<Plan>) => api.put<Plan>(`/plans/${id}`, data),
-  delete: (id: string) => api.delete<void>(`/plans/${id}`),
-  reorder: (plans: { id: string }[]) => api.patch<void>('/plans/reorder', { plans }),
 };
 
 // ============================================
