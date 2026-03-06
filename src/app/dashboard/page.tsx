@@ -314,7 +314,7 @@ function CourseCard({ course }: { course: CourseWithStatus }) {
     <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group border border-gray-100 ${isLocked ? "relative" : ""}`}>
       {/* Image Container */}
       <Link
-        href={isLocked ? `/pricing` : `/dashboard/courses/${course.id}`}
+        href={isLocked ? `/courses/${course.id}` : `/dashboard/courses/${course.id}`}
         className="block relative aspect-[16/10] overflow-hidden"
       >
         {course.thumbnail ? (
@@ -376,7 +376,7 @@ function CourseCard({ course }: { course: CourseWithStatus }) {
         )}
 
         {/* Title */}
-        <Link href={isLocked ? `/pricing` : `/dashboard/courses/${course.id}`}>
+        <Link href={isLocked ? `/courses/${course.id}` : `/dashboard/courses/${course.id}`}>
           <h3 className="text-base sm:text-lg font-bold text-[#000E51] mt-1 mb-2 line-clamp-2 group-hover:text-[#FF6F00] transition-colors duration-200">
             {course.title}
           </h3>
@@ -430,7 +430,7 @@ function CourseCard({ course }: { course: CourseWithStatus }) {
             </span>
           )}
           <Link
-            href={isLocked ? `/pricing` : `/dashboard/courses/${course.id}`}
+            href={isLocked ? `/courses/${course.id}` : `/dashboard/courses/${course.id}`}
             className={`inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 ${
               isLocked
                 ? "bg-[#000E51] text-white hover:bg-[#001a7a]"
