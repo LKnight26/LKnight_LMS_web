@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { courseApi, CourseDetails, Module } from "@/lib/api";
+import { courseApi, enrollmentApi, CourseDetails, Module } from "@/lib/api";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 const levelColors: Record<string, string> = {
@@ -28,8 +29,9 @@ const formatDuration = (seconds: number) => {
 
 export default function CourseDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const courseId = params.id as string;
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token } = useAuth();
 
   const [course, setCourse] = useState<CourseDetails | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(
@@ -43,6 +45,20 @@ export default function CourseDetailPage() {
     (async () => {
       try {
         setIsLoading(true);
+
+        // If user is logged in, check if they already have access
+        if (isAuthenticated && token) {
+          try {
+            const accessCheck = await enrollmentApi.getCheckoutDetails(courseId);
+            if (accessCheck.data?.hasAccess) {
+              router.replace(`/dashboard/courses/${courseId}`);
+              return;
+            }
+          } catch {
+            // Access check failed (e.g. not enrolled) — continue to show preview
+          }
+        }
+
         const res = await courseApi.getById(courseId);
         if (res.data) {
           setCourse(res.data);
@@ -60,7 +76,7 @@ export default function CourseDetailPage() {
         setIsLoading(false);
       }
     })();
-  }, [courseId]);
+  }, [courseId, isAuthenticated, token, router]);
 
   const toggleModule = (moduleId: string) => {
     setExpandedModules((prev) => {
