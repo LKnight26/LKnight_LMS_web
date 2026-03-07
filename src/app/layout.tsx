@@ -6,6 +6,7 @@ import { Providers } from "@/components/Providers";
 import MaintenanceCheck from "@/components/MaintenanceCheck";
 import JsonLd from "@/components/JsonLd";
 import ChatBotButton from "@/components/ChatBotButton";
+import StickyGoLiveButton from "@/components/StickyGoLiveButton";
 import {
   defaultMetadata,
   organizationSchema,
@@ -56,6 +57,7 @@ export default function RootLayout({
           <MaintenanceCheck>
             <NavigationProgress />
             {children}
+            <StickyGoLiveButton />
             <ChatBotButton />
           </MaintenanceCheck>
         </Providers>
