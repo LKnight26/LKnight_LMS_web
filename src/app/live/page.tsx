@@ -6,8 +6,27 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
-import { liveStreamApi, subscriptionApi, type LiveStreamPlayback } from "@/lib/api";
+import { type LiveStreamPlayback } from "@/lib/api";
 import Hls from "hls.js";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+async function fetchPlayback(
+  endpoint: string,
+  token: string | null
+): Promise<{ status: number; data: LiveStreamPlayback | null; success: boolean; message?: string }> {
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const json = await res.json().catch(() => ({}));
+  if (res.status === 403) {
+    return { status: 403, data: null, success: false, message: json.message };
+  }
+  if (res.ok && json.success) {
+    return { status: res.status, data: json.data ?? null, success: true };
+  }
+  return { status: res.status, data: null, success: false, message: json.message };
+}
 
 export default function LivePage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -18,6 +37,7 @@ export default function LivePage() {
   const [playback, setPlayback] = useState<LiveStreamPlayback | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -29,19 +49,28 @@ export default function LivePage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     (async () => {
       setLoading(true);
       setAccessDenied(false);
+      setServerError(null);
       try {
-        if (streamIdParam) {
-          const res = await liveStreamApi.getPlaybackById(streamIdParam);
-          if (!cancelled && res.success && res.data) setPlayback(res.data);
+        const endpoint = streamIdParam
+          ? `/live-streams/playback/${streamIdParam}`
+          : "/live-streams/playback/active";
+        const result = await fetchPlayback(endpoint, token);
+        if (cancelled) return;
+        if (result.status === 403) {
+          setAccessDenied(true);
+          setPlayback(undefined);
+        } else if (result.success) {
+          setPlayback(result.data ?? null);
         } else {
-          const res = await liveStreamApi.getActivePlayback();
-          if (!cancelled && res.success) setPlayback(res.data ?? null);
+          setServerError(result.message || "Something went wrong. Please try again.");
+          setPlayback(undefined);
         }
       } catch {
-        if (!cancelled) setAccessDenied(true);
+        if (!cancelled) setServerError("Unable to load live stream. Please try again.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -103,13 +132,26 @@ export default function LivePage() {
             </div>
           )}
 
-          {!loading && !accessDenied && playback === null && (
+          {!loading && !accessDenied && serverError && (
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-8 text-center">
+              <p className="text-gray-300 mb-4">{serverError}</p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 bg-secondary text-white font-medium rounded-lg hover:opacity-90"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {!loading && !accessDenied && !serverError && playback === null && (
             <div className="bg-gray-800 rounded-xl border border-gray-700 p-8 text-center">
               <p className="text-gray-300">No live stream is currently available. Check back later.</p>
             </div>
           )}
 
-          {!loading && !accessDenied && playback && (
+          {!loading && !accessDenied && !serverError && playback && (
             <div className="space-y-4">
               {playback.title && (
                 <p className="text-gray-300 text-lg">{playback.title}</p>
