@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-const POLL_INTERVAL_MS = 3_000;
+const POLL_INTERVAL_MS = 5_000;
 
 export function useLiveActive(): { isLiveActive: boolean } {
   const [isLiveActive, setIsLiveActive] = useState(false);

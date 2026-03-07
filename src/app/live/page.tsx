@@ -129,6 +129,13 @@ export default function LivePage() {
 
     const onEnded = () => setStreamEnded(true);
     const onPlaying = () => setVideoPlaying(true);
+    const tryAutoPlay = () => {
+      if (video.paused) video.play().catch(() => {});
+    };
+    const onCanPlay = () => {
+      onPlaying();
+      tryAutoPlay();
+    };
 
     if (Hls.isSupported()) {
       const hls = new Hls({
@@ -143,12 +150,14 @@ export default function LivePage() {
       hls.on(Hls.Events.MEDIA_ENDED, onEnded);
       video.addEventListener("ended", onEnded);
       video.addEventListener("playing", onPlaying);
-      video.addEventListener("canplay", onPlaying);
+      video.addEventListener("canplay", onCanPlay);
+      video.addEventListener("loadeddata", tryAutoPlay);
       return () => {
         hls.off(Hls.Events.MEDIA_ENDED, onEnded);
         video.removeEventListener("ended", onEnded);
         video.removeEventListener("playing", onPlaying);
-        video.removeEventListener("canplay", onPlaying);
+        video.removeEventListener("canplay", onCanPlay);
+        video.removeEventListener("loadeddata", tryAutoPlay);
         hls.destroy();
         hlsRef.current = null;
       };
@@ -157,11 +166,13 @@ export default function LivePage() {
       video.src = url;
       video.addEventListener("ended", onEnded);
       video.addEventListener("playing", onPlaying);
-      video.addEventListener("canplay", onPlaying);
+      video.addEventListener("canplay", onCanPlay);
+      video.addEventListener("loadeddata", tryAutoPlay);
       return () => {
         video.removeEventListener("ended", onEnded);
         video.removeEventListener("playing", onPlaying);
-        video.removeEventListener("canplay", onPlaying);
+        video.removeEventListener("canplay", onCanPlay);
+        video.removeEventListener("loadeddata", tryAutoPlay);
         video.src = "";
       };
     }
@@ -250,6 +261,7 @@ export default function LivePage() {
                   className="w-full h-full"
                   controls
                   playsInline
+                  autoPlay
                   muted={false}
                 />
                 {playback.status === "idle" && !videoPlaying && (

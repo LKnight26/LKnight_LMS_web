@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { liveStreamApi, type LiveStreamInfo } from "@/lib/api";
+import ConfirmModal from "@/components/admin/ConfirmModal";
 
 const RTMP_URL = "rtmps://global-live.mux.com:443/app";
 
@@ -14,6 +14,8 @@ export default function AdminLivePage() {
   const [newStream, setNewStream] = useState<LiveStreamInfo | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchStreams = useCallback(async () => {
     try {
@@ -54,14 +56,24 @@ export default function AdminLivePage() {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this live stream? This cannot be undone.")) return;
+  const handleDeleteClick = (s: LiveStreamInfo) => {
+    setError(null);
+    setDeleteTarget({ id: s.id, title: s.title || "Untitled stream" });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setError(null);
     try {
-      await liveStreamApi.deleteStream(id);
-      setNewStream((s) => (s?.id === id ? null : s));
+      await liveStreamApi.deleteStream(deleteTarget.id);
+      setNewStream((prev) => (prev?.id === deleteTarget.id ? null : prev));
+      setDeleteTarget(null);
       fetchStreams();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to delete");
+      setError(e instanceof Error ? e.message : "Failed to delete stream");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -70,14 +82,8 @@ export default function AdminLivePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div className="mb-8">
             <h1 className="text-2xl font-bold text-primary">Live streaming</h1>
-            <Link
-              href="/live"
-              className="text-secondary hover:underline font-medium"
-            >
-              View live page →
-            </Link>
           </div>
 
           {error && (
@@ -187,27 +193,35 @@ export default function AdminLivePage() {
                         Status: {s.status} · Playback ID: {s.playbackId}
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <Link
-                        href={`/live?stream=${s.id}`}
-                        className="px-3 py-1.5 text-sm font-medium text-secondary hover:underline"
-                      >
-                        View
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(s.id)}
-                        className="px-3 py-1.5 text-sm font-medium text-red-600 hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteClick(s)}
+                      className="px-3 py-1.5 text-sm font-medium text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
                   </li>
                 ))}
               </ul>
             )}
           </section>
         </div>
-    </div>
+
+        <ConfirmModal
+          isOpen={!!deleteTarget}
+          onClose={() => !deleting && setDeleteTarget(null)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete live stream"
+          message={
+            deleteTarget
+              ? `Are you sure you want to delete "${deleteTarget.title}"? This cannot be undone and the stream key will no longer work.`
+              : ""
+          }
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="danger"
+          isLoading={deleting}
+        />
+      </div>
   );
 }
