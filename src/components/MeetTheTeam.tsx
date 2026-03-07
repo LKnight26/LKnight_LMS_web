@@ -3,20 +3,34 @@
 import { useState, useRef, useEffect } from "react";
 import TeamMemberCard from "./TeamMemberCard";
 import { teamApi, TeamMember } from "@/lib/api";
+import { prefetchCache } from "@/lib/prefetchCache";
+
+function getInitialTeam(): TeamMember[] {
+  if (typeof window === "undefined") return [];
+  return prefetchCache.getTeam() ?? [];
+}
 
 export default function MeetTheTeam() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(getInitialTeam);
+  const [isLoading, setIsLoading] = useState(() => getInitialTeam().length === 0);
 
   useEffect(() => {
+    const cached = prefetchCache.getTeam();
+    if (cached && cached.length > 0) {
+      setTeamMembers(cached);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchTeamMembers = async () => {
       try {
         const response = await teamApi.getAll();
         if (response.success && response.data) {
           setTeamMembers(response.data);
+          prefetchCache.setTeam(response.data);
         }
       } catch (err) {
         console.error("Failed to fetch team members:", err);

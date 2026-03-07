@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import FAQSection from "@/components/FAQSection";
 import { planApi, subscriptionApi, Plan, PlanFeature } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { prefetchCache } from "@/lib/prefetchCache";
 
 // Plan icon component
 const PlanIcon = ({ slug }: { slug: string }) => {
@@ -228,11 +229,16 @@ const PricingCardSkeleton = () => (
   </div>
 );
 
+function getInitialPlans(): Plan[] {
+  if (typeof window === "undefined") return [];
+  return prefetchCache.getPlans() ?? [];
+}
+
 export default function PricingPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [plans, setPlans] = useState<Plan[]>(getInitialPlans);
+  const [loading, setLoading] = useState(() => getInitialPlans().length === 0);
   const [actionLoading, setActionLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [currentPlanSlug, setCurrentPlanSlug] = useState<string | null>(null);
@@ -240,12 +246,22 @@ export default function PricingPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const cached = prefetchCache.getPlans();
+    if (cached && cached.length > 0) {
+      setPlans(cached);
+      setLoading(false);
+    }
+
     const fetchData = async () => {
       try {
-        setLoading(true);
-        const plansResponse = await planApi.getAll();
-        if (plansResponse.success && plansResponse.data) {
-          setPlans(plansResponse.data);
+        if (!cached || cached.length === 0) setLoading(true);
+
+        if (!cached || cached.length === 0) {
+          const plansResponse = await planApi.getAll();
+          if (plansResponse.success && plansResponse.data) {
+            setPlans(plansResponse.data);
+            prefetchCache.setPlans(plansResponse.data);
+          }
         }
 
         if (isAuthenticated) {
