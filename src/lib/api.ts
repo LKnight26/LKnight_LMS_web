@@ -1235,7 +1235,10 @@ export const subscriptionApi = {
     api.get<{ id: string; user: User; role: string; joinedAt: string }[]>(`/subscriptions/${subscriptionId}/members`),
 
   addTeamMember: (subscriptionId: string, email: string) =>
-    api.post<void>(`/subscriptions/${subscriptionId}/members`, { email }),
+    api.post<{ email: string; invited?: boolean } | { id: string; user: User; role: string; joinedAt: string }>(`/subscriptions/${subscriptionId}/members`, { email }),
+
+  acceptInvite: (token: string) =>
+    api.post<{ subscriptionId: string }>('/subscriptions/accept-invite', { token }),
 
   removeTeamMember: (subscriptionId: string, memberId: string) =>
     api.delete<void>(`/subscriptions/${subscriptionId}/members/${memberId}`),

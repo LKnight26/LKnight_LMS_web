@@ -31,6 +31,7 @@ export default function SubscriptionManagementPage() {
   const [memberEmail, setMemberEmail] = useState("");
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [addMemberError, setAddMemberError] = useState<string | null>(null);
+  const [addMemberSuccess, setAddMemberSuccess] = useState<string | null>(null);
 
   // Remove member state
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
@@ -104,13 +105,19 @@ export default function SubscriptionManagementPage() {
     try {
       setAddMemberLoading(true);
       setAddMemberError(null);
-      await subscriptionApi.addTeamMember(subscription.id, memberEmail.trim());
+      setAddMemberSuccess(null);
+      const response = await subscriptionApi.addTeamMember(subscription.id, memberEmail.trim());
+      const msg = (response as { message?: string }).message;
+      setAddMemberSuccess(msg || "Invitation sent.");
       setMemberEmail("");
-      setShowAddMember(false);
       fetchTeamMembers(subscription.id);
+      setTimeout(() => {
+        setShowAddMember(false);
+        setAddMemberSuccess(null);
+      }, 2500);
     } catch (err) {
       setAddMemberError(
-        err instanceof Error ? err.message : "Failed to add team member."
+        err instanceof Error ? err.message : "Failed to send invitation."
       );
     } finally {
       setAddMemberLoading(false);
@@ -369,6 +376,9 @@ export default function SubscriptionManagementPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Invite by email
                 </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  An email will be sent to this address with an invitation to access Knight LMS. They can sign up or sign in to accept.
+                </p>
                 <div className="flex gap-2">
                   <input
                     type="email"
@@ -383,13 +393,14 @@ export default function SubscriptionManagementPage() {
                     disabled={addMemberLoading}
                     className="px-5 py-2.5 bg-[#000E51] hover:bg-[#001570] text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50"
                   >
-                    {addMemberLoading ? "Adding..." : "Add"}
+                    {addMemberLoading ? "Sending..." : "Send invite"}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setShowAddMember(false);
                       setAddMemberError(null);
+                      setAddMemberSuccess(null);
                       setMemberEmail("");
                     }}
                     className="px-4 py-2.5 border border-gray-200 text-gray-600 hover:bg-gray-100 rounded-xl text-sm transition-colors"
@@ -397,6 +408,9 @@ export default function SubscriptionManagementPage() {
                     Cancel
                   </button>
                 </div>
+                {addMemberSuccess && (
+                  <p className="text-green-600 text-sm mt-2">{addMemberSuccess}</p>
+                )}
                 {addMemberError && (
                   <p className="text-red-500 text-sm mt-2">{addMemberError}</p>
                 )}
