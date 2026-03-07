@@ -139,9 +139,9 @@ export default function HeroSection() {
           />
         </div>
 
-        {/* Go Live Button - Navigate to Vault */}
+        {/* Go Live Button - Navigate to Live stream page (admin can also manage from /admin/live) */}
         <div className="absolute bottom-8 sm:bottom-12 lg:bottom-16 right-4 sm:right-8 lg:right-12 z-20">
-          <Link href="/vault" className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer">
+          <Link href="/live" className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer">
             <span className="text-primary font-medium text-sm">Go live</span>
             <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
               <svg

@@ -1244,4 +1244,49 @@ export const subscriptionApi = {
     api.delete<void>(`/subscriptions/${subscriptionId}/members/${memberId}`),
 };
 
+// Live stream types
+export interface LiveStreamInfo {
+  id: string;
+  muxLiveStreamId?: string;
+  playbackId: string;
+  streamKey?: string;
+  rtmpIngestUrl?: string;
+  status: string;
+  title?: string | null;
+  createdAt?: string;
+  createdBy?: { id: string; email: string; firstName: string; lastName: string };
+  hasStreamKey?: boolean;
+}
+
+export interface LiveStreamPlayback {
+  id: string;
+  playbackId: string;
+  playbackUrl: string;
+  status: string;
+  title?: string | null;
+}
+
+export const liveStreamApi = {
+  createStream: (data?: { title?: string }) =>
+    api.post<LiveStreamInfo>('/live-streams', data || {}),
+
+  getStreams: () =>
+    api.get<LiveStreamInfo[]>('/live-streams'),
+
+  getStream: (id: string) =>
+    api.get<LiveStreamInfo>(`/live-streams/${id}`),
+
+  updateStream: (id: string, data: { title?: string; status?: string }) =>
+    api.patch<LiveStreamInfo>(`/live-streams/${id}`, data),
+
+  deleteStream: (id: string) =>
+    api.delete<void>(`/live-streams/${id}`),
+
+  getActivePlayback: () =>
+    api.get<LiveStreamPlayback | null>('/live-streams/playback/active'),
+
+  getPlaybackById: (id: string) =>
+    api.get<LiveStreamPlayback>(`/live-streams/playback/${id}`),
+};
+
 export default api;

@@ -79,6 +79,16 @@ const SettingsIcon = () => (
   </svg>
 );
 
+const LiveIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M8.5 8.5C7.5 9.5 7 10.7 7 12C7 13.3 7.5 14.5 8.5 15.5" />
+    <path d="M15.5 8.5C16.5 9.5 17 10.7 17 12C17 13.3 16.5 14.5 15.5 15.5" />
+    <path d="M5.5 5.5C3.8 7.2 3 9.5 3 12C3 14.5 3.8 16.8 5.5 18.5" />
+    <path d="M18.5 5.5C20.2 7.2 21 9.5 21 12C21 14.5 20.2 16.8 18.5 18.5" />
+  </svg>
+);
+
 const MenuIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="3" y1="12" x2="21" y2="12" />
@@ -104,6 +114,7 @@ const BackIcon = () => (
 const navItems = [
   { name: "Dashboard", href: "/admin", icon: DashboardIcon },
   { name: "Courses", href: "/admin/courses", icon: CoursesIcon },
+  { name: "Live", href: "/admin/live", icon: LiveIcon },
   { name: "Users", href: "/admin/users", icon: UsersIcon },
   { name: "Categories", href: "/admin/categories", icon: CategoriesIcon },
   { name: "Team", href: "/admin/team", icon: TeamIcon },
