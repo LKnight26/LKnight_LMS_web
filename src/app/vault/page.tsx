@@ -1,14 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import DiscussionCard from "@/components/vault/DiscussionCard";
-import VaultSidebar from "@/components/vault/VaultSidebar";
-import StartDiscussionModal from "@/components/vault/StartDiscussionModal";
 import { useAuth } from "@/context/AuthContext";
-import { vaultApi, type VaultDiscussion } from "@/lib/api";
+import { vaultApi, subscriptionApi, type VaultDiscussion } from "@/lib/api";
+
+// Lazy-load vault components for faster initial page load
+const DiscussionCard = dynamic(() => import("@/components/vault/DiscussionCard"), { ssr: false });
+const VaultSidebar = dynamic(() => import("@/components/vault/VaultSidebar"), { ssr: false });
+const StartDiscussionModal = dynamic(() => import("@/components/vault/StartDiscussionModal"), { ssr: false });
 
 const categories = [
   { id: "all", label: "All" },
@@ -24,6 +28,8 @@ export default function VaultPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
+  const [subscriptionCheckDone, setSubscriptionCheckDone] = useState(false);
+  const [hasVaultAccess, setHasVaultAccess] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [discussions, setDiscussions] = useState<VaultDiscussion[]>([]);
@@ -40,6 +46,25 @@ export default function VaultPage() {
       router.push("/signin?redirect=/vault");
     }
   }, [user, authLoading, router]);
+
+  // Vault is only for paid or trial users — check subscription once user is loaded
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await subscriptionApi.checkAccess();
+        if (!cancelled && res.success && res.data) {
+          setHasVaultAccess(res.data.hasAccess);
+        }
+      } catch {
+        if (!cancelled) setHasVaultAccess(false);
+      } finally {
+        if (!cancelled) setSubscriptionCheckDone(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   // Fetch discussions
   const fetchDiscussions = useCallback(
@@ -77,14 +102,14 @@ export default function VaultPage() {
     [selectedCategory]
   );
 
-  // Reset and re-fetch when category changes
+  // Reset and re-fetch when category changes (only if user has vault access)
   useEffect(() => {
-    if (user) {
+    if (user && hasVaultAccess) {
       setDiscussions([]);
       setNextCursor(null);
       fetchDiscussions();
     }
-  }, [selectedCategory, user, fetchDiscussions]);
+  }, [selectedCategory, user, hasVaultAccess, fetchDiscussions]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -104,9 +129,9 @@ export default function VaultPage() {
     return () => observer.disconnect();
   }, [nextCursor, loadingMore, fetchDiscussions]);
 
-  // Poll for new discussions every 5 seconds (only updates message section)
+  // Poll for new discussions every 5 seconds (only when user has access)
   useEffect(() => {
-    if (!user) return;
+    if (!user || !hasVaultAccess) return;
 
     const interval = setInterval(async () => {
       try {
@@ -128,7 +153,7 @@ export default function VaultPage() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [user, selectedCategory]);
+  }, [user, hasVaultAccess, selectedCategory]);
 
   // Handle new discussion created — errors propagate to modal for display
   const handleStartDiscussion = async (data: {
@@ -159,11 +184,70 @@ export default function VaultPage() {
     setStatsKey((k) => k + 1);
   };
 
-  // Show nothing until auth check completes
-  if (authLoading || !user) {
+  // Show loading until auth and subscription check complete
+  if (authLoading || !user || !subscriptionCheckDone) {
     return (
       <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#FF6F00] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Non–paid users: show step-by-step message and CTA (Vault is for paid/trial only)
+  if (!hasVaultAccess) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <section className="w-full bg-[#000E51] py-12 lg:py-16">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
+            <div className="text-center max-w-[640px] mx-auto">
+              <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="11" width="18" height="11" rx="2" stroke="#FF6F00" strokeWidth="1.5" />
+                  <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="#FF6F00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="text-white/80 text-sm font-medium">The Vault</span>
+              </div>
+              <h1 className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-3">
+                Members-only <span className="text-[#FF6F00]">community</span>
+              </h1>
+              <p className="text-white/80 text-sm sm:text-base mb-8">
+                The Vault is available to subscribers on a paid plan. Follow the steps below to get access.
+              </p>
+              <div className="bg-white/5 border border-white/15 rounded-xl p-6 text-left space-y-5">
+                <div className="flex gap-4">
+                  <span className="shrink-0 w-8 h-8 rounded-full bg-[#FF6F00] text-white flex items-center justify-center text-sm font-bold">1</span>
+                  <div>
+                    <p className="text-white font-medium">Sign in</p>
+                    <p className="text-white/70 text-sm">You’re already signed in.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <span className="shrink-0 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-bold">2</span>
+                  <div>
+                    <p className="text-white font-medium">Choose a plan</p>
+                    <p className="text-white/70 text-sm">Pick a paid plan or start a free trial.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <span className="shrink-0 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-bold">3</span>
+                  <div>
+                    <p className="text-white font-medium">Access The Vault</p>
+                    <p className="text-white/70 text-sm">Return here to join the private leadership community.</p>
+                  </div>
+                </div>
+              </div>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 bg-[#FF6F00] hover:bg-[#e56400] text-white font-medium px-6 py-3 rounded-full mt-6 transition-colors"
+              >
+                View plans
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </Link>
+            </div>
+          </div>
+        </section>
+        <Footer />
       </div>
     );
   }
@@ -433,7 +517,7 @@ export default function VaultPage() {
             </div>
 
             {/* Right - Sidebar */}
-            <div className="w-full lg:w-[320px] flex-shrink-0">
+            <div className="w-full lg:w-[320px] shrink-0">
               <VaultSidebar key={statsKey} />
             </div>
           </div>
