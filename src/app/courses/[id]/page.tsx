@@ -359,14 +359,14 @@ export default function CourseDetailPage() {
                   >
                     View Plans &amp; Pricing
                   </Link>
-                  {isAuthenticated && (
+                  {/* {isAuthenticated && (
                     <Link
                       href={`/dashboard/courses/${courseId}`}
                       className="block w-full text-center px-6 py-2.5 mt-2 border border-[#000E51] text-[#000E51] font-medium rounded-xl hover:bg-[#000E51]/5 transition-colors text-sm"
                     >
                       Go to Dashboard
                     </Link>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>
