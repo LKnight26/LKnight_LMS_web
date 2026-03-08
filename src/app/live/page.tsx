@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -28,7 +28,7 @@ async function fetchPlayback(
   return { status: res.status, data: null, success: false, message: json.message };
 }
 
-export default function LivePage() {
+function LivePageContent() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -287,5 +287,19 @@ export default function LivePage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function LivePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <LivePageContent />
+    </Suspense>
   );
 }
