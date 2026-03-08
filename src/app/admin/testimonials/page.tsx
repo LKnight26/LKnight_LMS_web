@@ -5,7 +5,7 @@ import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import Badge from "@/components/admin/Badge";
-import { testimonialApi, Testimonial } from "@/lib/api";
+import { testimonialApi, uploadApi, Testimonial } from "@/lib/api";
 
 const pageOptions = [
   { key: "showOnHome" as const, label: "Home" },
@@ -55,6 +55,7 @@ export default function TestimonialManagementPage() {
   const [editingItem, setEditingItem] = useState<Testimonial | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,18 +107,26 @@ export default function TestimonialManagementPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
       setError("Image size must be less than 5MB");
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData((prev) => ({ ...prev, image: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
+    setError(null);
+    setIsUploadingImage(true);
+    try {
+      const response = await uploadApi.uploadImage(file, "testimonials");
+      if (response.success && response.data?.url) {
+        setFormData((prev) => ({ ...prev, image: response.data!.url }));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Image upload failed");
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const handleAdd = async () => {
@@ -499,17 +508,18 @@ export default function TestimonialManagementPage() {
                       onChange={handleImageChange}
                       className="hidden"
                       id="testimonial-image-upload"
+                      disabled={isUploadingImage}
                     />
                     <label
                       htmlFor="testimonial-image-upload"
-                      className="inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                      className={`inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors ${isUploadingImage ? "cursor-wait opacity-70" : "cursor-pointer hover:bg-gray-50"}`}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="17 8 12 3 7 8" />
                         <line x1="12" y1="3" x2="12" y2="15" />
                       </svg>
-                      Upload Photo
+                      {isUploadingImage ? "Uploading..." : "Upload Photo"}
                     </label>
                     {formData.image && (
                       <button

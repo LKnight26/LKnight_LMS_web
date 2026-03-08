@@ -916,6 +916,39 @@ export interface TeamMember {
   updatedAt?: string;
 }
 
+// Upload image to Bunny Storage (returns CDN URL)
+export const uploadApi = {
+  uploadImage: async (
+    file: File,
+    path: 'team' | 'testimonials' | 'courses' | 'uploads' = 'uploads'
+  ): Promise<ApiResponse<{ url: string }>> => {
+    const token = getAuthToken();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    // Do not set Content-Type; browser sets multipart/form-data with boundary
+
+    const response = await fetch(
+      `${API_BASE_URL}/upload/image?path=${encodeURIComponent(path)}`,
+      {
+        method: 'POST',
+        headers,
+        body: formData,
+      }
+    );
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Image upload failed');
+    }
+    return data;
+  },
+};
+
 export interface TeamMemberInput {
   name: string;
   role: string;

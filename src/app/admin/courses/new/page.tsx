@@ -6,7 +6,7 @@ import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
-import { categoryApi, courseApi, Category } from "@/lib/api";
+import { categoryApi, courseApi, uploadApi, Category } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 
 const levelOptions = [
@@ -33,8 +33,8 @@ export default function NewCoursePage() {
     level: "BEGINNER",
     price: "",
   });
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
 
   // Fetch categories on mount
   const fetchCategories = useCallback(async () => {
@@ -77,15 +77,27 @@ export default function NewCoursePage() {
     }));
   };
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setThumbnail(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setThumbnailPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Image must be under 5MB", "error");
+      return;
+    }
+    setIsUploadingThumbnail(true);
+    setError(null);
+    try {
+      const response = await uploadApi.uploadImage(file, "courses");
+      if (response.success && response.data?.url) {
+        setThumbnailPreview(response.data.url);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Thumbnail upload failed";
+      setError(msg);
+      showToast(msg, "error");
+    } finally {
+      setIsUploadingThumbnail(false);
+      e.target.value = "";
     }
   };
 
@@ -337,8 +349,9 @@ export default function NewCoursePage() {
                       accept="image/*"
                       onChange={handleThumbnailChange}
                       className="hidden"
+                      disabled={isUploadingThumbnail}
                     />
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 sm:p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all duration-200">
+                    <div className={`border-2 border-dashed border-gray-200 rounded-xl p-4 sm:p-6 text-center transition-all duration-200 ${isUploadingThumbnail ? "cursor-wait opacity-70" : "cursor-pointer hover:border-primary/50 hover:bg-primary/5"}`}>
                       <svg
                         width="20"
                         height="20"
@@ -355,21 +368,22 @@ export default function NewCoursePage() {
                         <line x1="12" y1="3" x2="12" y2="15" />
                       </svg>
                       <p className="text-xs sm:text-sm text-gray-600">
-                        <span className="text-primary font-medium">
-                          Click to upload
-                        </span>{" "}
-                        <span className="hidden sm:inline">or drag and drop</span>
+                        {isUploadingThumbnail ? (
+                          "Uploading..."
+                        ) : (
+                          <>
+                            <span className="text-primary font-medium">
+                              Click to upload
+                            </span>{" "}
+                            <span className="hidden sm:inline">or drag and drop</span>
+                          </>
+                        )}
                       </p>
                       <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
-                        PNG, JPG up to 2MB
+                        PNG, JPG, WebP, GIF up to 5MB
                       </p>
                     </div>
                   </label>
-                  {thumbnail && (
-                    <p className="text-xs sm:text-sm text-gray-500 mt-2 truncate">
-                      Selected: {thumbnail.name}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>

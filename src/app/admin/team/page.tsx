@@ -5,7 +5,7 @@ import AdminCard from "@/components/admin/AdminCard";
 import AdminButton from "@/components/admin/AdminButton";
 import AdminInput from "@/components/admin/AdminInput";
 import Badge from "@/components/admin/Badge";
-import { teamApi, TeamMember } from "@/lib/api";
+import { teamApi, uploadApi, TeamMember } from "@/lib/api";
 
 export default function TeamManagementPage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -14,6 +14,7 @@ export default function TeamManagementPage() {
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,7 +64,7 @@ export default function TeamManagementPage() {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -72,11 +73,19 @@ export default function TeamManagementPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData((prev) => ({ ...prev, image: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
+    setError(null);
+    setIsUploadingImage(true);
+    try {
+      const response = await uploadApi.uploadImage(file, "team");
+      if (response.success && response.data?.url) {
+        setFormData((prev) => ({ ...prev, image: response.data!.url }));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Image upload failed");
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const handleAdd = async () => {
@@ -460,10 +469,11 @@ export default function TeamManagementPage() {
                       onChange={handleImageChange}
                       className="hidden"
                       id="team-image-upload"
+                      disabled={isUploadingImage}
                     />
                     <label
                       htmlFor="team-image-upload"
-                      className="inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                      className={`inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors ${isUploadingImage ? "cursor-wait opacity-70" : "cursor-pointer hover:bg-gray-50"}`}
                     >
                       <svg
                         width="14"
@@ -479,7 +489,7 @@ export default function TeamManagementPage() {
                         <polyline points="17 8 12 3 7 8" />
                         <line x1="12" y1="3" x2="12" y2="15" />
                       </svg>
-                      Upload Photo
+                      {isUploadingImage ? "Uploading..." : "Upload Photo"}
                     </label>
                     {formData.image && (
                       <button

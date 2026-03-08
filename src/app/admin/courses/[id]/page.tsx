@@ -8,7 +8,7 @@ import AdminInput from "@/components/admin/AdminInput";
 import AdminSelect from "@/components/admin/AdminSelect";
 import Badge from "@/components/admin/Badge";
 import ConfirmModal from "@/components/admin/ConfirmModal";
-import { categoryApi, courseApi, documentApi, Category, CourseDetails, Document as DocType } from "@/lib/api";
+import { categoryApi, courseApi, documentApi, uploadApi, Category, CourseDetails, Document as DocType } from "@/lib/api";
 import { DocumentManager } from "@/components/admin";
 import { useToast } from "@/components/ui/Toast";
 
@@ -45,6 +45,7 @@ export default function EditCoursePage() {
     status: "DRAFT",
   });
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
 
   // Fetch categories and course data
   const fetchData = useCallback(async () => {
@@ -122,14 +123,27 @@ export default function EditCoursePage() {
     }));
   };
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setThumbnailPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Image must be under 5MB", "error");
+      return;
+    }
+    setIsUploadingThumbnail(true);
+    setError(null);
+    try {
+      const response = await uploadApi.uploadImage(file, "courses");
+      if (response.success && response.data?.url) {
+        setThumbnailPreview(response.data.url);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Thumbnail upload failed";
+      setError(msg);
+      showToast(msg, "error");
+    } finally {
+      setIsUploadingThumbnail(false);
+      e.target.value = "";
     }
   };
 
@@ -488,8 +502,9 @@ export default function EditCoursePage() {
                     accept="image/*"
                     onChange={handleThumbnailChange}
                     className="hidden"
+                    disabled={isUploadingThumbnail}
                   />
-                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all duration-200">
+                  <div className={`border-2 border-dashed border-gray-200 rounded-xl p-6 text-center transition-all duration-200 ${isUploadingThumbnail ? "cursor-wait opacity-70" : "cursor-pointer hover:border-primary/50 hover:bg-primary/5"}`}>
                     <svg
                       width="24"
                       height="24"
@@ -506,13 +521,19 @@ export default function EditCoursePage() {
                       <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
                     <p className="text-sm text-gray-600">
-                      <span className="text-primary font-medium">
-                        Click to upload
-                      </span>{" "}
-                      or drag and drop
+                      {isUploadingThumbnail ? (
+                        "Uploading..."
+                      ) : (
+                        <>
+                          <span className="text-primary font-medium">
+                            Click to upload
+                          </span>{" "}
+                          or drag and drop
+                        </>
+                      )}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
-                      PNG, JPG up to 2MB (Recommended: 1280x720)
+                      PNG, JPG, WebP, GIF up to 5MB (Recommended: 1280x720)
                     </p>
                   </div>
                 </label>
