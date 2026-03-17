@@ -320,7 +320,9 @@ export default function UsersPage() {
                 <path d="M9 6V4h6v2" />
               </svg>
             }
-          />
+          >
+            Delete
+          </AdminButton>
         </div>
       ),
     },
