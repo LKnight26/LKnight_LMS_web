@@ -307,6 +307,16 @@ export default function PricingPage() {
       return;
     }
 
+    // If user already has an active subscription on a different plan, block and show a clear message
+    if (currentPlanSlug && currentPlanSlug !== plan.slug) {
+      const currentPlanName =
+        plans.find((p) => p.slug === currentPlanSlug)?.name || "your current plan";
+      setError(
+        `You already have an active subscription for ${currentPlanName}. To move to a different plan, please contact our support team so we can safely update your billing.`
+      );
+      return;
+    }
+
     try {
       setActionLoading(true);
       const response = await subscriptionApi.createCheckoutSession({
@@ -388,21 +398,24 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16 -mt-40 mb-4 relative z-10">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center justify-between">
-            <span>{error}</span>
-            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 ml-4 font-medium">
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Cards */}
       <div className="relative z-10 -mt-36 sm:-mt-40 pb-12">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16">
+          {/* Error above cards, over the pricing section */}
+          {error && (
+            <div className="mb-5">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center justify-between shadow-sm">
+                <span>{error}</span>
+                <button
+                  onClick={() => setError(null)}
+                  className="text-red-500 hover:text-red-700 ml-4 font-medium"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-5 items-stretch">
               {[1, 2, 3, 4].map((i) => (

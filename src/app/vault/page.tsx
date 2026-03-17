@@ -25,7 +25,7 @@ const categories = [
 ];
 
 export default function VaultPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isAdmin } = useAuth();
   const router = useRouter();
 
   const [subscriptionCheckDone, setSubscriptionCheckDone] = useState(false);
@@ -53,6 +53,15 @@ export default function VaultPage() {
     let cancelled = false;
     (async () => {
       try {
+        // Admins always have Vault access regardless of subscription
+        if (isAdmin) {
+          if (!cancelled) {
+            setHasVaultAccess(true);
+            setSubscriptionCheckDone(true);
+          }
+          return;
+        }
+
         const res = await subscriptionApi.checkAccess();
         if (!cancelled && res.success && res.data) {
           setHasVaultAccess(res.data.hasAccess);
@@ -64,7 +73,7 @@ export default function VaultPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, isAdmin]);
 
   // Fetch discussions
   const fetchDiscussions = useCallback(

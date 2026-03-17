@@ -249,23 +249,7 @@ export default function Navbar() {
                 </TransitionLink>
               )}
 
-              {/* Live Stream - for authenticated users */}
-              {isAuthenticated && (
-                <TransitionLink
-                  href="/live"
-                  className="relative inline-flex items-center gap-2 px-5 py-2.5 bg-[#FF6F001A] hover:bg-[#FF6F0033] text-[#FF6F00] text-sm font-semibold rounded-lg transition-all duration-200 mr-4"
-                >
-                  {isLiveActive && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white" aria-hidden />
-                  )}
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M8.5 8.5C7.5 9.5 7 10.7 7 12C7 13.3 7.5 14.5 8.5 15.5" />
-                    <path d="M15.5 8.5C16.5 9.5 17 10.7 17 12C17 13.3 16.5 14.5 15.5 15.5" />
-                  </svg>
-                  Live
-                </TransitionLink>
-              )}
+              {/* Live Stream buttons removed – sticky global button remains */}
 
               {/* Platform Dropdown */}
               {!hiddenPages.includes("platform") && <div
@@ -632,26 +616,7 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Live - Mobile (authenticated) */}
-            {isAuthenticated && (
-              <div className="px-4 mb-4 relative inline-block w-full">
-                <TransitionLink
-                  href="/live"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="relative flex items-center justify-center gap-2 w-full px-5 py-3 bg-[#FF6F001A] hover:bg-[#FF6F0033] text-[#FF6F00] text-sm font-semibold rounded-lg transition-all duration-200"
-                >
-                  {isLiveActive && (
-                    <span className="absolute top-2 right-4 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white" aria-hidden />
-                  )}
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M8.5 8.5C7.5 9.5 7 10.7 7 12C7 13.3 7.5 14.5 8.5 15.5" />
-                    <path d="M15.5 8.5C16.5 9.5 17 10.7 17 12C17 13.3 16.5 14.5 15.5 15.5" />
-                  </svg>
-                  Live
-                </TransitionLink>
-              </div>
-            )}
+            {/* Live - Mobile button removed – sticky global button remains */}
 
             {/* Mobile Navigation Links */}
             <div className="px-4 space-y-1">
