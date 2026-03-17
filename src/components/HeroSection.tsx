@@ -51,7 +51,8 @@ export default function HeroSection() {
 
           {/* Main Heading */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-center mb-4 sm:mb-6 px-2">
-            <span className="text-white">Unlock Your Potential with</span>
+            <span className="text-white">Not Just Skills. Leadership Transformation
+            </span>
             <br />
             <span className="text-secondary">LKnight LMS</span>
           </h1>
@@ -139,47 +140,7 @@ export default function HeroSection() {
           />
         </div>
 
-        {/* Go Live Button - Navigate to Live stream page (admin can also manage from /admin/live) */}
-        <div className="absolute bottom-8 sm:bottom-12 lg:bottom-16 right-4 sm:right-8 lg:right-12 z-20">
-          <Link href="/live" className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer">
-            <span className="text-primary font-medium text-sm">Go live</span>
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle cx="12" cy="12" r="3" fill="white" />
-                <path
-                  d="M8.5 8.5C7.5 9.5 7 10.7 7 12C7 13.3 7.5 14.5 8.5 15.5"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M15.5 8.5C16.5 9.5 17 10.7 17 12C17 13.3 16.5 14.5 15.5 15.5"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M5.5 5.5C3.8 7.2 3 9.5 3 12C3 14.5 3.8 16.8 5.5 18.5"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M18.5 5.5C20.2 7.2 21 9.5 21 12C21 14.5 20.2 16.8 18.5 18.5"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-          </Link>
-        </div>
+        {/* (Live button removed – sticky global button remains) */}
       </div>
     </section>
   );

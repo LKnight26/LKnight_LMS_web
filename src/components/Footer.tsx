@@ -209,9 +209,21 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="border-t border-gray-200">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-6">
-          <p className="text-[#64748B] text-sm text-center">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-[#64748B] text-sm text-center sm:text-left">
             © 2025 LKnight LMS. All rights reserved.
+          </p>
+          <p className="text-[#94A3B8] text-xs sm:text-sm text-center sm:text-right">
+            LMS developed by{" "}
+            <a
+              href="https://share.google/EloUbwMUTnDfPgbEi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#0F172A] font-semibold hover:text-[#FF6F00] underline-offset-4 hover:underline transition-colors duration-200"
+            >
+              AionX Technologies
+            </a>
+            .
           </p>
         </div>
       </div>

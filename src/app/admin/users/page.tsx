@@ -50,6 +50,8 @@ export default function UsersPage() {
   const limit = 10;
 
   const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
+  const [userToDelete, setUserToDelete] = useState<UserDetails | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get initials from user name
   const getInitials = (user: UserDetails) => {
@@ -137,6 +139,27 @@ export default function UsersPage() {
       setError(err instanceof Error ? err.message : 'Failed to update user status');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Delete user via custom confirmation dialog
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      setIsDeleting(true);
+      setError(null);
+      await userApi.delete(userToDelete.id);
+      setSelectedUser((current) =>
+        current && current.id === userToDelete.id ? null : current
+      );
+      setUserToDelete(null);
+      // Refresh list and stats
+      fetchUsers();
+      fetchStats();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete user");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -251,28 +274,54 @@ export default function UsersPage() {
       key: "actions",
       header: "",
       render: (user: UserDetails) => (
-        <AdminButton
-          variant="ghost"
-          size="sm"
-          onClick={() => setSelectedUser(user)}
-          icon={
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          }
-        >
-          View
-        </AdminButton>
+        <div className="flex items-center justify-end gap-1.5">
+          <AdminButton
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedUser(user)}
+            icon={
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            }
+          >
+            View
+          </AdminButton>
+          <AdminButton
+            variant="danger"
+            size="sm"
+            onClick={() => setUserToDelete(user)}
+            disabled={isDeleting}
+            icon={
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M9 6V4h6v2" />
+              </svg>
+            }
+          />
+        </div>
       ),
     },
   ];
@@ -492,7 +541,7 @@ export default function UsersPage() {
       {/* User Detail Modal */}
       {selectedUser && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 sm:p-4"
+          className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-3 sm:p-4"
           onClick={() => setSelectedUser(null)}
         >
           <div
@@ -594,7 +643,7 @@ export default function UsersPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
               <AdminButton
                 variant="outline"
                 className="flex-1"
@@ -606,7 +655,7 @@ export default function UsersPage() {
               </AdminButton>
               {selectedUser.status === "ACTIVE" ? (
                 <AdminButton
-                  variant="danger"
+                  variant="secondary"
                   className="flex-1"
                   size="sm"
                   onClick={() => handleToggleStatus(selectedUser)}
@@ -625,6 +674,70 @@ export default function UsersPage() {
                   {isSaving ? "Saving..." : "Activate"}
                 </AdminButton>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      {userToDelete && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 sm:p-4"
+          onClick={() => !isDeleting && setUserToDelete(null)}
+        >
+          <div
+            className="bg-white rounded-xl sm:rounded-2xl max-w-sm w-full p-4 sm:p-5 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-3 sm:mb-4">
+              <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center text-red-600">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm sm:text-base font-semibold text-gray-900">
+                  Delete user account?
+                </h2>
+                <p className="mt-1 text-xs sm:text-sm text-gray-500">
+                  This will permanently remove{" "}
+                  <span className="font-medium text-gray-800">
+                    {getFullName(userToDelete)}
+                  </span>{" "}
+                  and all related data, including subscriptions, enrollments, and Vault activity. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row-reverse gap-2 sm:gap-3 mt-3 sm:mt-4">
+              <AdminButton
+                variant="danger"
+                className="flex-1"
+                size="sm"
+                onClick={handleDeleteUser}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete user"}
+              </AdminButton>
+              <AdminButton
+                variant="outline"
+                className="flex-1"
+                size="sm"
+                onClick={() => setUserToDelete(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </AdminButton>
             </div>
           </div>
         </div>

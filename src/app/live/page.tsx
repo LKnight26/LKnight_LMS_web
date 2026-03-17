@@ -65,8 +65,14 @@ function LivePageContent() {
         const result = await fetchPlayback(endpoint, token);
         if (cancelled) return;
         if (result.status === 403) {
-          setAccessDenied(true);
-          setPlayback(undefined);
+          // Allow admins through even if backend returns 403 (no active stream or no entitlements)
+          if (isAdmin) {
+            setAccessDenied(false);
+            setPlayback(result.data ?? null);
+          } else {
+            setAccessDenied(true);
+            setPlayback(undefined);
+          }
         } else if (result.success) {
           setPlayback(result.data ?? null);
           setStreamEnded(false);
@@ -82,7 +88,7 @@ function LivePageContent() {
       }
     })();
     return () => { cancelled = true; };
-  }, [user, streamIdParam]);
+  }, [user, streamIdParam, isAdmin]);
 
   // When status is idle, poll playback so we get status update (e.g. active) without refresh
   useEffect(() => {

@@ -60,11 +60,11 @@ export default function MaintenanceCheck({ children }: { children: React.ReactNo
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-bold text-white font-outfit mb-4">
-            Under Maintenance
+            LKnight Learning Hub is coming soon
           </h1>
           <p className="text-gray-300 text-base sm:text-lg mb-8 leading-relaxed">
-            We&apos;re currently performing scheduled maintenance to improve your experience.
-            Please check back shortly.
+            We&apos;re putting the final touches on an amazing learning experience.
+            Please check back soon to start your journey with us.
           </p>
 
           {/* Animated dots */}
