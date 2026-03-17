@@ -54,7 +54,7 @@ export default function HeroSection() {
             <span className="text-white">Not Just Skills. Leadership Transformation
             </span>
             <br />
-            <span className="text-secondary">LKnight LMS</span>
+            <span className="text-secondary">LKnight Learning Hub</span>
           </h1>
 
           {/* Description */}
