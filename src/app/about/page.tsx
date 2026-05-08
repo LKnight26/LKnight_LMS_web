@@ -101,7 +101,7 @@ export default function AboutPage() {
               {/* Main Image */}
             <div className="relative w-full h-[280px] sm:h-[350px] lg:h-[400px] rounded-2xl overflow-hidden">
   <img
-    src="/50kimage.jpeg"
+    src="/50kImage.jpeg"
     alt="LKnight Productions - Our Story"
     className="w-full h-full object-cover"
   />
