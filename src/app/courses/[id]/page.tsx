@@ -404,9 +404,6 @@ export default function CourseDetailPage() {
                           <h3 className="font-semibold text-[#000E51] text-sm sm:text-base">
                             {module.title}
                           </h3>
-                          <p className="text-xs text-gray-500">
-                            {module.lessons?.length || 0} lessons
-                          </p>
                         </div>
                       </div>
                       <svg

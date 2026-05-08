@@ -167,7 +167,7 @@ export default function CategoriesSection() {
                 </p>
 
                 <div className="flex items-center gap-2 text-secondary font-medium text-sm">
-                  <span>{cat.courseCount} {cat.courseCount === 1 ? "course" : "courses"}</span>
+                  <span>See more</span>
                   <svg
                     width="16"
                     height="16"
