@@ -129,8 +129,8 @@ export default function TestimonialSection({ page }: TestimonialSectionProps) {
         if (response.success && response.data) {
           setTestimonials(response.data);
         }
-      } catch (err) {
-        console.error("Failed to fetch testimonials:", err);
+      } catch {
+        // silently fail
       } finally {
         setIsLoading(false);
       }

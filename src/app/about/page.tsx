@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MeetTheTeam from "@/components/MeetTheTeam";
 import TestimonialSection from "@/components/TestimonialSection";
+import RefundFAQ from "@/components/RefundFAQ";
 import Image from "next/image";
 import { createMetadata } from "@/lib/seo";
 
@@ -444,6 +445,9 @@ export default function AboutPage() {
     </div>
   </div>
 </section>
+      {/* Refund Policy Section */}
+      <RefundFAQ />
+
       {/* Meet the Team Section */}
       {/* <MeetTheTeam /> */}
       <TestimonialSection page="about" />

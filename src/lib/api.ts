@@ -49,7 +49,26 @@ async function apiFetch<T>(
       headers,
     });
 
-    const data = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    const rawText = await response.text();
+
+    let data: ApiResponse<T> & { message?: string };
+    if (contentType.includes('application/json') && rawText) {
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        throw new Error(
+          `Invalid JSON response from ${endpoint} (status ${response.status})`
+        );
+      }
+    } else {
+      // Non-JSON response (HTML error page, empty body, etc.)
+      throw new Error(
+        !response.ok
+          ? `Request to ${endpoint} failed with status ${response.status}`
+          : `Unexpected non-JSON response from ${endpoint}`
+      );
+    }
 
     if (!response.ok) {
       throw new Error(data.message || 'An error occurred');
