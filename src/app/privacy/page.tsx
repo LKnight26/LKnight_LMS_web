@@ -324,14 +324,14 @@ export default function PrivacyPage() {
               <p className="text-gray-700">
                 <strong>Lunka Crawford</strong>
               </p>
-              <p className="text-gray-700">
+              {/* <p className="text-gray-700">
                 <a
                   href="mailto:Lunka_Crawford@lknightproductions.com"
                   className="text-[#FF6F00] hover:underline"
                 >
                   Lunka_Crawford@lknightproductions.com
                 </a>
-              </p>
+              </p> */}
               <div className="border-t border-gray-200 my-3"></div>
               <p className="text-gray-700">
                 <strong>Ken Crawford</strong>

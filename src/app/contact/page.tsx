@@ -173,7 +173,7 @@ export default function ContactPage() {
                     </div>
                     <div className="flex flex-col gap-1">
                       <a href="mailto:inquiries@lknightproductions.com" className="text-sm hover:underline">inquiries@lknightproductions.com</a>
-                      <a href="mailto:Lunka_Crawford@lknightproductions.com" className="text-sm hover:underline">Lunka_Crawford@lknightproductions.com</a>
+                      {/* <a href="mailto:Lunka_Crawford@lknightproductions.com" className="text-sm hover:underline">Lunka_Crawford@lknightproductions.com</a> */}
                     </div>
                   </div>
 

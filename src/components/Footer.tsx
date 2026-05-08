@@ -180,14 +180,14 @@ export default function Footer() {
                   inquiries@lknightproductions.com
                 </a>
               </li>
-              <li>
+              {/* <li>
                 <a
                   href="mailto:Lunka_Crawford@lknightproductions.com"
                   className="text-[#64748B] text-sm hover:text-[#FF6F00] transition-colors duration-200"
                 >
                   Lunka_Crawford@lknightproductions.com
                 </a>
-              </li>
+              </li> */}
               <li>
                 <a
                   href="tel:+18329535517"
