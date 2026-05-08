@@ -99,16 +99,13 @@ export default function AboutPage() {
             {/* Right Image with Stats Badge */}
             <div className="flex-1 w-full lg:max-w-[650px] relative">
               {/* Main Image */}
-              <div className="relative w-full h-[280px] sm:h-[350px] lg:h-[400px] rounded-2xl overflow-hidden">
-                <Image
-                  src="/50kimage.jpeg"
-                  alt="LKnight Productions - Our Story"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 650px"
-                  priority
-                />
-              </div>
+            <div className="relative w-full h-[280px] sm:h-[350px] lg:h-[400px] rounded-2xl overflow-hidden">
+  <img
+    src="/50kimage.jpeg"
+    alt="LKnight Productions - Our Story"
+    className="w-full h-full object-cover"
+  />
+</div>
 
               {/* Stats Badge */}
               {/* <div
