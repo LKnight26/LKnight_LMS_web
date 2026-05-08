@@ -366,7 +366,7 @@ export default function AboutPage() {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 bg-[#E8EAF6] text-[#000E51] text-[11px] font-semibold px-4 py-2 rounded-full mb-5">
           <span className="w-2 h-2 rounded-full bg-[#000E51]" />
-          Founders & Leadership
+          Founders 
         </div>
 
         {/* Heading */}
@@ -427,7 +427,7 @@ export default function AboutPage() {
             </h3>
 
             <p className="text-[#64748B] text-[11px] uppercase tracking-wide leading-relaxed">
-              Years Leadership Experience
+              Years in HR &amp; Organizational Strategy
             </p>
           </div>
 

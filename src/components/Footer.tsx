@@ -86,7 +86,7 @@ export default function Footer() {
 
             {/* Tagline */}
             <p className="text-[#64748B] text-sm leading-relaxed mb-6 max-w-[280px]">
-              Empowering learners worldwide with world-class courses designed to help you master new skills and advance your career.
+              Leadership development built for the realities of today&rsquo;s workplace. LKnight combines organizational strategy and clinical mental health insight to help leaders communicate clearly, lead effectively, and build healthier workplace cultures.
             </p>
 
             {/* Social Icons */}
