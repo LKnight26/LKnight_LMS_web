@@ -14,15 +14,9 @@ export default function CTASection() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
         <div className="flex flex-col items-center text-center">
           {/* Heading */}
-          <h2 className="text-[#000E51] text-xl sm:text-2xl lg:text-[28px] font-bold mb-3">
-            Ready to Start Learning?
+          <h2 className="text-[#000E51] text-xl sm:text-2xl lg:text-[28px] font-bold mb-6">
+            Start Today, Lead Tomorrow with LKnight.
           </h2>
-
-          {/* Subtext */}
-          <p className="text-[#64748B] text-sm lg:text-[15px] mb-6 max-w-[500px]">
-            Join over 50,000 learners worldwide and unlock your potential with
-            LKnight LMS
-          </p>
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">

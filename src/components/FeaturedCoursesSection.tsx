@@ -32,7 +32,7 @@ interface FeaturedCoursesSectionProps {
 
 export default function FeaturedCoursesSection({
   title = "Featured Courses",
-  subtitle = "Our most popular courses loved by thousands of learners",
+  subtitle = "",
   showViewAll = true,
   viewAllHref = "/courses",
   limit = 3,
@@ -71,9 +71,11 @@ export default function FeaturedCoursesSection({
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mb-2 sm:mb-3">
                 {title}
               </h2>
-              <p className="text-sm sm:text-base lg:text-lg text-gray-500">
-                {subtitle}
-              </p>
+              {subtitle && (
+                <p className="text-sm sm:text-base lg:text-lg text-gray-500">
+                  {subtitle}
+                </p>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
@@ -113,9 +115,11 @@ export default function FeaturedCoursesSection({
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mb-2 sm:mb-3">
               {title}
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-500">
-              {subtitle}
-            </p>
+            {subtitle && (
+              <p className="text-sm sm:text-base lg:text-lg text-gray-500">
+                {subtitle}
+              </p>
+            )}
           </div>
 
           {showViewAll && (

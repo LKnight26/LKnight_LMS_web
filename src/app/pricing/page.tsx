@@ -446,8 +446,8 @@ export default function PricingPage() {
           Ready to lead differently?
         </h2>
         <p className="text-gray-500 text-sm sm:text-base max-w-lg mx-auto mb-8 leading-relaxed">
-          Join thousands of professionals and organizations transforming
-          leadership from the inside out.
+          Join leaders and organizations investing in healthier, more
+          intentional leadership.
         </p>
         <button
           onClick={() => router.push("/courses")}
